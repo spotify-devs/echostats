@@ -81,6 +81,8 @@ def _parse_redis_url() -> RedisSettings:
         host=parsed.hostname or "localhost",
         port=parsed.port or 6379,
         database=int(parsed.path.lstrip("/") or "0"),
+        password=parsed.password or None,
+        username=parsed.username or None,
     )
 
 

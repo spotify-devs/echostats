@@ -1,5 +1,10 @@
 # EchoStats Helm Values
 
+# Override the full name of resources (default: {release}-echostats)
+# Set this to "echostats" for cleaner pod names like "echostats-api"
+fullnameOverride: ""
+# nameOverride: ""
+
 replicaCount:
   api: 1
   web: 1
