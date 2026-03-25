@@ -15,11 +15,13 @@ export default function PlaylistAnalyzerPage() {
   const { data: playlists, isLoading: loadingPlaylists } = useQuery({
     queryKey: ["playlists-for-analyzer"],
     queryFn: () => api.get<any>("/api/v1/playlists"),
+    retry: false,
   });
 
   const { data: analytics } = useQuery({
     queryKey: ["analytics-overview", "all_time"],
     queryFn: () => api.get<any>("/api/v1/analytics/overview?period=all_time"),
+    retry: false,
   });
 
   const items = playlists?.items || [];
