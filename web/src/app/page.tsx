@@ -1,11 +1,42 @@
 "use client";
 
-import { BarChart3, Clock, Disc3, Music, Shield, Smartphone, TrendingUp } from "lucide-react";
-import { useState } from "react";
+import { BarChart3, Clock, Disc3, Loader2, Music, Shield, Smartphone, TrendingUp } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { SpotifyConnectModal } from "@/components/ui/spotify-connect-modal";
+import { api } from "@/lib/api";
 
 export default function LandingPage() {
   const [connectOpen, setConnectOpen] = useState(false);
+  const [checking, setChecking] = useState(true);
+  const router = useRouter();
+
+  // Auto-redirect if already authenticated (single-user auto-login)
+  useEffect(() => {
+    api
+      .get<{ authenticated: boolean }>("/api/v1/auth/status")
+      .then((data) => {
+        if (data.authenticated) {
+          router.replace("/dashboard");
+        } else {
+          setChecking(false);
+        }
+      })
+      .catch(() => {
+        setChecking(false);
+      });
+  }, [router]);
+
+  if (checking) {
+    return (
+      <main className="min-h-screen flex items-center justify-center bg-surface">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="w-8 h-8 text-accent-dynamic animate-spin" />
+          <p className="text-sm text-white/40">Checking authentication…</p>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-center bg-surface px-4">
