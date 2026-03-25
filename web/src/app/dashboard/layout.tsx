@@ -20,7 +20,7 @@ export default function DashboardLayout({
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         <Header />
         <SyncBanner />
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 pb-20 lg:pb-6">{children}</main>
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 pb-24 lg:pb-6">{children}</main>
       </div>
       <BottomNav />
       <ShortcutsModal />

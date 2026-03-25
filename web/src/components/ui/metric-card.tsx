@@ -22,11 +22,11 @@ export function MetricCard({ icon: Icon, label, value, subtitle, color, trend, a
   return (
     <div className="metric-card animate-slide-up group hover:shadow-accent-glow/5 transition-shadow duration-300">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className={`p-2 rounded-lg ${color} transition-transform group-hover:scale-110 duration-300`}>
-            <Icon className="w-5 h-5 text-white" />
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className={`p-1.5 sm:p-2 rounded-lg ${color} transition-transform group-hover:scale-110 duration-300`}>
+            <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
           </div>
-          <span className="text-sm text-theme-secondary">{label}</span>
+          <span className="text-xs sm:text-sm text-theme-secondary">{label}</span>
         </div>
         {trend && (
           <span className={`flex items-center gap-1 text-xs font-medium ${trend.value >= 0 ? "text-emerald-400" : "text-red-400"}`}>
@@ -35,8 +35,8 @@ export function MetricCard({ icon: Icon, label, value, subtitle, color, trend, a
           </span>
         )}
       </div>
-      <p className="text-3xl font-bold text-theme tabular-nums">{displayValue}</p>
-      {subtitle && <p className="text-xs text-theme-tertiary">{subtitle}</p>}
+      <p className="text-2xl sm:text-3xl font-bold text-theme tabular-nums">{displayValue}</p>
+      {subtitle && <p className="text-[10px] sm:text-xs text-theme-tertiary">{subtitle}</p>}
     </div>
   );
 }

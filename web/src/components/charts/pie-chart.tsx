@@ -33,7 +33,7 @@ export function PieChart({ data, height = 300, innerRadius = 60, showLegend = tr
         <Pie
           data={data}
           cx="50%"
-          cy="50%"
+          cy="45%"
           innerRadius={innerRadius}
           outerRadius={innerRadius + 40}
           paddingAngle={2}
@@ -46,7 +46,8 @@ export function PieChart({ data, height = 300, innerRadius = 60, showLegend = tr
         <Tooltip content={<CustomTooltip />} />
         {showLegend && (
           <Legend
-            formatter={(value: string) => <span className="text-white/70 text-xs">{value}</span>}
+            wrapperStyle={{ fontSize: "11px", lineHeight: "20px", paddingTop: "8px" }}
+            formatter={(value: string) => <span className="text-white/70 text-[10px] sm:text-xs">{value}</span>}
           />
         )}
       </RechartsPieChart>

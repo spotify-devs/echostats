@@ -51,7 +51,7 @@ export default function DashboardPage() {
   }));
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-white">Dashboard</h1>
@@ -91,8 +91,8 @@ export default function DashboardPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="glass-card p-6">
-            <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+          <div className="glass-card p-4 sm:p-6">
+            <h2 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4 flex items-center gap-2">
               <TrendingUp className="w-5 h-5 text-accent-purple" /> Hourly Activity
             </h2>
             {hourlyData.length > 0 ? (
@@ -101,12 +101,12 @@ export default function DashboardPage() {
               <p className="text-white/40 text-center py-12">No data yet</p>
             )}
           </div>
-          <div className="glass-card p-6">
-            <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+          <div className="glass-card p-4 sm:p-6">
+            <h2 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4 flex items-center gap-2">
               <Disc3 className="w-5 h-5 text-accent-cyan" /> Top Genres
             </h2>
             {genrePieData.length > 0 ? (
-              <PieChart data={genrePieData} height={isMobile ? 200 : 250} />
+              <PieChart data={genrePieData} height={isMobile ? 280 : 250} innerRadius={isMobile ? 45 : 60} />
             ) : (
               <p className="text-white/40 text-center py-12">No data yet</p>
             )}
