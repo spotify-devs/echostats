@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { Clock, RefreshCw } from "lucide-react";
+import { Clock, Music, RefreshCw } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { api } from "@/lib/api";
@@ -76,7 +76,7 @@ export function RecentFeed() {
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-theme-tertiary">
-                    <Clock className="w-4 h-4" />
+                    <Music className="w-4 h-4" />
                   </div>
                 )}
               </div>

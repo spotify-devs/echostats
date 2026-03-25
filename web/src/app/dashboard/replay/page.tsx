@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { Flame, Repeat, Users } from "lucide-react";
+import { Flame, Music, Repeat, Users } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { BarChart } from "@/components/charts/bar-chart";
@@ -86,8 +86,8 @@ export default function ReplayPage() {
                       <span className="w-6 text-center text-sm font-bold text-accent-dynamic">
                         {i + 1}
                       </span>
-                      {track.image_url && (
-                        <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-theme-surface-3 flex-shrink-0">
+                      <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-theme-surface-3 flex-shrink-0">
+                        {track.image_url ? (
                           <Image
                             src={track.image_url}
                             alt=""
@@ -95,8 +95,12 @@ export default function ReplayPage() {
                             className="object-cover"
                             sizes="40px"
                           />
-                        </div>
-                      )}
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-theme-tertiary">
+                            <Music className="w-4 h-4" />
+                          </div>
+                        )}
+                      </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-theme truncate">{name}</p>
                         <p className="text-xs text-theme-tertiary truncate">{artist}</p>

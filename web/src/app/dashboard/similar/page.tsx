@@ -72,8 +72,8 @@ export default function SimilarTracksPage() {
                         : "hover:bg-current/[0.04]"
                     }`}
                   >
-                    {track.image_url && (
-                      <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-theme-surface-3 flex-shrink-0">
+                    <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-theme-surface-3 flex-shrink-0">
+                      {track.image_url ? (
                         <Image
                           src={track.image_url}
                           alt=""
@@ -81,8 +81,12 @@ export default function SimilarTracksPage() {
                           className="object-cover"
                           sizes="40px"
                         />
-                      </div>
-                    )}
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-theme-tertiary">
+                          <Music className="w-4 h-4" />
+                        </div>
+                      )}
+                    </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-theme truncate">{name}</p>
                       <p className="text-xs text-theme-tertiary truncate">{artist}</p>
@@ -140,8 +144,8 @@ export default function SimilarTracksPage() {
                         className="flex items-center gap-3 p-2 rounded-xl hover:bg-current/[0.04] transition-colors"
                       >
                         <span className="w-5 text-center text-xs text-theme-tertiary">{i + 1}</span>
-                        {track.image_url && (
-                          <div className="relative w-9 h-9 rounded-lg overflow-hidden bg-theme-surface-3 flex-shrink-0">
+                        <div className="relative w-9 h-9 rounded-lg overflow-hidden bg-theme-surface-3 flex-shrink-0">
+                          {track.image_url ? (
                             <Image
                               src={track.image_url}
                               alt=""
@@ -149,8 +153,12 @@ export default function SimilarTracksPage() {
                               className="object-cover"
                               sizes="36px"
                             />
-                          </div>
-                        )}
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-theme-tertiary">
+                              <Music className="w-4 h-4" />
+                            </div>
+                          )}
+                        </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm text-theme truncate">{name}</p>
                           <p className="text-[10px] text-theme-tertiary truncate">{artist}</p>

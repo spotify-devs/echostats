@@ -269,7 +269,11 @@ export default function PlayerPage() {
                   <div className="relative w-8 h-8 rounded overflow-hidden bg-theme-surface-3 flex-shrink-0">
                     {track.image ? (
                       <Image src={track.image} alt="" fill className="object-cover" sizes="32px" />
-                    ) : null}
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-theme-tertiary">
+                        <Music className="w-3.5 h-3.5" />
+                      </div>
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-medium text-theme truncate">{track.name}</p>
