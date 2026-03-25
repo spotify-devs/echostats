@@ -24,11 +24,14 @@ export function Header() {
   return (
     <>
       <header className="h-16 border-b border-white/5 bg-surface-1/50 backdrop-blur-lg flex items-center justify-between px-4 sm:px-6">
-        {/* Spacer for mobile hamburger */}
-        <div className="w-10 lg:hidden" />
+        {/* App name on mobile, spacer for hamburger */}
+        <div className="flex items-center gap-2 lg:hidden flex-shrink-0">
+          <div className="w-10" /> {/* hamburger spacer */}
+          <span className="text-sm font-bold text-gradient sm:hidden">EchoStats</span>
+        </div>
 
-        {/* Search — always visible, compact on mobile */}
-        <div className="flex-1">
+        {/* Search — hidden on mobile, visible on sm+ */}
+        <div className="flex-1 hidden sm:block">
           <GlobalSearch />
         </div>
 
