@@ -44,30 +44,41 @@ export function SyncBanner() {
 
   // Build update banner element (shown alongside token status)
   const updateBanner = showUpdate ? (
-    <div className="mx-4 sm:mx-6 mt-3 flex items-center gap-3 px-4 py-2.5 rounded-xl border border-accent-dynamic/20 bg-accent-dynamic/5">
-      <ArrowUpCircle className="w-4 h-4 text-accent-dynamic flex-shrink-0" />
-      <div className="flex-1 min-w-0">
-        <p className="text-xs text-theme font-medium">
-          Update available: v{updateInfo.latest_version}
-        </p>
-        <p className="text-[10px] text-theme-tertiary">
-          Running v{updateInfo.current_version}
-        </p>
+    <div className="mx-4 sm:mx-6 mt-3 rounded-xl border border-accent-dynamic/20 bg-accent-dynamic/5 overflow-hidden">
+      <div className="flex items-center gap-3 px-4 py-2.5">
+        <ArrowUpCircle className="w-4 h-4 text-accent-dynamic flex-shrink-0" />
+        <div className="flex-1 min-w-0">
+          <p className="text-xs text-theme font-medium">
+            Update available: v{updateInfo.latest_version}
+          </p>
+          <p className="text-[10px] text-theme-tertiary">
+            Currently running v{updateInfo.current_version}
+            {updateInfo.published_at &&
+              ` · Released ${new Date(updateInfo.published_at).toLocaleDateString()}`}
+          </p>
+        </div>
+        <a
+          href={updateInfo.release_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-xs text-accent-dynamic hover:text-accent-dynamic/80 px-2.5 py-1.5 rounded-lg border border-accent-dynamic/30 hover:bg-accent-dynamic/10 transition-all flex-shrink-0 font-medium"
+        >
+          View Release
+        </a>
+        <button
+          onClick={() => setDismissedUpdate(true)}
+          className="p-1 text-theme-tertiary hover:text-theme transition-colors"
+        >
+          <X className="w-3.5 h-3.5" />
+        </button>
       </div>
-      <a
-        href={updateInfo.release_url}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-xs text-accent-dynamic hover:text-accent-dynamic/80 px-2.5 py-1 rounded-lg border border-accent-dynamic/30 hover:bg-accent-dynamic/10 transition-all flex-shrink-0"
-      >
-        View Release
-      </a>
-      <button
-        onClick={() => setDismissedUpdate(true)}
-        className="p-1 text-theme-tertiary hover:text-theme transition-colors"
-      >
-        <X className="w-3.5 h-3.5" />
-      </button>
+      {updateInfo.release_notes && (
+        <div className="px-4 pb-2.5 pt-0">
+          <p className="text-[10px] text-theme-tertiary line-clamp-2">
+            {updateInfo.release_notes}
+          </p>
+        </div>
+      )}
     </div>
   ) : null;
 

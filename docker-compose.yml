@@ -57,6 +57,8 @@ services:
       ENCRYPTION_KEY: ${ENCRYPTION_KEY}
       SYNC_INTERVAL_MINUTES: ${SYNC_INTERVAL_MINUTES:-15}
       ANALYTICS_REFRESH_HOURS: ${ANALYTICS_REFRESH_HOURS:-6}
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+      GITHUB_REPO: ${GITHUB_REPO:-spotify-devs/echostats}
     ports:
       - "${API_PORT:-8000}:8000"
     depends_on:
