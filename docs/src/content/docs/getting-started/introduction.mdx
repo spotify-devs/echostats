@@ -66,9 +66,68 @@ EchoStats is a **self-hosted** Spotify analytics platform that connects to your 
 | Container | Docker / Helm | Kubernetes-ready deployment |
 | CI/CD | GitHub Actions | Automated testing + GHCR publishing |
 
-## Screenshots
+## Architecture Overview
 
-> 🖼️ *Screenshots coming soon — the dashboard features interactive charts, listening heatmaps, artist radar views, music DNA profiles, and more.*
+EchoStats follows a modern microservices architecture with clear separation between the frontend, backend API, background workers, and data stores.
+
+```
+┌─────────────────────┐     ┌──────────────────────┐
+│   Next.js 16 (Web)  │────▶│  FastAPI (API)        │
+│   React 19 / TS     │     │  Python 3.12          │
+│   Tailwind / Motion │     │  38 REST endpoints    │
+│   Port 3000         │     │  Port 8000            │
+└─────────────────────┘     └──────┬───────┬────────┘
+                                   │       │
+                            ┌──────▼──┐  ┌─▼──────────┐
+                            │ MongoDB │  │   Redis     │
+                            │  7.x    │  │   7.x       │
+                            │ Beanie  │  │ Cache+Queue │
+                            └─────────┘  └──────┬──────┘
+                                                │
+                                         ┌──────▼──────┐
+                                         │ ARQ Worker  │
+                                         │ Cron every  │
+                                         │ 15 minutes  │
+                                         └─────────────┘
+```
+
+### Data Flow
+
+1. **Spotify OAuth** → User authenticates with their Spotify account
+2. **Initial Sync** → The API triggers the first full data sync on login
+3. **Background Worker** → ARQ cron syncs recently played tracks every 15 minutes and refreshes analytics every 6 hours
+4. **API Layer** → FastAPI serves 38 endpoints covering auth, analytics, history, playlists, playback, and sync management
+5. **Frontend** → Next.js renders 40+ pages with interactive Recharts visualizations, Framer Motion animations, and responsive layouts
+
+### Key Design Decisions
+
+- **Self-hosted first** — All data stays on your infrastructure. No third-party analytics or telemetry.
+- **Single-user optimized** — Auto-login when one user exists, no registration flow needed.
+- **PWA-native** — Installable on mobile and desktop with service worker caching for offline access.
+- **Encrypted tokens** — Spotify API tokens are encrypted at rest using your `ENCRYPTION_KEY`.
+
+## Environment Requirements
+
+| Requirement | Minimum | Recommended |
+|------------|---------|-------------|
+| Docker | 24.x | Latest |
+| Docker Compose | v2.x | Latest |
+| RAM | 1 GB | 2 GB |
+| Disk | 1 GB | 5 GB |
+| Spotify Account | Free or Premium | Premium (for playback controls) |
+
+You also need a [Spotify Developer Application](https://developer.spotify.com/dashboard) with a Client ID and Client Secret.
+
+## Quick Links
+
+- **[Installation](/getting-started/installation)** — Get EchoStats running in under 5 minutes with Docker Compose
+- **[Configuration](/getting-started/configuration)** — Environment variables, Spotify app setup, and deployment options
+- **[Dashboard Guide](/user-guide/dashboard)** — Navigate the dashboard, keyboard shortcuts, and responsive layouts
+- **[Analytics Guide](/user-guide/analytics)** — Understand the 40+ analytics pages and visualizations
+- **[Importing History](/user-guide/importing-history)** — Import your full Spotify extended streaming history
+- **[API Authentication](/api/authentication)** — JWT session cookies, OAuth flow, and dev login
+- **[Troubleshooting](/troubleshooting/common-issues)** — Solutions to common deployment and runtime issues
+- **[FAQ](/troubleshooting/faq)** — Answers to frequently asked questions
 
 ## Getting Started
 

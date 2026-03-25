@@ -1,8 +1,235 @@
 ---
 title: Importing History
-description: How to import your Spotify listening history into EchoStats.
+description: How to import your Spotify listening history into EchoStats — from requesting your data to uploading JSON files.
 ---
 
 # Importing History
 
-_Documentation coming soon._
+EchoStats automatically syncs your recently played tracks every 15 minutes, but Spotify's API only provides the **last 50 tracks**. To get your complete listening history — going back months or years — you need to import your **Extended Streaming History** from Spotify's privacy data export.
+
+## Why Import?
+
+| Data Source | Coverage | Method |
+|-------------|----------|--------|
+| Spotify API (auto-sync) | Last 50 plays (~1–2 days) | Automatic every 15 min |
+| Extended Streaming History | **Your entire account history** | Manual import (one-time) |
+
+Without importing, EchoStats only has data from when you first connected. With a full import, you get years of analytics, accurate all-time top artists, complete listening calendars, and meaningful trend analysis.
+
+## Step 1: Request Your Data from Spotify
+
+1. Go to your [Spotify Privacy Settings](https://www.spotify.com/account/privacy/)
+2. Log in with your Spotify account
+3. Scroll down to **"Download your data"**
+4. Select **"Extended streaming history"** (not the basic "Account data" option)
+5. Click **"Request data"**
+6. Confirm via the email Spotify sends you
+
+:::note
+Spotify's basic "Account data" export includes a simplified `StreamingHistory*.json` format that EchoStats can also import, but it contains less detail. The **Extended streaming history** is recommended for the richest analytics.
+:::
+
+### Wait for Delivery
+
+Spotify typically takes **5 to 30 days** to prepare your data. You'll receive an email when it's ready to download. The wait time varies — some users get it within a week, others may wait the full 30 days.
+
+## Step 2: Download and Extract
+
+1. Click the download link in Spotify's email
+2. Download the ZIP file
+3. Extract it to a folder on your computer
+
+### What's Inside
+
+The extended streaming history export contains files named:
+
+```
+endsong_0.json
+endsong_1.json
+endsong_2.json
+...
+```
+
+Each file contains an array of listening records. A typical export for an active listener might have 3–10 files, each up to 50 MB.
+
+### File Format (Extended History)
+
+Each entry in an `endsong_*.json` file looks like this:
+
+```json
+{
+  "ts": "2024-03-15T14:23:45Z",
+  "username": "your_username",
+  "platform": "Android OS 14",
+  "ms_played": 215000,
+  "conn_country": "US",
+  "ip_addr_decrypted": null,
+  "user_agent_decrypted": null,
+  "master_metadata_track_name": "Bohemian Rhapsody",
+  "master_metadata_album_artist_name": "Queen",
+  "master_metadata_album_album_name": "A Night at the Opera",
+  "spotify_track_uri": "spotify:track:4u7EnebtmKWzUH433cf5Qv",
+  "episode_name": null,
+  "episode_show_name": null,
+  "spotify_episode_uri": null,
+  "reason_start": "trackdone",
+  "reason_end": "trackdone",
+  "shuffle": false,
+  "skipped": null,
+  "offline": false,
+  "offline_timestamp": 0,
+  "incognito_mode": false
+}
+```
+
+### File Format (Basic History)
+
+If you downloaded the basic "Account data" export, the files are named `StreamingHistory*.json` with a simpler format:
+
+```json
+{
+  "endTime": "2024-03-15 14:23",
+  "artistName": "Queen",
+  "trackName": "Bohemian Rhapsody",
+  "msPlayed": 215000
+}
+```
+
+EchoStats supports both formats automatically.
+
+## Step 3: Import via the UI
+
+The easiest way to import your history:
+
+1. Open EchoStats and navigate to the **Export** page (accessible from the sidebar under Tools)
+2. Click the **Import** button
+3. Select one or more `endsong_*.json` or `StreamingHistory*.json` files
+4. Click **Upload** to start the import
+5. Wait for the import to complete — a progress indicator shows the status
+
+### What to Expect
+
+| History Size | Entries | Import Time |
+|-------------|---------|-------------|
+| 1 year | ~5,000–15,000 | 10–30 seconds |
+| 3 years | ~15,000–50,000 | 30–90 seconds |
+| 5+ years | ~50,000–150,000 | 1–5 minutes |
+
+Import times depend on your server's hardware and MongoDB performance.
+
+## Step 3 (Alternative): Import via the API
+
+For programmatic imports or automation, use the API endpoint directly:
+
+```bash
+# Import a single file
+curl -X POST \
+  -b cookies.txt \
+  -F "file=@/path/to/endsong_0.json" \
+  http://localhost:8000/api/v1/history/import
+```
+
+**Response:**
+
+```json
+{
+  "job_id": "abc123def456",
+  "status": "completed",
+  "items_processed": 8432,
+  "items_total": 8500
+}
+```
+
+### Importing Multiple Files
+
+Import each file separately — the API processes one file per request:
+
+```bash
+# Import all endsong files in a directory
+for file in endsong_*.json; do
+  echo "Importing $file..."
+  curl -X POST \
+    -b cookies.txt \
+    -F "file=@$file" \
+    http://localhost:8000/api/v1/history/import
+  echo ""
+done
+```
+
+Or on Windows (PowerShell):
+
+```powershell
+Get-ChildItem -Filter "endsong_*.json" | ForEach-Object {
+    Write-Host "Importing $($_.Name)..."
+    curl -X POST `
+        -b cookies.txt `
+        -F "file=@$($_.FullName)" `
+        http://localhost:8000/api/v1/history/import
+}
+```
+
+## What Gets Imported
+
+EchoStats extracts and stores the following from each listening record:
+
+| Field | Source (Extended) | Source (Basic) |
+|-------|-------------------|----------------|
+| Track name | `master_metadata_track_name` | `trackName` |
+| Artist name | `master_metadata_album_artist_name` | `artistName` |
+| Album name | `master_metadata_album_album_name` | — |
+| Timestamp | `ts` | `endTime` |
+| Duration (ms) | `ms_played` | `msPlayed` |
+| Spotify track ID | Extracted from `spotify_track_uri` | — |
+
+### Deduplication
+
+EchoStats automatically deduplicates imported entries. If you import the same file twice, duplicate entries (matching track, artist, and timestamp) are skipped. This means it's safe to re-import files without worrying about double-counting.
+
+### Audio Feature Enrichment
+
+After import, the background worker automatically fetches **audio features** (danceability, energy, valence, etc.) for any new tracks that don't already have them. This happens during the next scheduled sync cycle (within 15 minutes).
+
+## After Importing
+
+Once your history is imported:
+
+1. **Wait for analytics to refresh** — The background worker recomputes analytics every 6 hours, or you can force a refresh:
+   ```bash
+   curl -X POST -b cookies.txt http://localhost:8000/api/v1/analytics/refresh
+   ```
+
+2. **Explore your data** — Visit the dashboard, calendar heatmap, top artists, and taste profile pages to see your complete listening history
+
+3. **Check the calendar** — The calendar heatmap will now show activity going back to your earliest imported entry
+
+4. **Verify counts** — Check the metric cards on the dashboard to confirm your total play count increased
+
+## Troubleshooting
+
+### Import Fails with "Invalid JSON"
+
+Ensure the file is a valid JSON array. Common issues:
+
+- File was corrupted during download — re-download from Spotify
+- File is actually a ZIP — extract it first
+- Wrong file selected — make sure it's `endsong_*.json` or `StreamingHistory*.json`
+
+### Import Shows 0 Items Processed
+
+This usually means all entries were duplicates (already imported) or the file contains only podcast/video entries (which are skipped — EchoStats only imports music tracks).
+
+### Analytics Don't Update After Import
+
+Analytics are computed on a schedule. Either wait for the next `refresh_analytics` cycle (every 6 hours) or trigger a manual refresh:
+
+```bash
+curl -X POST -b cookies.txt http://localhost:8000/api/v1/analytics/refresh
+```
+
+### Missing Audio Features
+
+Audio features are fetched asynchronously by the background worker. If tracks show without audio features:
+
+1. Ensure the worker is running: `docker compose ps worker`
+2. Wait for the next sync cycle (up to 15 minutes)
+3. Check worker logs: `docker compose logs worker --tail 50`

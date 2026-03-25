@@ -1,8 +1,226 @@
 ---
 title: Dashboard
-description: Overview of the EchoStats dashboard.
+description: Navigate the EchoStats dashboard — layout, navigation, keyboard shortcuts, search, and responsive design.
 ---
 
 # Dashboard
 
-_Documentation coming soon._
+The EchoStats dashboard is your central hub for exploring music analytics. This guide covers how to navigate the interface, use keyboard shortcuts, and get the most out of the responsive layout.
+
+## Main Dashboard Layout
+
+When you first land on the dashboard (`/dashboard`), you'll see a comprehensive overview of your listening activity. The main dashboard is organized into several sections:
+
+### Metric Cards
+
+At the top of the dashboard, you'll find key metric cards showing:
+
+- **Total Tracks Played** — Lifetime play count
+- **Listening Hours** — Total time spent listening
+- **Unique Artists** — Number of distinct artists in your history
+- **Unique Tracks** — Number of distinct tracks you've played
+- **Current Streak** — Consecutive days of listening
+- **Discovery Score** — Percentage of new music vs. repeat listens
+
+### Charts & Visualizations
+
+Below the metric cards, the dashboard displays:
+
+- **Hourly Listening Chart** — A bar chart showing your listening distribution across hours of the day
+- **Genre Distribution** — A pie chart breaking down your top genres
+- **Audio Feature Profile** — A radar chart showing your average music DNA (energy, danceability, valence, etc.)
+- **Listening Streak** — A visual calendar showing your consecutive listening days
+- **Top Artists** — Your most-played artists with artwork and play counts
+- **Top Tracks** — Your most-played songs with album art
+- **Recent Listening** — Your latest played tracks in chronological order
+
+All charts are interactive — hover for tooltips, click for details, and use the time range selector to change the analysis period.
+
+## Navigation
+
+### Sidebar (Desktop)
+
+On desktop screens (768px and wider), a persistent sidebar on the left provides navigation to all pages:
+
+| Section | Pages |
+|---------|-------|
+| **Home** | Dashboard |
+| **Analytics** | Artists, Tracks, Genres, History |
+| **Insights** | Patterns, Music DNA, Taste Profile, Mood |
+| **Discover** | Recommendations, Browse, New Releases |
+| **Library** | Playlists, Saved Albums, Followed Artists |
+| **Tools** | Sync Jobs, API Logs, Export |
+| **Settings** | Appearance, Account |
+
+The sidebar also shows:
+
+- **Current playback** — Now playing widget at the bottom
+- **Version indicator** — Deployed version number
+- **Update banner** — Notification when a new version is available
+
+### Bottom Navigation (Mobile)
+
+On mobile screens (below 768px), the sidebar collapses into a bottom navigation bar with quick access to the most-used pages:
+
+- Dashboard
+- Artists
+- Tracks
+- History
+- More (hamburger menu for all pages)
+
+### Hamburger Menu
+
+Tap the hamburger icon (☰) or the "More" tab on mobile to access the full navigation menu as an overlay. This gives you access to all 40+ pages on any screen size.
+
+## Search
+
+EchoStats includes a global search feature accessible from anywhere in the app.
+
+### Opening Search
+
+- **Keyboard:** Press `Cmd+K` (macOS) or `Ctrl+K` (Windows/Linux)
+- **Keyboard:** Press `/` or `k` from any page
+- **Click:** Click the search icon in the sidebar or top bar
+
+### Using Search
+
+The search dialog supports:
+
+- **Artist search** — Find artists in your listening history
+- **Track search** — Search for specific songs
+- **Page navigation** — Type a page name to jump directly to it
+
+Search results appear in real time as you type. Press `Enter` to select the first result, or use arrow keys to navigate the results list.
+
+### Closing Search
+
+Press `Escape` or click outside the search dialog to close it.
+
+## Keyboard Shortcuts
+
+EchoStats supports keyboard shortcuts for fast navigation. All shortcuts use a **two-key combo** system — press the first key, then the second key within 500 milliseconds.
+
+### Navigation Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| `g` then `d` | Go to Dashboard |
+| `g` then `t` | Go to Tracks |
+| `g` then `a` | Go to Artists |
+| `g` then `g` | Go to Genres |
+| `g` then `h` | Go to History |
+| `g` then `p` | Go to Patterns |
+| `g` then `l` | Go to Playlists (Library) |
+| `g` then `r` | Go to Recommendations |
+| `g` then `s` | Go to Settings |
+
+### Action Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| `/` or `k` | Open search |
+| `Cmd+K` / `Ctrl+K` | Open search |
+| `?` | Show keyboard shortcuts help |
+| `Escape` | Close modal / clear search |
+
+### Viewing the Shortcuts Reference
+
+Press `?` at any time to open the shortcuts help modal, which displays all available shortcuts grouped by category.
+
+:::note
+Keyboard shortcuts are disabled when you're typing in an input field, textarea, or select dropdown to prevent accidental navigation.
+:::
+
+## Responsive Design
+
+EchoStats is fully responsive and works across all screen sizes.
+
+### Desktop (1024px+)
+
+- Full sidebar navigation always visible
+- Charts displayed at full width with hover tooltips
+- Multi-column card layouts (2–4 columns)
+- Now Playing widget in the sidebar
+
+### Tablet (768px – 1023px)
+
+- Collapsible sidebar (toggle with hamburger icon)
+- Charts adapt to available width
+- 2-column card layouts
+
+### Mobile (below 768px)
+
+- Bottom navigation bar replaces the sidebar
+- Single-column card layouts
+- Swipe-friendly interactions
+- Full-screen chart views on tap
+- Hamburger menu for full page list
+
+### PWA Mode
+
+When installed as a PWA (Progressive Web App), EchoStats runs in standalone mode:
+
+- No browser chrome (address bar, tabs)
+- Full-screen app experience
+- Custom splash screen on launch
+- App icon on home screen / dock / taskbar
+
+To install the PWA:
+
+- **Chrome/Edge (Desktop):** Click the install icon (⊕) in the address bar
+- **Chrome (Android):** Tap the "Add to Home Screen" banner or Menu → Install
+- **Safari (iOS):** Share button → "Add to Home Screen"
+
+## Now Playing
+
+If you have Spotify playing on any device, the dashboard shows a **Now Playing** widget:
+
+- Current track name, artist, and album art
+- Playback progress bar
+- Play/pause, skip forward, skip back controls (Premium only)
+- Device selector — switch playback between your devices
+
+The Now Playing widget updates in real time and appears in the sidebar on desktop or as a floating bar on mobile.
+
+## Themes & Customization
+
+### Changing Themes
+
+Navigate to **Settings** → **Appearance** (or press `g` then `s`):
+
+| Theme | Description |
+|-------|-------------|
+| 🌑 **Dark** | Deep black background, white text |
+| ☀️ **Light** | Clean white background, dark text |
+| 🌆 **Dim** | Soft dark gray, reduced contrast |
+| 🌊 **Ocean** | Deep navy blue with blue accent glow |
+| 🌌 **Midnight** | Deep purple-black with purple borders |
+| 🌲 **Forest** | Dark green tones with natural accents |
+
+### Accent Colors
+
+Choose from 12 preset accent colors or create your own:
+
+**Solid colors:** Purple, Pink, Cyan, Green, Amber, Red, Blue, Orange
+
+**Gradient accents:** Sunset, Ocean, Neon, Aurora
+
+**Custom:** Enter any hex color value using the color picker
+
+Accent colors affect buttons, links, active states, chart highlights, and interactive elements throughout the app.
+
+## Dashboard Performance
+
+### Data Loading
+
+Dashboard data loads on page navigation. Each page fetches only the data it needs from the API. Charts render progressively — metric cards appear first, followed by charts as data loads.
+
+### Caching
+
+- API responses are cached in Redis for fast subsequent loads
+- Analytics snapshots are pre-computed by the background worker
+- Browser-side caching via service worker for PWA installations
+
+### Animations
+
+EchoStats uses Framer Motion for smooth page transitions and chart animations. All animations respect the user's `prefers-reduced-motion` system preference — if you have reduced motion enabled, animations are minimized.

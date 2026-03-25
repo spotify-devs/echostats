@@ -1,8 +1,267 @@
 ---
 title: FAQ
-description: Frequently asked questions about EchoStats.
+description: Frequently asked questions about EchoStats — sync intervals, data safety, offline access, importing history, and more.
 ---
 
-# FAQ
+# Frequently Asked Questions
 
-_Documentation coming soon._
+## Syncing & Data
+
+### How often does EchoStats sync my data?
+
+EchoStats runs two scheduled sync jobs via the ARQ background worker:
+
+| Job | Interval | What It Does |
+|-----|----------|--------------|
+| `sync_all_users` | Every **15 minutes** (at :00, :15, :30, :45) | Fetches recently played tracks from Spotify and enriches them with audio features |
+| `refresh_analytics` | Every **6 hours** (at 00:30, 06:30, 12:30, 18:30 UTC) | Recomputes analytics snapshots (top artists, tracks, genres, listening patterns) |
+
+An immediate sync also runs when you first authenticate with Spotify.
+
+### How do I trigger a manual sync?
+
+You can trigger a sync in two ways:
+
+**From the UI:** Navigate to the Sync Jobs page and click the sync button.
+
+**From the API:**
+
+```bash
+curl -X POST -b cookies.txt http://localhost:8000/api/v1/sync-jobs/trigger
+```
+
+The response includes a job ID you can use to track progress:
+
+```json
+{
+  "job_id": "abc123",
+  "status": "running",
+  "message": "Sync job started"
+}
+```
+
+### How do I import my full Spotify history?
+
+Spotify only provides the last 50 recently played tracks via their API. To import your complete listening history:
+
+1. **Request your data from Spotify:** Go to [Spotify Account](https://www.spotify.com/account/privacy/) → Privacy Settings → "Request your data" → Select "Extended streaming history"
+2. **Wait for the email** — Spotify typically delivers data within 5–30 days
+3. **Download and extract** the ZIP file — you'll find files named `endsong_0.json`, `endsong_1.json`, etc.
+4. **Import via the UI:** Navigate to the Export page → click Import → upload the JSON files
+5. **Or import via the API:**
+
+```bash
+curl -X POST -b cookies.txt \
+  -F "file=@endsong_0.json" \
+  http://localhost:8000/api/v1/history/import
+```
+
+See the [Importing History](/user-guide/importing-history) guide for detailed instructions.
+
+### Is my data safe?
+
+Yes. EchoStats is designed with privacy and security in mind:
+
+- **Self-hosted** — Your data never leaves your server. There's no third-party analytics, telemetry, or data collection.
+- **Encrypted tokens** — Spotify access and refresh tokens are encrypted at rest using Fernet symmetric encryption with your `ENCRYPTION_KEY`.
+- **JWT authentication** — Sessions use signed JWT tokens in HTTP-only cookies (JavaScript can't access them).
+- **No external calls** — EchoStats only communicates with Spotify's API and (optionally) GitHub's API for update checks.
+- **Your database** — All listening data is stored in your MongoDB instance. Delete it anytime by dropping the database.
+
+### Can I export my data?
+
+Currently, you can access all your data through the API endpoints. For example:
+
+```bash
+# Get listening history (paginated)
+curl -b cookies.txt "http://localhost:8000/api/v1/history?limit=50&page=1"
+
+# Get analytics overview
+curl -b cookies.txt "http://localhost:8000/api/v1/analytics/overview?period=all_time"
+```
+
+You can also connect directly to the MongoDB database to query or export data:
+
+```bash
+docker compose exec mongo mongosh echostats --eval "db.history_entries.find().toArray()" > history.json
+```
+
+## Features & Usage
+
+### Does EchoStats work offline?
+
+Partially. EchoStats is a **Progressive Web App (PWA)**, so once installed:
+
+- **Dashboard pages** you've visited are cached and viewable offline
+- **Navigation** works offline between cached pages
+- **New data** won't load until you're back online (requires API calls)
+- **Playback controls** require an active internet connection (they go through Spotify's API)
+
+To install the PWA:
+- **Desktop (Chrome/Edge):** Click the install icon in the address bar
+- **iOS Safari:** Share → "Add to Home Screen"
+- **Android Chrome:** Tap the "Install" banner or Menu → "Add to Home Screen"
+
+### How do I change the theme or accent color?
+
+Navigate to **Settings** (gear icon in the sidebar, or press `g` then `s`):
+
+1. **Theme:** Choose from 6 themes — Dark, Light, Dim, Ocean, Midnight, or Forest
+2. **Accent Color:** Pick from 12 preset colors (8 solid + 4 gradients) or use the **Custom Color** picker to enter any hex value
+
+Changes apply instantly across the entire application.
+
+### How do I check what version is deployed?
+
+Three ways:
+
+1. **Sidebar:** The current version is displayed at the bottom of the sidebar navigation
+2. **Health endpoint:**
+   ```bash
+   curl http://localhost:8000/api/health
+   ```
+   ```json
+   {
+     "status": "healthy",
+     "service": "echostats-api",
+     "version": "1.2.0"
+   }
+   ```
+3. **Update check:** EchoStats automatically checks for new GitHub releases and shows a banner in the dashboard when an update is available
+
+### How do I update to the latest version?
+
+**Docker Compose:**
+
+```bash
+# Pull latest images
+docker compose pull
+
+# Restart with new images
+docker compose up -d
+```
+
+**Helm / Kubernetes:**
+
+```bash
+# Update the Helm chart
+helm upgrade echostats oci://ghcr.io/your-org/echostats/helm/echostats \
+  --reuse-values
+```
+
+**Verify the update:**
+
+```bash
+curl http://localhost:8000/api/health
+# Check that "version" matches the expected release
+```
+
+### Can multiple users use EchoStats?
+
+Yes, EchoStats supports multiple Spotify accounts. Each user authenticates with their own Spotify account and gets their own analytics.
+
+However, EchoStats is **optimized for single-user self-hosted deployments**:
+
+- **Auto-login** only works when exactly 1 user exists in the database
+- There's no user management UI — additional users simply authenticate via `/api/v1/auth/login`
+- The sync worker syncs all users on each 15-minute cycle
+- Each user's data is isolated — you only see your own analytics
+
+### How do I add custom accent colors?
+
+1. Go to **Settings** → **Appearance**
+2. Scroll to the accent color picker
+3. Click the **Custom** option (paint palette icon)
+4. Enter any hex color value or use the color picker to choose a custom color
+5. The accent color updates in real time across the entire app
+
+Your custom color is saved in `localStorage` and persists across sessions.
+
+### What Spotify account type do I need?
+
+EchoStats works with both **Free** and **Premium** Spotify accounts, with one difference:
+
+| Feature | Free | Premium |
+|---------|------|---------|
+| Listening history & analytics | ✅ | ✅ |
+| Top artists, tracks, genres | ✅ | ✅ |
+| Data import | ✅ | ✅ |
+| Playback controls (play/pause/skip) | ❌ | ✅ |
+| Device switching | ❌ | ✅ |
+
+Playback control features require Spotify Premium because they use Spotify's Connect API.
+
+## Deployment & Infrastructure
+
+### What are the system requirements?
+
+| Resource | Minimum | Recommended |
+|----------|---------|-------------|
+| RAM | 1 GB | 2 GB |
+| CPU | 1 core | 2 cores |
+| Disk | 1 GB | 5 GB (grows with history) |
+| Docker | v24+ | Latest |
+| Docker Compose | v2+ | Latest |
+
+### Can I run EchoStats without Docker?
+
+Yes, but it's not recommended for production. You'll need to manually run:
+
+1. **MongoDB 7** — Document database
+2. **Redis 7** — Cache and job queue
+3. **FastAPI** — `uv run uvicorn app.main:app --host 0.0.0.0 --port 8000`
+4. **ARQ Worker** — `uv run arq app.tasks.worker.WorkerSettings`
+5. **Next.js** — `pnpm build && pnpm start`
+
+Docker Compose handles all of this with a single `docker compose up -d`.
+
+### How do I monitor EchoStats?
+
+EchoStats provides several monitoring tools:
+
+- **Health endpoints:** `GET /api/health` (liveness) and `GET /api/health/ready` (readiness with DB check)
+- **Sync Jobs page:** View sync history, status, and error details
+- **API Logs page:** Monitor all Spotify API calls with status distribution and latency stats
+- **Container logs:** `docker compose logs -f` for real-time log output
+- **Prometheus metrics:** The API exposes Prometheus-compatible metrics via `prometheus-fastapi-instrumentator`
+
+### How do I back up my data?
+
+Back up the MongoDB database regularly:
+
+```bash
+# Create a backup
+docker compose exec mongo mongodump --db echostats --archive=/tmp/backup.archive
+
+# Copy backup out of container
+docker compose cp mongo:/tmp/backup.archive ./echostats-backup.archive
+
+# Restore from backup
+docker compose cp ./echostats-backup.archive mongo:/tmp/backup.archive
+docker compose exec mongo mongorestore --archive=/tmp/backup.archive --drop
+```
+
+### How do I reset all data and start fresh?
+
+```bash
+# Stop all services
+docker compose down
+
+# Remove data volumes
+docker compose down -v
+
+# Restart fresh
+docker compose up -d
+```
+
+:::caution
+This permanently deletes all listening history, user data, and analytics. There is no undo.
+:::
+
+## Still Have Questions?
+
+If your question isn't answered here:
+
+- Check the [Common Issues](/troubleshooting/common-issues) page for troubleshooting steps
+- Search the [GitHub Issues](https://github.com) for similar discussions
+- Open a new issue with your question — we're happy to help!

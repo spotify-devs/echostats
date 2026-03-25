@@ -1,8 +1,206 @@
 ---
 title: Playlists
-description: Managing playlists in EchoStats.
+description: Managing and analyzing playlists in EchoStats — synced playlists, audio feature breakdown, playlist generator, and sync behavior.
 ---
 
 # Playlists
 
-_Documentation coming soon._
+EchoStats syncs your Spotify playlists and provides analytics tools to understand the audio characteristics of your playlists. You can also generate new playlists based on mood, genre, or listening patterns.
+
+## Viewing Synced Playlists
+
+Navigate to **Playlists** (`/dashboard/playlists`) from the sidebar or press `g` then `l` to see all your Spotify playlists.
+
+### Playlist List
+
+The playlists page displays:
+
+- **Playlist artwork** — Cover image from Spotify
+- **Playlist name** — Title of the playlist
+- **Track count** — Number of tracks in the playlist
+- **Owner** — Whether it's your playlist, a collaborative playlist, or one you follow
+- **Visibility** — Public or private indicator
+
+```bash
+# Fetch your playlists via the API
+curl -b cookies.txt "http://localhost:8000/api/v1/playlists?page=1&limit=50"
+```
+
+**Response:**
+
+```json
+{
+  "items": [
+    {
+      "id": "37i9dQZF1DXcBWIGoYBM5M",
+      "name": "Today's Top Hits",
+      "description": "The most played songs right now.",
+      "image_url": "https://i.scdn.co/image/...",
+      "track_count": 50,
+      "owner": "spotify",
+      "is_public": true,
+      "is_collaborative": false
+    }
+  ],
+  "total": 42,
+  "page": 1,
+  "limit": 50
+}
+```
+
+### Playlist Types
+
+EchoStats syncs all playlists associated with your Spotify account:
+
+| Type | Description |
+|------|-------------|
+| **Your playlists** | Playlists you created |
+| **Followed playlists** | Playlists by others that you follow |
+| **Collaborative playlists** | Shared playlists you contribute to |
+| **Spotify-generated** | Discover Weekly, Release Radar, Daily Mixes, etc. |
+
+## Playlist Analyzer
+
+Click on any playlist to open the **Playlist Analyzer**, which provides a detailed audio feature breakdown of the playlist's tracks.
+
+### Audio Feature Breakdown
+
+The analyzer shows average audio features for the playlist as a radar chart:
+
+- **Danceability** — How suitable the playlist is for dancing
+- **Energy** — Overall intensity and activity level
+- **Valence** — Emotional positivity (happy vs. sad)
+- **Acousticness** — Presence of acoustic instruments
+- **Instrumentalness** — Vocal vs. instrumental balance
+- **Speechiness** — Presence of spoken words
+- **Liveness** — Live performance characteristics
+
+### Track-by-Track Analysis
+
+Below the radar chart, each track in the playlist is listed with:
+
+- Track name and artist
+- Individual audio feature scores
+- Duration
+- Popularity score (from Spotify)
+
+### Feature Distribution
+
+Histograms show how audio features are distributed across the playlist's tracks. This helps you understand whether a playlist is consistent (tight distribution) or varied (wide distribution).
+
+For example:
+- A **workout playlist** might show tightly clustered high energy and high tempo
+- A **chill playlist** might show consistently low energy and high acousticness
+- A **mixed playlist** might show wide distributions across multiple features
+
+### Playlist Mood Summary
+
+Based on the aggregate audio features, the analyzer assigns a mood summary:
+
+| Mood | Characteristics |
+|------|----------------|
+| **Energetic** | High energy, high tempo, moderate-high danceability |
+| **Chill** | Low energy, high acousticness, moderate valence |
+| **Happy** | High valence, moderate-high energy |
+| **Melancholy** | Low valence, low-moderate energy |
+| **Intense** | High energy, low valence, high loudness |
+| **Atmospheric** | High instrumentalness, low speechiness |
+
+## Playlist Generator
+
+EchoStats can generate playlist suggestions based on your listening data and preferences.
+
+### Mood-Based Generation
+
+Create playlists tailored to a specific mood:
+
+1. Navigate to the playlist generator section
+2. Select a target mood (energetic, chill, happy, focused, etc.)
+3. Choose the number of tracks (10–50)
+4. EchoStats selects tracks from your listening history that match the target audio feature profile
+
+### Genre-Based Generation
+
+Generate playlists focused on specific genres:
+
+1. Select one or more genres from your listening history
+2. Set the desired track count
+3. EchoStats picks your most-played tracks from those genres
+
+### Recommendations-Based
+
+Use Spotify's recommendation engine to discover new tracks:
+
+```bash
+# Get recommendations based on your top artists
+curl -b cookies.txt "http://localhost:8000/api/v1/recommendations?seed_type=artists&limit=20"
+
+# Based on your top tracks
+curl -b cookies.txt "http://localhost:8000/api/v1/recommendations?seed_type=tracks&limit=20"
+
+# Based on genres
+curl -b cookies.txt "http://localhost:8000/api/v1/recommendations?seed_type=genres&limit=20"
+
+# Mixed seeds (artists + tracks + genres)
+curl -b cookies.txt "http://localhost:8000/api/v1/recommendations?seed_type=mixed&limit=30"
+```
+
+**Response:**
+
+```json
+{
+  "tracks": [
+    {
+      "id": "track_id",
+      "name": "Track Name",
+      "artist": "Artist Name",
+      "album": "Album Name",
+      "image_url": "https://i.scdn.co/image/...",
+      "preview_url": "https://p.scdn.co/mp3-preview/...",
+      "duration_ms": 215000
+    }
+  ],
+  "seeds": ["artist_id_1", "track_id_1", "genre_1"]
+}
+```
+
+## How Playlists Sync
+
+### Automatic Sync
+
+Playlists are synced from Spotify during the regular 15-minute background sync cycle. The worker fetches your current playlist list and updates the stored data.
+
+### What Gets Synced
+
+| Data | Synced |
+|------|--------|
+| Playlist metadata (name, description, image) | ✅ |
+| Track list (IDs and order) | ✅ |
+| Track audio features | ✅ (enriched by worker) |
+| Play count per playlist | ❌ (Spotify doesn't provide this) |
+| Playlist followers count | ✅ |
+
+### Sync Behavior
+
+- **New playlists** you create or follow are picked up on the next sync
+- **Deleted playlists** are removed from EchoStats on the next sync
+- **Track changes** (additions/removals) are reflected after sync
+- **Playlist order** matches your Spotify library order
+- **Spotify-generated playlists** (Discover Weekly, etc.) update their tracks when Spotify refreshes them
+
+### Manual Sync
+
+To force an immediate playlist sync:
+
+```bash
+curl -X POST -b cookies.txt http://localhost:8000/api/v1/sync-jobs/trigger
+```
+
+This triggers a full sync that includes playlists along with recently played tracks and other data.
+
+## Tips
+
+- **Large libraries:** If you have hundreds of playlists, the initial sync may take a few minutes. Subsequent syncs are faster because they only update changes.
+- **Private playlists:** EchoStats can access your private playlists because it authenticates with the `playlist-read-private` scope.
+- **Collaborative playlists:** These are synced with the `playlist-read-collaborative` scope and include tracks added by all collaborators.
+- **Playlist analysis:** For the most accurate audio feature analysis, ensure the background worker has had time to enrich all tracks with audio features (check Sync Jobs for status).

@@ -1,8 +1,281 @@
 ---
 title: Common Issues
-description: Solutions to common issues with EchoStats.
+description: Solutions to common issues with EchoStats — deployment problems, UI bugs, sync failures, and configuration fixes.
 ---
 
 # Common Issues
 
-_Documentation coming soon._
+This page covers the most common problems you may encounter when deploying and running EchoStats, along with their solutions.
+
+## Worker Pod Crashes (Redis Authentication Error)
+
+**Symptom:** The ARQ worker container crashes on startup with a Redis authentication or connection error.
+
+**Cause:** When Redis is configured with a password (via `requirepass` or ACL), the worker needs the password included in the Redis connection URL.
+
+**Solution:**
+
+Ensure your `REDIS_URL` environment variable includes the password:
+
+```bash
+# Wrong — missing password
+REDIS_URL=redis://redis:6379/0
+
+# Correct — with password
+REDIS_URL=redis://:your_redis_password@redis:6379/0
+```
+
+If using Docker Compose, update both the `api` and `worker` services with the correct `REDIS_URL`. The ARQ worker uses `RedisSettings.from_dsn()` to parse the connection string, so the URL must include all authentication details.
+
+For Helm deployments, update the `redis.url` value in your `values.yaml`:
+
+```yaml
+redis:
+  url: "redis://:your_redis_password@echostats-redis:6379/0"
+```
+
+## "Connect with Spotify" Shows When Already Authenticated
+
+**Symptom:** The login page shows "Connect with Spotify" even though you've previously authenticated.
+
+**Cause:** This typically happens when:
+1. The session cookie has expired (30-day lifetime)
+2. The `JWT_SECRET` changed between deployments (invalidating existing cookies)
+3. The browser cleared cookies
+
+**Solution:**
+
+- **Check auto-login:** If you're the only user, EchoStats should auto-login you. Verify there's exactly one user in the database. The auto-login feature creates a new session automatically when only one user exists.
+
+- **Verify `JWT_SECRET` persistence:** Ensure your `JWT_SECRET` doesn't change between container restarts. Store it in a persistent secret or environment file:
+
+  ```yaml
+  # docker-compose.yml
+  environment:
+    JWT_SECRET: "${JWT_SECRET}"  # Set in .env file, not generated randomly
+  ```
+
+- **Clear and re-authenticate:** If the secret changed, clear your browser cookies for the EchoStats domain and log in again via `/api/v1/auth/login`.
+
+## Empty Dashboard Pages
+
+**Symptom:** Dashboard pages load but show no data — empty charts, zero values, or "No data" messages.
+
+**Cause:** This usually means:
+1. The initial sync hasn't completed yet
+2. The ARQ worker isn't running
+3. Analytics haven't been computed yet
+
+**Solution:**
+
+1. **Check if the worker is running:**
+   ```bash
+   # Docker Compose
+   docker compose ps worker
+   docker compose logs worker --tail 50
+
+   # Kubernetes
+   kubectl get pods -l app=echostats-worker
+   kubectl logs -l app=echostats-worker --tail 50
+   ```
+
+2. **Trigger a manual sync:**
+   ```bash
+   curl -X POST -b cookies.txt http://localhost:8000/api/v1/sync-jobs/trigger
+   ```
+
+3. **Check sync job status:**
+   ```bash
+   curl -b cookies.txt http://localhost:8000/api/v1/sync-jobs
+   ```
+
+4. **Force analytics refresh:**
+   ```bash
+   curl -X POST -b cookies.txt http://localhost:8000/api/v1/analytics/refresh
+   ```
+
+5. **Ensure you have listening history:** If your Spotify account is new or you haven't listened to much recently, the dashboard will be sparse. Consider [importing your extended history](/user-guide/importing-history).
+
+## API Logs Showing 307 Redirects
+
+**Symptom:** API requests return `307 Temporary Redirect` responses, causing double requests and potential failures.
+
+**Cause:** FastAPI's default behavior redirects requests without a trailing slash to the version with a trailing slash (or vice versa). For example, `GET /api/v1/history` redirects to `GET /api/v1/history/`.
+
+**Solution:**
+
+This is typically a frontend issue. Ensure all API calls use the exact path as defined in the router:
+
+```typescript
+// Wrong — may trigger a 307 redirect
+fetch("/api/v1/history/");
+
+// Correct — matches the router definition exactly
+fetch("/api/v1/history");
+```
+
+If you're running behind a reverse proxy (Nginx, Traefik), ensure it preserves the original path without adding or removing trailing slashes:
+
+```nginx
+# Nginx — preserve paths as-is
+location /api/ {
+    proxy_pass http://api:8000/api/;
+    proxy_redirect off;
+}
+```
+
+## Mobile Text Overflow
+
+**Symptom:** Text overflows its container on mobile devices, especially on pages with long track or artist names.
+
+**Cause:** Some analytics pages display long strings (track names, artist names, URLs) without proper text truncation.
+
+**Solution:**
+
+If you encounter text overflow on mobile:
+
+1. **Check your browser version** — ensure you're on a recent version of Chrome, Safari, or Firefox
+2. **Try the PWA version** — install EchoStats as a PWA (Add to Home Screen) which uses the standalone display mode
+3. **Report the specific page** — open an issue on GitHub with a screenshot and the page URL. Include your device model and screen width.
+
+For contributors fixing text overflow, use Tailwind's truncation utilities:
+
+```tsx
+{/* Truncate long text */}
+<span className="truncate max-w-full">{trackName}</span>
+
+{/* Or use line-clamp for multi-line text */}
+<p className="line-clamp-2">{description}</p>
+```
+
+## Theme Colors Wrong on Light Mode
+
+**Symptom:** UI elements have incorrect colors when the Light theme is selected — text is unreadable, borders are invisible, or background colors clash.
+
+**Cause:** Some components may use hardcoded dark-theme colors instead of theme-aware CSS variables.
+
+**Solution:**
+
+1. **Hard refresh the page** — press `Ctrl+Shift+R` (or `Cmd+Shift+R` on macOS) to clear cached CSS
+2. **Switch themes back and forth** — go to Settings → Appearance → select Dark, then switch back to Light
+3. **Clear localStorage** — if the theme state is corrupted:
+   ```javascript
+   // In browser console
+   localStorage.removeItem("echostats-theme");
+   location.reload();
+   ```
+
+If the issue persists, it may be a bug — check GitHub issues or open a new one with the specific component affected.
+
+## PWA Not Installable
+
+**Symptom:** The browser doesn't show the "Install" or "Add to Home Screen" prompt for EchoStats.
+
+**Cause:** PWA installation requires specific conditions:
+
+1. A valid `manifest.json` must be served at the correct path
+2. The site must be served over HTTPS (except on `localhost`)
+3. The manifest must include required fields (`name`, `icons`, `start_url`, `display`)
+4. A service worker must be registered
+
+**Solution:**
+
+1. **Check the manifest is accessible:**
+   ```bash
+   curl http://localhost:3000/manifest.json
+   ```
+
+2. **Verify HTTPS** — In production, ensure you're accessing EchoStats via HTTPS. PWA install prompts are blocked on HTTP (except localhost).
+
+3. **Check Chrome DevTools:**
+   - Open DevTools → Application → Manifest
+   - Look for any warnings or errors
+   - Check the "Service Workers" section to verify registration
+
+4. **For Helm/Kubernetes deployments:** Ensure the Ingress is configured with TLS:
+
+   ```yaml
+   ingress:
+     enabled: true
+     tls:
+       - secretName: echostats-tls
+         hosts:
+           - echostats.example.com
+   ```
+
+5. **iOS Safari:** On iOS, use the Share button → "Add to Home Screen" — iOS doesn't show automatic install prompts.
+
+## Docker Standalone Not Serving Public Files
+
+**Symptom:** Static assets (icons, images, manifest.json) return 404 errors when running the Next.js container.
+
+**Cause:** The Next.js standalone build doesn't include the `public/` directory by default. The files need to be copied separately in the Dockerfile.
+
+**Solution:**
+
+Ensure your Dockerfile copies the public directory into the standalone output:
+
+```dockerfile
+# Copy public assets to standalone output
+COPY --from=builder /app/web/public ./public
+COPY --from=builder /app/web/.next/standalone ./
+COPY --from=builder /app/web/.next/static ./.next/static
+```
+
+If using the project's provided Dockerfile, ensure you're pulling the latest image:
+
+```bash
+docker compose pull web
+docker compose up -d web
+```
+
+## MongoDB Connection Failures
+
+**Symptom:** The API fails to start with a MongoDB connection error, or the readiness probe fails.
+
+**Solution:**
+
+1. **Check MongoDB is running:**
+   ```bash
+   docker compose ps mongo
+   docker compose logs mongo --tail 20
+   ```
+
+2. **Verify the connection string:**
+   ```bash
+   # Test connectivity
+   docker compose exec mongo mongosh --eval "db.adminCommand('ping')"
+   ```
+
+3. **Check credentials** — ensure `MONGO_USER`, `MONGO_PASSWORD`, and `MONGO_URI` match:
+   ```bash
+   # The URI should include auth credentials
+   MONGO_URI=mongodb://echostats:yourpassword@mongo:27017/echostats?authSource=admin
+   ```
+
+## Spotify API Rate Limiting
+
+**Symptom:** Sync jobs fail with HTTP 429 errors in the API logs.
+
+**Cause:** Spotify's API has rate limits. If you trigger many manual syncs or have multiple users, you may hit these limits.
+
+**Solution:**
+
+- **Wait and retry** — Rate limits reset after a short window (usually 30 seconds)
+- **Don't trigger manual syncs excessively** — the automatic 15-minute sync interval is designed to stay within limits
+- **Check API logs** for the specific endpoint being rate-limited:
+  ```bash
+  curl -b cookies.txt "http://localhost:8000/api/v1/api-logs?status_min=429"
+  ```
+
+## Still Having Issues?
+
+If your problem isn't listed here:
+
+1. **Check the [FAQ](/troubleshooting/faq)** for quick answers
+2. **Search [GitHub Issues](https://github.com)** for similar reports
+3. **Check container logs** for error details:
+   ```bash
+   docker compose logs --tail 100
+   ```
+4. **Open a new issue** with your EchoStats version, deployment method, and relevant logs

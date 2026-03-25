@@ -1,8 +1,250 @@
 ---
 title: Authentication
-description: API authentication and authorization in EchoStats.
+description: API authentication and authorization in EchoStats — JWT session cookies, Spotify OAuth 2.0, auto-login, and token management.
 ---
 
 # Authentication
 
-_Documentation coming soon._
+EchoStats uses **JWT session cookies** for authentication and **Spotify OAuth 2.0** to connect user accounts. The system is designed for single-user self-hosted deployments, with an auto-login feature that eliminates repeated sign-ins.
+
+## Overview
+
+| Mechanism | Details |
+|-----------|---------|
+| Auth type | JWT in HTTP-only session cookie |
+| OAuth provider | Spotify OAuth 2.0 (Authorization Code flow) |
+| Token storage | Encrypted at rest with `ENCRYPTION_KEY` |
+| Session duration | 30 days |
+| Cookie flags | `httponly`, `samesite=lax`, `path=/` |
+| Auto-login | Enabled when exactly 1 user exists in the database |
+
+## Authentication Endpoints
+
+### `GET /api/v1/auth/login`
+
+Generates a Spotify authorization URL and redirects the user to Spotify's consent screen.
+
+```bash
+# Browser redirect (default behavior)
+curl -L http://localhost:8000/api/v1/auth/login
+
+# JSON response (for API clients)
+curl -H "Accept: application/json" http://localhost:8000/api/v1/auth/login
+```
+
+**Response (JSON mode):**
+
+```json
+{
+  "authorization_url": "https://accounts.spotify.com/authorize?client_id=...&response_type=code&redirect_uri=...&scope=...&state=..."
+}
+```
+
+The endpoint generates a random `state` token (valid for 10 minutes) to prevent CSRF attacks. Requested Spotify scopes include access to listening history, playlists, playback control, and user profile data.
+
+### `GET /api/v1/auth/callback`
+
+Handles the OAuth redirect from Spotify. This endpoint:
+
+1. Validates the `state` parameter against the stored value
+2. Exchanges the authorization `code` for access and refresh tokens
+3. Fetches the user's Spotify profile
+4. Creates or updates the user record in MongoDB
+5. Encrypts and stores the Spotify tokens
+6. Creates a JWT session and sets the cookie
+7. Triggers an initial data sync in the background
+8. Redirects to the frontend dashboard
+
+```bash
+# This endpoint is called automatically by Spotify's redirect.
+# You should not call it manually. The redirect URI must match
+# what's configured in your Spotify Developer Dashboard:
+# http://localhost:8000/api/v1/auth/callback
+```
+
+### `GET /api/v1/auth/status`
+
+Returns the current authentication status. This is the endpoint the frontend calls on page load to check if the user is logged in.
+
+```bash
+curl -b cookies.txt http://localhost:8000/api/v1/auth/status
+```
+
+**Response (authenticated):**
+
+```json
+{
+  "authenticated": true,
+  "user": {
+    "spotify_id": "your_spotify_id",
+    "display_name": "Your Name",
+    "email": "you@example.com",
+    "image_url": "https://i.scdn.co/image/...",
+    "product": "premium"
+  },
+  "token_expires_at": "2025-07-15T12:30:00Z"
+}
+```
+
+**Response (not authenticated):**
+
+```json
+{
+  "authenticated": false,
+  "user": null
+}
+```
+
+### `POST /api/v1/auth/refresh`
+
+Forces a refresh of the Spotify access token. Under normal operation, tokens are refreshed automatically — this endpoint exists for manual troubleshooting.
+
+```bash
+curl -X POST -b cookies.txt http://localhost:8000/api/v1/auth/refresh
+```
+
+### `POST /api/v1/auth/logout`
+
+Clears the session cookie and logs the user out.
+
+```bash
+curl -X POST -b cookies.txt http://localhost:8000/api/v1/auth/logout
+```
+
+### `GET /api/v1/auth/dev-login` (Development Only)
+
+Logs in as the first user in the database without OAuth. Only available when `LOG_LEVEL` is set to `debug` or the app is running in development mode. Useful for local development when you don't want to go through the OAuth flow every time.
+
+```bash
+curl -c cookies.txt http://localhost:8000/api/v1/auth/dev-login
+```
+
+## OAuth 2.0 Flow
+
+EchoStats uses the **Authorization Code** flow (the most secure OAuth flow for server-side apps):
+
+```
+┌──────────┐     1. /auth/login      ┌────────────┐
+│  Browser  │ ──────────────────────▶ │  EchoStats │
+│           │                         │    API      │
+│           │ ◀── 2. Redirect to ──── │            │
+│           │     Spotify consent     └────────────┘
+│           │
+│           │     3. User approves
+│           │        on Spotify
+│           │
+│           │ ──── 4. Callback ─────▶ ┌────────────┐
+│           │     with auth code      │  EchoStats │
+│           │                         │    API      │
+│           │ ◀── 5. Set cookie ───── │            │
+│           │     + redirect          │ Exchanges   │
+│           │     to dashboard        │ code for    │
+└──────────┘                          │ tokens      │
+                                      └────────────┘
+```
+
+### Spotify Scopes Requested
+
+EchoStats requests the following Spotify API scopes:
+
+| Scope | Purpose |
+|-------|---------|
+| `user-read-recently-played` | Sync listening history |
+| `user-top-read` | Top artists and tracks |
+| `user-read-playback-state` | Current playback info |
+| `user-modify-playback-state` | Playback controls |
+| `user-read-currently-playing` | Now playing display |
+| `playlist-read-private` | Private playlists |
+| `playlist-read-collaborative` | Collaborative playlists |
+| `user-library-read` | Saved albums and tracks |
+| `user-follow-read` | Followed artists |
+| `user-read-email` | User profile email |
+| `user-read-private` | User profile details |
+
+## Single-User Auto-Login
+
+When exactly **one user** exists in the database and no active session cookie is present, the `/api/v1/auth/status` endpoint automatically creates a new session for that user. This means:
+
+- After initial setup, you never need to log in again
+- Restarting the browser or clearing cookies still works — you're auto-logged back in
+- If a second user is added, auto-login is disabled and explicit authentication is required
+
+This behavior is ideal for self-hosted single-user deployments where there's no need for a login screen.
+
+## JWT Session Cookies
+
+### Token Structure
+
+The JWT payload contains:
+
+```json
+{
+  "sub": "mongo_user_id",
+  "spotify_id": "spotify_user_id",
+  "iat": 1720000000,
+  "exp": 1722592000
+}
+```
+
+Tokens are signed using the `HS256` algorithm with your `JWT_SECRET` environment variable.
+
+### Cookie Configuration
+
+| Setting | Value | Purpose |
+|---------|-------|---------|
+| `httponly` | `true` | Prevents JavaScript access (XSS protection) |
+| `samesite` | `lax` | Prevents CSRF on cross-origin POST requests |
+| `secure` | `false` (dev) / `true` (prod) | Requires HTTPS in production |
+| `max_age` | `2,592,000` (30 days) | Cookie expiration |
+| `path` | `/` | Available to all routes |
+
+### Token Resolution
+
+The API checks for authentication in this order:
+
+1. **Session cookie** (`session` cookie) — primary method
+2. **Authorization header** (`Bearer <token>`) — for programmatic API access
+
+## Spotify Token Management
+
+Spotify access tokens expire after **1 hour**. EchoStats handles token refresh automatically:
+
+1. Before every Spotify API call, the token's expiry time is checked
+2. If the token expires within **5 minutes**, a refresh is triggered using the stored refresh token
+3. The new access token and expiry are encrypted and saved
+4. If refresh fails (e.g., user revoked access), the user is prompted to re-authenticate
+
+### Token Encryption
+
+Spotify tokens are encrypted at rest using **Fernet symmetric encryption**. The `ENCRYPTION_KEY` environment variable (64 hex characters) is used as the encryption key. Never share or commit this key.
+
+## Making Authenticated API Calls
+
+### Using Session Cookies (Browser)
+
+If you're calling the API from the same origin as the frontend, cookies are sent automatically:
+
+```javascript
+const response = await fetch("/api/v1/analytics/overview?period=month");
+const data = await response.json();
+```
+
+### Using Session Cookies (curl)
+
+```bash
+# 1. Login (saves cookie to file)
+curl -c cookies.txt -L http://localhost:8000/api/v1/auth/dev-login
+
+# 2. Make authenticated requests
+curl -b cookies.txt http://localhost:8000/api/v1/analytics/overview?period=month
+curl -b cookies.txt http://localhost:8000/api/v1/history?limit=10
+curl -X POST -b cookies.txt http://localhost:8000/api/v1/sync-jobs/trigger
+```
+
+## Security Considerations
+
+- **Always set a strong `JWT_SECRET`** — use at least 32 random characters
+- **Always set a unique `ENCRYPTION_KEY`** — use `python -c "import secrets; print(secrets.token_hex(32))"` to generate
+- **Enable HTTPS in production** — set `secure=true` for cookies when behind a TLS-terminating reverse proxy
+- **Restrict `CORS_ORIGINS`** — only allow your frontend's domain
+- **Never expose the API port (8000) directly** — always put it behind a reverse proxy or ingress controller

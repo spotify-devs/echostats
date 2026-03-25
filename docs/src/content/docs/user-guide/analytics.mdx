@@ -1,8 +1,258 @@
 ---
 title: Analytics
-description: Understanding your listening analytics in EchoStats.
+description: Understanding your listening analytics in EchoStats — dashboards, charts, time ranges, music DNA, patterns, mood analysis, and more.
 ---
 
 # Analytics
 
-_Documentation coming soon._
+EchoStats provides 40+ pages of analytics and visualizations built from your Spotify listening data. This guide explains what each analytics feature shows and how to get the most from your data.
+
+## Time Range Filtering
+
+Most analytics pages support time range filtering to focus on specific periods of your listening history.
+
+### Preset Ranges
+
+| Range | Period |
+|-------|--------|
+| **Week** | Last 7 days |
+| **Month** | Last 30 days |
+| **Quarter** | Last 90 days |
+| **Year** | Last 365 days |
+| **All Time** | Your entire listening history |
+
+### Custom Date Range
+
+On supported pages, click the date range selector to enter a custom start and end date. This is useful for analyzing specific periods like a vacation, a particular season, or comparing different months.
+
+## Analytics Overview
+
+The main analytics page (`/dashboard/analytics`) provides a comprehensive summary for the selected time period. Data is fetched from the `/api/v1/analytics/overview` endpoint and includes:
+
+```bash
+# Fetch analytics for the last month
+curl -b cookies.txt "http://localhost:8000/api/v1/analytics/overview?period=month"
+```
+
+The response includes top artists, top tracks, genre distribution, hourly and daily listening patterns, average audio features, and listening streak data.
+
+## Top Artists
+
+The **Top Artists** page (`/dashboard/artists`) shows your most-played artists ranked by play count for the selected time range.
+
+### What You'll See
+
+- **Artist cards** with artwork, play count, and total listening time
+- **Trend indicators** showing whether an artist is rising or falling in your rankings
+- **Genre tags** for each artist
+- **Click-through** to individual artist detail pages
+
+### Artist Detail Page
+
+Click on any artist to see:
+
+- Total plays and listening hours
+- Play history over time (line chart)
+- Top tracks by that artist
+- Related artists you might enjoy
+- Audio feature profile for that artist's music
+
+## Top Tracks
+
+The **Top Tracks** page (`/dashboard/tracks`) displays your most-played songs.
+
+### What You'll See
+
+- **Track cards** with album artwork, artist name, play count, and duration
+- **Audio feature badges** (high energy, danceable, acoustic, etc.)
+- **Play button** to start playback (Premium accounts)
+- **Click-through** to track detail pages with full audio feature analysis
+
+### Track Detail Page
+
+Each track's detail page shows:
+
+- Play count and listening time
+- Audio features radar chart (danceability, energy, valence, tempo, etc.)
+- Play history timeline
+- Album information
+- Similar tracks in your history
+
+## Top Genres
+
+The **Genres** page (`/dashboard/genres`) breaks down your listening by musical genre.
+
+### Visualizations
+
+- **Genre distribution pie chart** — Proportional breakdown of your top genres
+- **Genre bar chart** — Ranked list with play counts
+- **Genre evolution** — How your genre preferences change over time
+- **Sub-genre breakdown** — Drill into broad genres to see specific sub-genres
+
+```bash
+# Fetch genre distribution
+curl -b cookies.txt "http://localhost:8000/api/v1/genres/distribution?period=month"
+```
+
+## Music DNA
+
+The **Music DNA** page provides a radar chart visualization of your average audio features, creating a unique "fingerprint" of your music taste.
+
+### Audio Features Explained
+
+| Feature | Range | Description |
+|---------|-------|-------------|
+| **Danceability** | 0–1 | How suitable the music is for dancing (tempo, rhythm stability, beat strength) |
+| **Energy** | 0–1 | Perceptual intensity and activity (loud, fast, noisy = high energy) |
+| **Valence** | 0–1 | Musical positivity (happy, cheerful = high; sad, angry = low) |
+| **Acousticness** | 0–1 | Confidence that the track is acoustic |
+| **Instrumentalness** | 0–1 | Predicts whether a track has no vocals |
+| **Speechiness** | 0–1 | Presence of spoken words (podcasts/spoken word = high) |
+| **Liveness** | 0–1 | Presence of a live audience in the recording |
+| **Tempo** | BPM | Estimated tempo in beats per minute (normalized for display) |
+
+### How It Works
+
+EchoStats fetches audio features for every track in your history from Spotify's Audio Features API. Your Music DNA radar averages these features across all your listened tracks for the selected time period, showing your overall music taste profile.
+
+### Comparing Periods
+
+Switch between time ranges to see how your music DNA evolves. For example, your summer listening might show higher energy and danceability, while winter could trend toward higher acousticness and lower valence.
+
+## Listening Patterns
+
+The **Patterns** page (`/dashboard/patterns`) reveals when and how you listen to music.
+
+### Hourly Distribution
+
+A bar chart showing your listening activity by hour of the day (0–23). Discover your peak listening hours — are you a morning listener or a late-night music explorer?
+
+### Daily Distribution
+
+A bar chart showing listening activity by day of the week. See whether you listen more on weekdays or weekends.
+
+### Listening Heatmap
+
+A calendar-style heatmap showing your daily listening intensity across weeks and months. Darker cells indicate more listening. This visualization makes it easy to spot:
+
+- Consistent listening habits
+- High-activity periods (vacations, work-from-home days)
+- Gaps in listening (breaks, travel without connectivity)
+
+## Taste Profile
+
+The **Taste Profile** page provides a deep analysis of your music preferences, going beyond simple play counts to understand the character of your listening.
+
+### What It Analyzes
+
+- **Diversity score** — How varied your listening is across genres and artists
+- **Mainstream vs. niche** — Whether you gravitate toward popular or obscure music
+- **Audio feature tendencies** — Your preferences for energy, mood, tempo, and more
+- **Discovery rate** — How often you listen to new artists vs. returning to favorites
+- **Consistency** — Whether your taste is stable or constantly evolving
+
+## Mood & Vibe Analysis
+
+The **Mood** page analyzes the emotional character of your listening using Spotify's audio features as proxies for mood.
+
+### Mood Categories
+
+EchoStats maps audio features to mood categories:
+
+| Mood | Audio Feature Signals |
+|------|----------------------|
+| **Happy / Upbeat** | High valence + high energy |
+| **Sad / Melancholy** | Low valence + low energy |
+| **Energetic / Intense** | High energy + high tempo |
+| **Calm / Relaxed** | Low energy + high acousticness |
+| **Dark / Aggressive** | Low valence + high energy |
+| **Dreamy / Atmospheric** | High instrumentalness + low speechiness |
+
+### Mood Timeline
+
+See how your listening mood shifts over time — by day, week, or month. This can reveal patterns like upbeat music during workouts or mellow tracks in the evening.
+
+## Artist Map
+
+The **Artist Map** visualization shows the relationships and play-share distribution between your top artists.
+
+### How to Read It
+
+- **Node size** — Proportional to play count (bigger = more plays)
+- **Connections** — Lines between artists indicate they share genres or you listen to them in similar patterns
+- **Clusters** — Groups of connected artists represent genre neighborhoods in your taste
+- **Colors** — Nodes are colored by primary genre
+
+This visualization helps you understand the structure of your music taste and discover connections between artists you might not have noticed.
+
+## Calendar Heatmap
+
+The **Calendar** page displays a GitHub-style contribution heatmap showing your daily listening activity over months or years.
+
+### Reading the Heatmap
+
+- Each cell represents one day
+- Color intensity indicates the number of tracks played that day
+- Hover over a cell to see the exact play count and date
+- Use the time range selector to view different years
+
+### Streaks
+
+The heatmap also highlights your listening streaks:
+
+- **Current streak** — Consecutive days with at least one track played
+- **Longest streak** — Your all-time record for consecutive listening days
+- **Total active days** — How many days you've listened to music in the selected period
+
+## Streak Tracking
+
+EchoStats tracks your listening streaks to gamify your music habits:
+
+- **Current streak** — How many consecutive days you've listened
+- **Longest streak** — Your personal record
+- **Streak calendar** — Visual representation of active vs. inactive days
+
+Streaks reset at midnight in your local timezone. Even playing one track counts as an active day.
+
+## Discovery Score
+
+The **Discovery Score** measures how adventurous your listening habits are:
+
+- **New artists discovered** — Artists you listened to for the first time in the period
+- **New tracks discovered** — Tracks played for the first time
+- **Repeat ratio** — Percentage of plays that are repeat listens vs. new discoveries
+- **Discovery trend** — Whether you're becoming more or less adventurous over time
+
+## API Endpoints for Analytics
+
+All analytics data is available via the REST API:
+
+```bash
+# Analytics overview (aggregated stats)
+curl -b cookies.txt "http://localhost:8000/api/v1/analytics/overview?period=month"
+
+# Top artists
+curl -b cookies.txt "http://localhost:8000/api/v1/artists/top?period=month&limit=20"
+
+# Top tracks
+curl -b cookies.txt "http://localhost:8000/api/v1/tracks/top?period=month&limit=20"
+
+# Genre distribution
+curl -b cookies.txt "http://localhost:8000/api/v1/genres/distribution?period=month"
+
+# Listening history (paginated)
+curl -b cookies.txt "http://localhost:8000/api/v1/history?limit=50&page=1"
+
+# Force refresh analytics
+curl -X POST -b cookies.txt "http://localhost:8000/api/v1/analytics/refresh"
+```
+
+## Tips for Better Analytics
+
+1. **Import your full history** — The more data EchoStats has, the richer your analytics. [Import your extended streaming history](/user-guide/importing-history) for the most complete picture.
+
+2. **Let it run** — Analytics improve over time as the worker syncs more data. After the first week, patterns start to emerge clearly.
+
+3. **Compare time periods** — Switch between week, month, year, and all-time views to spot trends and seasonal changes in your listening.
+
+4. **Check after big playlists** — If you listened to a curated playlist or discovered a new genre, check back in a few hours to see how it shifts your analytics.

@@ -1,8 +1,345 @@
 ---
-title: Guidelines
-description: Contributing guidelines for the EchoStats project.
+title: Contributing Guidelines
+description: How to contribute to EchoStats — code style, commit conventions, PR process, and architecture guidelines.
 ---
 
-# Guidelines
+# Contributing Guidelines
 
-_Documentation coming soon._
+Thank you for your interest in contributing to EchoStats! This guide covers everything you need to know to submit high-quality contributions.
+
+## Getting Started
+
+1. **Fork** the repository on GitHub
+2. **Clone** your fork locally
+3. **Set up** the development environment (see [Installation](/getting-started/installation))
+4. **Create a branch** for your changes
+5. **Make changes**, commit, and push
+6. **Open a Pull Request** against `main`
+
+## Development Environment
+
+### Prerequisites
+
+| Tool | Version | Purpose |
+|------|---------|---------|
+| Python | 3.12+ | Backend API |
+| uv | Latest | Python package manager |
+| Node.js | 22+ | Frontend |
+| pnpm | 10+ | Node package manager |
+| Docker | 24+ | Local services (MongoDB, Redis) |
+
+### Local Setup
+
+```bash
+# Clone and enter the project
+git clone https://github.com/your-username/echostats.git
+cd echostats
+
+# Start infrastructure (MongoDB + Redis)
+docker compose up -d mongo redis
+
+# Backend setup
+cd api
+uv sync
+cp .env.example .env  # Configure your Spotify credentials
+uv run uvicorn app.main:app --reload --port 8000
+
+# Frontend setup (in a new terminal)
+cd web
+pnpm install
+cp .env.example .env.local
+pnpm dev
+```
+
+### Seed Data
+
+EchoStats includes seed data for development (15 artists, 25 tracks, ~1,800 history entries). Use the dev-login endpoint to bypass OAuth during development:
+
+```bash
+curl http://localhost:8000/api/v1/auth/dev-login
+```
+
+## Code Style
+
+### Python (Backend)
+
+EchoStats uses **[Ruff](https://docs.astral.sh/ruff/)** for both linting and formatting.
+
+```bash
+cd api
+
+# Check for lint errors
+uv run ruff check .
+
+# Auto-fix lint errors
+uv run ruff check --fix .
+
+# Format code
+uv run ruff format .
+
+# Type checking with mypy
+uv run mypy app/
+```
+
+**Key Ruff settings:**
+
+| Setting | Value |
+|---------|-------|
+| Target version | Python 3.12 |
+| Line length | 100 characters |
+| Import sorting | `isort`-compatible (I rules) |
+| First-party packages | `app` |
+
+The Ruff configuration enables an extensive rule set including `E`, `F`, `W`, `I`, `N`, `UP`, `S`, `B`, `A`, `C4`, `DTZ`, `PIE`, `PT`, `RET`, `SIM`, `TID`, `TCH`, `ARG`, `PL`, `TRY`, `PERF`, and `RUF` families. See `api/pyproject.toml` for the full configuration.
+
+**Python conventions:**
+
+- Use `async`/`await` for all I/O operations (MongoDB, Redis, HTTP calls)
+- Use Beanie ODM models for MongoDB documents
+- Use Pydantic models for request/response schemas
+- Use `structlog` for logging, not `print()`
+- Type-annotate all function signatures
+
+### TypeScript (Frontend)
+
+EchoStats uses **[Biome](https://biomejs.dev/)** for linting and formatting.
+
+```bash
+cd web
+
+# Lint and format check
+pnpm biome check .
+
+# Auto-fix issues
+pnpm biome check --write .
+
+# Format only
+pnpm biome format --write .
+```
+
+**Key Biome settings:**
+
+| Setting | Value |
+|---------|-------|
+| Indent style | Spaces |
+| Indent width | 2 |
+| Line width | 100 |
+| Import sorting | Automatic |
+| Unused variables | Warning |
+
+**TypeScript conventions:**
+
+- Use functional React components with hooks
+- Use `"use client"` directive only when the component needs client-side interactivity
+- Prefer named exports over default exports for components
+- Use Tailwind CSS classes — avoid inline styles and CSS modules
+- Use `fetch` with relative URLs (`/api/v1/...`) for API calls
+- Keep components small and composable
+
+## Commit Message Format
+
+EchoStats follows **[Conventional Commits](https://www.conventionalcommits.org/)** for consistent, parseable commit history.
+
+### Format
+
+```
+<type>(<scope>): <short description>
+
+[optional body]
+
+[optional footer]
+```
+
+### Types
+
+| Type | When to Use |
+|------|-------------|
+| `feat` | New feature or capability |
+| `fix` | Bug fix |
+| `docs` | Documentation changes only |
+| `style` | Code formatting (no logic change) |
+| `refactor` | Code change that neither fixes a bug nor adds a feature |
+| `perf` | Performance improvement |
+| `test` | Adding or updating tests |
+| `chore` | Build process, CI, dependency updates |
+| `ci` | CI/CD pipeline changes |
+
+### Scopes
+
+Use a scope to indicate which part of the codebase is affected:
+
+| Scope | Area |
+|-------|------|
+| `api` | Backend Python code |
+| `web` | Frontend Next.js code |
+| `worker` | ARQ background worker |
+| `helm` | Helm chart changes |
+| `docker` | Docker/Compose changes |
+| `docs` | Documentation site |
+| `deps` | Dependency updates |
+
+### Examples
+
+```bash
+# Good commit messages
+feat(api): add genre distribution endpoint
+fix(web): resolve theme flicker on page load
+docs: update authentication guide with curl examples
+chore(deps): bump fastapi to 0.115.6
+refactor(api): extract token refresh into service layer
+perf(web): lazy-load analytics charts for faster initial render
+fix(worker): handle Redis connection timeout during sync
+ci: add Python 3.12 to test matrix
+```
+
+## Branch Naming
+
+Use descriptive branch names with a type prefix:
+
+```
+<type>/<short-description>
+```
+
+### Examples
+
+```bash
+feat/genre-distribution-endpoint
+fix/theme-flicker-on-load
+docs/authentication-guide
+chore/bump-fastapi-version
+refactor/extract-token-service
+```
+
+### Rules
+
+- Use lowercase with hyphens (kebab-case)
+- Keep it short but descriptive
+- The type prefix should match your commit type
+- Branch from `main` for all changes
+
+## Pull Request Process
+
+### Before Submitting
+
+1. **Ensure your branch is up to date** with `main`:
+   ```bash
+   git fetch origin
+   git rebase origin/main
+   ```
+
+2. **Run linters and formatters**:
+   ```bash
+   # Backend
+   cd api && uv run ruff check . && uv run ruff format --check .
+
+   # Frontend
+   cd web && pnpm biome check .
+   ```
+
+3. **Run tests**:
+   ```bash
+   # Backend
+   cd api && uv run pytest
+
+   # Frontend
+   cd web && pnpm test
+   ```
+
+4. **Test your changes manually** — verify the feature works in the browser
+
+### PR Description
+
+Your pull request should include:
+
+- **What** — A clear description of the change
+- **Why** — The motivation or issue being resolved
+- **How** — Brief technical approach (for non-trivial changes)
+- **Testing** — How you verified the change works
+- **Screenshots** — For UI changes, include before/after screenshots
+
+### Review Process
+
+1. A maintainer will review your PR
+2. CI checks must pass (linting, tests, build)
+3. Address any review feedback with new commits (don't force-push during review)
+4. Once approved, a maintainer will merge using **squash merge**
+
+## Testing
+
+### Backend Tests
+
+```bash
+cd api
+
+# Run all tests
+uv run pytest
+
+# Run with coverage
+uv run pytest --cov=app --cov-report=term-missing
+
+# Run a specific test file
+uv run pytest tests/test_auth.py
+
+# Run tests matching a pattern
+uv run pytest -k "test_login"
+```
+
+Tests use `pytest` with `pytest-asyncio` for async test support. Use `httpx.AsyncClient` for testing API endpoints.
+
+### Frontend Tests
+
+```bash
+cd web
+
+# Run tests
+pnpm test
+
+# Run tests in watch mode
+pnpm test --watch
+```
+
+### Writing Tests
+
+- **Backend:** Place tests in `api/tests/` mirroring the source structure
+- **Frontend:** Co-locate test files with components (e.g., `Component.test.tsx`)
+- Aim for meaningful coverage of business logic, not 100% line coverage
+- Test edge cases: empty data, error responses, expired tokens
+
+## Architecture Guidelines
+
+### Adding a New API Endpoint
+
+1. Create or update the router in `api/app/routers/`
+2. Define Pydantic request/response models
+3. Add business logic in `api/app/services/`
+4. Register the router in `api/app/main.py`
+5. Add tests in `api/tests/`
+
+### Adding a New Dashboard Page
+
+1. Create the page in `web/src/app/dashboard/<page>/page.tsx`
+2. Add the data-fetching hook in `web/src/hooks/`
+3. Create visualization components in `web/src/components/`
+4. Add the page to the sidebar navigation in the layout
+5. Ensure responsive design works on mobile
+
+### Database Changes
+
+- Use Beanie ODM document models in `api/app/models/`
+- MongoDB collections are created automatically from document classes
+- For schema changes, ensure backward compatibility — MongoDB is schema-less but your code should handle old documents gracefully
+
+## Reporting Issues
+
+When reporting bugs, include:
+
+- **EchoStats version** (shown in sidebar or `GET /api/health`)
+- **Deployment method** (Docker Compose or Helm)
+- **Browser and OS** (for frontend issues)
+- **Steps to reproduce** the issue
+- **Expected vs actual behavior**
+- **Relevant logs** from the API, worker, or browser console
+
+## Code of Conduct
+
+Be respectful, inclusive, and constructive. We're all here to build something great together. Harassment, discrimination, or hostile behavior will not be tolerated.
