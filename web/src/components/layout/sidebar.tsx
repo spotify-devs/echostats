@@ -8,7 +8,8 @@ import {
   ListMusic, Sparkles, Heart, Star, Library, Play, Settings,
   Menu, X, Activity, Headphones, Zap, GitCompare, Terminal,
   Radio, Podcast, Trophy, Mic2, Globe, Repeat, Dna, Gift,
-  Calendar, Fingerprint, Crown, Network, FileText,
+  Calendar, Fingerprint, Crown, Network, FileText, Bell,
+  Wand2, Microscope, Target, Download,
 } from "lucide-react";
 
 interface NavSection {
@@ -50,6 +51,8 @@ const navSections: NavSection[] = [
       { href: "/dashboard/library", icon: Library, label: "Library" },
       { href: "/dashboard/podcasts", icon: Podcast, label: "Podcasts" },
       { href: "/dashboard/recent-adds", icon: Zap, label: "Recently Added" },
+      { href: "/dashboard/playlist-generator", icon: Wand2, label: "Playlist Gen" },
+      { href: "/dashboard/playlist-analyzer", icon: Microscope, label: "Analyzer" },
     ],
   },
   {
@@ -69,12 +72,15 @@ const navSections: NavSection[] = [
       { href: "/dashboard/wrapped", icon: Gift, label: "Wrapped" },
       { href: "/dashboard/artist-map", icon: Network, label: "Artist Map" },
       { href: "/dashboard/listening-report", icon: FileText, label: "Monthly Report" },
+      { href: "/dashboard/goals", icon: Target, label: "Goals" },
     ],
   },
   {
     title: "System",
     items: [
       { href: "/dashboard/api-logs", icon: Terminal, label: "API Logs" },
+      { href: "/dashboard/notifications", icon: Bell, label: "Notifications" },
+      { href: "/dashboard/export", icon: Download, label: "Export" },
     ],
   },
 ];
