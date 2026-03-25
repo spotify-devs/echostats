@@ -2,24 +2,18 @@
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
-  name: {{ include "echostats.fullname" . }}
+  name: {{ .Values.ingressRoute.metadata.name | default (include "echostats.fullname" .) }}
+  {{- if .Values.ingressRoute.metadata.namespace }}
+  namespace: {{ .Values.ingressRoute.metadata.namespace }}
+  {{- end }}
   labels:
     {{- include "echostats.labels" . | nindent 4 }}
-spec:
-  entryPoints:
-    {{- toYaml .Values.ingressRoute.entryPoints | nindent 4 }}
-  routes:
-    {{- range .Values.ingressRoute.routes }}
-    - match: {{ .match | quote }}
-      kind: Rule
-      services:
-        - name: {{ include "echostats.fullname" $ }}-{{ .service }}
-          port: {{ if eq .service "api" }}{{ $.Values.service.api.port }}{{ else }}{{ $.Values.service.web.port }}{{ end }}
-    {{- end }}
-  {{- if .Values.ingressRoute.tls }}
-  tls:
-    {{- with .Values.ingressRoute.tls }}
+  {{- with .Values.ingressRoute.annotations }}
+  annotations:
     {{- toYaml . | nindent 4 }}
-    {{- end }}
+  {{- end }}
+spec:
+  {{- with .Values.ingressRoute.spec }}
+  {{- toYaml . | nindent 2 }}
   {{- end }}
 {{- end }}

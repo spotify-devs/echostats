@@ -152,18 +152,34 @@ ingress:
   #     - echostats.local
 
 # Traefik IngressRoute (alternative to nginx Ingress)
+# The entire spec is passed through as-is to the IngressRoute resource
 ingressRoute:
   enabled: false
-  entryPoints:
-    - websecure
-  # certResolver: letsencrypt
-  routes:
-    - match: "Host(`echostats.local`) && PathPrefix(`/api`)"
-      service: api
-    - match: "Host(`echostats.local`)"
-      service: web
-  tls: {}
-  # certResolver: letsencrypt
+  metadata:
+    name: echostats
+    # namespace: echostats  # defaults to release namespace
+  annotations: {}
+    # kubernetes.io/ingress.class: traefik-external
+  spec:
+    entryPoints:
+      - websecure
+    routes:
+      - match: "Host(`echostats.local`) && PathPrefix(`/api`)"
+        kind: Rule
+        services:
+          - name: echostats-api
+            port: 8000
+        # middlewares:
+        #   - name: default-headers
+        #     namespace: traefik
+      - match: "Host(`echostats.local`)"
+        kind: Rule
+        services:
+          - name: echostats-web
+            port: 3000
+    tls:
+      secretName: echostats-tls
+      # certResolver: letsencrypt
 
 # Service
 service:
