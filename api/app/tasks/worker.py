@@ -77,16 +77,7 @@ async def refresh_analytics(ctx: dict) -> None:
 
 def _parse_redis_url() -> RedisSettings:
     """Parse Redis URL into ARQ RedisSettings."""
-    from urllib.parse import urlparse
-
-    parsed = urlparse(settings.redis_url)
-    return RedisSettings(
-        host=parsed.hostname or "localhost",
-        port=parsed.port or 6379,
-        database=int(parsed.path.lstrip("/") or "0"),
-        password=parsed.password if parsed.password else None,
-        username=parsed.username if parsed.username else None,
-    )
+    return RedisSettings.from_dsn(settings.redis_url)
 
 
 class WorkerSettings:
