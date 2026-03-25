@@ -40,8 +40,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           dangerouslySetInnerHTML={{
             __html: `
       if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js').catch(() => {});
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('/sw.js')
+            .then(function(reg) {
+              console.log('[EchoStats] SW registered, scope:', reg.scope);
+            })
+            .catch(function(err) {
+              console.warn('[EchoStats] SW registration failed:', err);
+            });
         });
       }
     `,

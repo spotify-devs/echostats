@@ -44,6 +44,8 @@ RUN addgroup --system --gid 1001 echostats && \
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=echostats:echostats /app/.next/standalone ./
 COPY --from=builder --chown=echostats:echostats /app/.next/static ./.next/static
+# Custom server that serves /public files (standalone server.js doesn't)
+COPY web/server.js ./server.js
 
 USER echostats
 
