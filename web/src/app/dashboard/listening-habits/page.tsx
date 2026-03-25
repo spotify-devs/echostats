@@ -79,7 +79,7 @@ export default function ListeningHabitsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-theme flex items-center gap-2">
+        <h1 className="text-xl sm:text-2xl font-bold text-theme flex items-center gap-2">
           <Activity className="w-6 h-6 text-accent-dynamic" /> Listening Habits
         </h1>
         <p className="text-theme-secondary mt-1">When and how you listen to music</p>
@@ -94,7 +94,7 @@ export default function ListeningHabitsPage() {
         <>
           {/* Your Listening Personality */}
           {peakSlot && (
-            <div className="glass-card p-8 text-center bg-gradient-to-br from-accent-dynamic/5 to-transparent">
+            <div className="glass-card p-5 sm:p-8 text-center bg-gradient-to-br from-accent-dynamic/5 to-transparent">
               <span className="text-5xl mb-3 block">{peakSlot.emoji}</span>
               <h2 className="text-2xl font-bold text-theme mb-1">You&apos;re a {peakSlot.label}</h2>
               <p className="text-theme-secondary">

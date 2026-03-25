@@ -19,9 +19,9 @@ export default function PlaylistsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+          <h1 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2">
             <ListMusic className="w-6 h-6 text-spotify-green" /> Playlists
           </h1>
           <p className="text-white/50 mt-1">{data?.total || 0} playlists</p>

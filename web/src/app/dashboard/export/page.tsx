@@ -157,7 +157,7 @@ export default function ExportPage() {
   return (
     <div className="space-y-6 max-w-2xl mx-auto">
       <div>
-        <h1 className="text-2xl font-bold text-theme flex items-center gap-2">
+        <h1 className="text-xl sm:text-2xl font-bold text-theme flex items-center gap-2">
           <Download className="w-6 h-6 text-accent-dynamic" /> Export Data
         </h1>
         <p className="text-theme-secondary mt-1">Download your EchoStats data</p>

@@ -35,7 +35,7 @@ export default function DecadesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-theme flex items-center gap-2">
+        <h1 className="text-xl sm:text-2xl font-bold text-theme flex items-center gap-2">
           <Globe className="w-6 h-6 text-accent-dynamic" /> Decades
         </h1>
         <p className="text-theme-secondary mt-1">Explore your music through the decades</p>

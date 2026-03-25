@@ -93,7 +93,7 @@ export default function PlaylistGeneratorPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-theme flex items-center gap-2">
+        <h1 className="text-xl sm:text-2xl font-bold text-theme flex items-center gap-2">
           <Wand2 className="w-6 h-6 text-accent-dynamic" /> Playlist Generator
         </h1>
         <p className="text-theme-secondary mt-1">Create the perfect playlist based on your taste</p>

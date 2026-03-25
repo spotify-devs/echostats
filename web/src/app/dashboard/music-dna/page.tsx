@@ -63,9 +63,9 @@ export default function MusicDnaPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-theme flex items-center gap-2">
+          <h1 className="text-xl sm:text-2xl font-bold text-theme flex items-center gap-2">
             <Dna className="w-6 h-6 text-accent-dynamic" /> Music DNA
           </h1>
           <p className="text-theme-secondary mt-1">Deep dive into your genre preferences</p>

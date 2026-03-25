@@ -37,7 +37,7 @@ export default function AlbumsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-theme flex items-center gap-2">
+        <h1 className="text-xl sm:text-2xl font-bold text-theme flex items-center gap-2">
           <Disc3 className="w-6 h-6 text-accent-dynamic" /> Albums
         </h1>
         <p className="text-theme-secondary mt-1">{albums.length} albums from your top tracks</p>

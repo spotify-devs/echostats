@@ -50,7 +50,7 @@ export default function AboutPage() {
         <div className="inline-flex p-4 rounded-3xl bg-accent-dynamic/15 shadow-accent-glow">
           <Info className="w-10 h-10 text-accent-dynamic" />
         </div>
-        <h1 className="text-4xl font-bold text-gradient">EchoStats</h1>
+        <h1 className="text-2xl sm:text-4xl font-bold text-gradient">EchoStats</h1>
         <p className="text-theme-secondary max-w-md mx-auto">
           Self-hosted Spotify analytics dashboard. Discover insights about your listening habits
           with beautiful visualizations.

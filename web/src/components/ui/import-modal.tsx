@@ -164,7 +164,7 @@ export function ImportHistoryModal({ isOpen, onClose, onComplete }: ImportModalP
             onDragOver={(e) => e.preventDefault()}
             onDrop={handleDrop}
             onClick={() => fileInputRef.current?.click()}
-            className="border-2 border-dashed border-white/10 hover:border-accent-dynamic/30 rounded-xl p-8 text-center cursor-pointer transition-colors"
+            className="border-2 border-dashed border-white/10 hover:border-accent-dynamic/30 rounded-xl p-4 sm:p-8 text-center cursor-pointer transition-colors"
           >
             <FileJson className="w-10 h-10 text-theme-tertiary mx-auto mb-3" />
             <p className="text-sm text-theme-secondary">

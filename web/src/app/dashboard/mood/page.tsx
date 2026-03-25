@@ -81,9 +81,9 @@ export default function MoodPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-theme flex items-center gap-2">
+          <h1 className="text-xl sm:text-2xl font-bold text-theme flex items-center gap-2">
             <Heart className="w-6 h-6 text-accent-pink" /> Mood & Vibe
           </h1>
           <p className="text-theme-secondary mt-1">How does your music make you feel?</p>
@@ -112,7 +112,7 @@ export default function MoodPage() {
       ) : (
         <>
           {/* Current Mood Card */}
-          <div className="glass-card p-8 flex flex-col items-center gap-4">
+          <div className="glass-card p-5 sm:p-8 flex flex-col items-center gap-4">
             <div className="text-6xl">{moodInfo?.emoji || "😊"}</div>
             <div className="text-center">
               <h2 className="text-2xl font-bold text-theme">
@@ -124,7 +124,7 @@ export default function MoodPage() {
                 {avgFeatures ? Math.round(avgFeatures.valence * 100) : 0}%) of your listened tracks
               </p>
             </div>
-            <div className="flex gap-6 mt-2">
+            <div className="flex gap-4 sm:gap-6 mt-2">
               {Object.entries(MOOD_EMOJIS).map(([key, info]) => (
                 <div
                   key={key}

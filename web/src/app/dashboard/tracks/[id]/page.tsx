@@ -112,7 +112,7 @@ export default function TrackDetailPage({ params }: { params: Promise<{ id: stri
           )}
         </div>
         <div className="text-center sm:text-left flex-1">
-          <h1 className="text-3xl font-bold text-theme">{track.name}</h1>
+          <h1 className="text-xl sm:text-3xl font-bold text-theme">{track.name}</h1>
           <p className="text-lg text-theme-secondary mt-1">
             {track.artists?.map((a: any) => a.name).join(", ")}
           </p>

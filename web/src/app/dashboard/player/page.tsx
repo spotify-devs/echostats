@@ -91,7 +91,7 @@ export default function PlayerPage() {
   if (isLoading && !isError) {
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold text-theme">Player</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-theme">Player</h1>
         <ChartSkeleton height={300} />
       </div>
     );
@@ -101,7 +101,7 @@ export default function PlayerPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-theme flex items-center gap-2">
+      <h1 className="text-xl sm:text-2xl font-bold text-theme flex items-center gap-2">
         <Music className="w-6 h-6 text-spotify-green" /> Player
       </h1>
 

@@ -54,7 +54,7 @@ export default function ChangelogPage() {
   return (
     <div className="space-y-6 max-w-2xl mx-auto pb-12">
       <div className="text-center pt-4">
-        <h1 className="text-2xl font-bold text-theme flex items-center justify-center gap-2">
+        <h1 className="text-xl sm:text-2xl font-bold text-theme flex items-center justify-center gap-2">
           <Zap className="w-6 h-6 text-accent-dynamic" /> What&apos;s New
         </h1>
         <p className="text-theme-secondary mt-1">Changelog and release notes</p>

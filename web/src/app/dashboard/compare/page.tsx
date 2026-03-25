@@ -75,7 +75,7 @@ export default function ComparePage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-theme flex items-center gap-2">
+        <h1 className="text-xl sm:text-2xl font-bold text-theme flex items-center gap-2">
           <GitCompare className="w-6 h-6 text-accent-dynamic" /> Compare Periods
         </h1>
         <p className="text-theme-secondary mt-1">See how your listening changes over time</p>

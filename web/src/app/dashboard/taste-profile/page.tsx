@@ -84,7 +84,7 @@ export default function TasteProfilePage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-theme flex items-center gap-2">
+        <h1 className="text-xl sm:text-2xl font-bold text-theme flex items-center gap-2">
           <Fingerprint className="w-6 h-6 text-accent-dynamic" /> Taste Profile
         </h1>
         <p className="text-theme-secondary mt-1">Your unique musical fingerprint</p>
@@ -98,9 +98,11 @@ export default function TasteProfilePage() {
       ) : af ? (
         <>
           {/* Personality Card */}
-          <div className="glass-card p-8 text-center bg-gradient-to-br from-accent-dynamic/5 to-transparent">
+          <div className="glass-card p-5 sm:p-8 text-center bg-gradient-to-br from-accent-dynamic/5 to-transparent">
             <span className="text-6xl mb-4 block">{personality.emoji}</span>
-            <h2 className="text-3xl font-bold text-gradient mb-2">{personality.title}</h2>
+            <h2 className="text-xl sm:text-3xl font-bold text-gradient mb-2">
+              {personality.title}
+            </h2>
             <p className="text-theme-secondary max-w-md mx-auto">{personality.desc}</p>
           </div>
 

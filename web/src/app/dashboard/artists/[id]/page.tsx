@@ -54,7 +54,7 @@ export default function ArtistDetailPage({ params }: { params: Promise<{ id: str
       </Link>
 
       {/* Header */}
-      <div className="glass-card p-6 flex flex-col sm:flex-row items-center gap-6">
+      <div className="glass-card p-6 flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
         <div className="relative w-32 h-32 rounded-full overflow-hidden bg-theme-surface-3 flex-shrink-0 ring-4 ring-accent-dynamic/20">
           {artist.images?.[0]?.url ? (
             <Image
@@ -69,7 +69,7 @@ export default function ArtistDetailPage({ params }: { params: Promise<{ id: str
           )}
         </div>
         <div className="text-center sm:text-left flex-1">
-          <h1 className="text-3xl font-bold text-theme">{artist.name}</h1>
+          <h1 className="text-xl sm:text-3xl font-bold text-theme">{artist.name}</h1>
           <div className="flex flex-wrap items-center gap-3 mt-2 justify-center sm:justify-start">
             <span className="text-sm text-theme-secondary">
               <Users className="w-4 h-4 inline mr-1" />

@@ -32,7 +32,7 @@ export default function ArtistMapPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-theme flex items-center gap-2">
+        <h1 className="text-xl sm:text-2xl font-bold text-theme flex items-center gap-2">
           <Network className="w-6 h-6 text-accent-dynamic" /> Artist Map
         </h1>
         <p className="text-theme-secondary mt-1">

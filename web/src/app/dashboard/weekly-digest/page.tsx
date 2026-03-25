@@ -71,7 +71,7 @@ export default function WeeklyDigestPage() {
     <div className="space-y-6 max-w-3xl mx-auto">
       <div className="text-center pt-4">
         <Newspaper className="w-10 h-10 text-accent-dynamic mx-auto mb-3" />
-        <h1 className="text-3xl font-bold text-theme">Weekly Digest</h1>
+        <h1 className="text-xl sm:text-3xl font-bold text-theme">Weekly Digest</h1>
         <p className="text-theme-secondary mt-1">
           {weekStart.toLocaleDateString("en-US", { month: "short", day: "numeric" })} —{" "}
           {new Date().toLocaleDateString("en-US", {

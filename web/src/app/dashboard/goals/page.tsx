@@ -61,9 +61,9 @@ export default function GoalsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-theme flex items-center gap-2">
+          <h1 className="text-xl sm:text-2xl font-bold text-theme flex items-center gap-2">
             <Target className="w-6 h-6 text-accent-dynamic" /> Listening Goals
           </h1>
           <p className="text-theme-secondary mt-1">
@@ -105,7 +105,7 @@ export default function GoalsPage() {
               </div>
 
               {/* Circular Progress */}
-              <div className="flex items-center gap-6">
+              <div className="flex items-center gap-4 sm:gap-6">
                 <div className="relative flex-shrink-0">
                   <svg className="w-24 h-24 -rotate-90" viewBox="0 0 96 96">
                     <circle

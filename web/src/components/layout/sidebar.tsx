@@ -136,7 +136,7 @@ export function Sidebar() {
       {/* Mobile hamburger */}
       <button
         onClick={() => setIsOpen(true)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-xl border text-theme-secondary hover:text-theme transition-colors"
+        className="lg:hidden fixed top-4 left-4 z-50 p-3 rounded-xl border text-theme-secondary hover:text-theme transition-colors"
         style={{
           backgroundColor: "rgb(var(--surface-2))",
           borderColor: "rgb(var(--border) / 0.1)",
@@ -173,7 +173,7 @@ export function Sidebar() {
           </Link>
           <button
             onClick={() => setIsOpen(false)}
-            className="lg:hidden p-1 rounded-lg text-theme-tertiary hover:text-theme"
+            className="lg:hidden p-3 rounded-lg text-theme-tertiary hover:text-theme"
           >
             <X className="w-5 h-5" />
           </button>

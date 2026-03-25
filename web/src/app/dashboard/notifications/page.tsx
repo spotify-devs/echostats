@@ -136,9 +136,9 @@ export default function NotificationsPage() {
 
   return (
     <div className="space-y-6 max-w-2xl mx-auto">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-theme flex items-center gap-2">
+          <h1 className="text-xl sm:text-2xl font-bold text-theme flex items-center gap-2">
             <Bell className="w-6 h-6 text-accent-dynamic" /> Notifications
             {unreadCount > 0 && (
               <span className="px-2 py-0.5 text-xs bg-accent-dynamic/20 text-accent-dynamic rounded-full">

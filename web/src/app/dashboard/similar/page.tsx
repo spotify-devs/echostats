@@ -32,7 +32,7 @@ export default function SimilarTracksPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-theme flex items-center gap-2">
+        <h1 className="text-xl sm:text-2xl font-bold text-theme flex items-center gap-2">
           <Shuffle className="w-6 h-6 text-accent-dynamic" /> Similar Tracks
         </h1>
         <p className="text-theme-secondary mt-1">Find tracks similar to your favorites</p>

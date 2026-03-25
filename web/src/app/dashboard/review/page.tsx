@@ -47,12 +47,12 @@ export default function YearInReviewPage() {
         <div className="inline-flex p-4 rounded-3xl bg-accent-dynamic/15 shadow-accent-glow">
           <Star className="w-10 h-10 text-accent-dynamic" />
         </div>
-        <h1 className="text-4xl font-bold text-theme">Your Year in Music</h1>
+        <h1 className="text-2xl sm:text-4xl font-bold text-theme">Your Year in Music</h1>
         <p className="text-theme-secondary">A look back at your listening journey</p>
       </div>
 
       {/* Hero Stats */}
-      <div className="glass-card p-8 text-center space-y-2 bg-gradient-to-br from-accent-dynamic/5 to-transparent">
+      <div className="glass-card p-5 sm:p-8 text-center space-y-2 bg-gradient-to-br from-accent-dynamic/5 to-transparent">
         <p className="text-6xl font-bold text-gradient tabular-nums">{hours.toLocaleString()}</p>
         <p className="text-xl text-theme-secondary">hours of music</p>
         <p className="text-sm text-theme-tertiary">

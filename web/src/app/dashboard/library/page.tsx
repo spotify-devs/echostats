@@ -23,7 +23,7 @@ export default function LibraryPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-theme flex items-center gap-2">
+        <h1 className="text-xl sm:text-2xl font-bold text-theme flex items-center gap-2">
           <Library className="w-6 h-6 text-accent-dynamic" /> Library
         </h1>
         <p className="text-theme-secondary mt-1">Your saved content on Spotify</p>
