@@ -16,7 +16,7 @@ export function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-surface-1/95 backdrop-blur-xl border-t border-white/5 safe-bottom">
+    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 backdrop-blur-xl border-t safe-bottom" style={{ backgroundColor: "rgb(var(--surface-1) / 0.95)", borderColor: "rgb(var(--border) / var(--border-opacity))" }}>
       <div className="flex items-center justify-around py-2">
         {BOTTOM_ITEMS.map(({ href, icon: Icon, label }) => {
           const isActive = pathname === href;

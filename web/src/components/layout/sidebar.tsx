@@ -100,7 +100,8 @@ export function Sidebar() {
       {/* Mobile hamburger */}
       <button
         onClick={() => setIsOpen(true)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-xl bg-surface-2 border border-white/10 text-white/60 hover:text-white transition-colors"
+        className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-xl border text-theme-secondary hover:text-theme transition-colors"
+        style={{ backgroundColor: "rgb(var(--surface-2))", borderColor: "rgb(var(--border) / 0.1)" }}
       >
         <Menu className="w-5 h-5" />
       </button>
@@ -115,9 +116,10 @@ export function Sidebar() {
 
       {/* Sidebar */}
       <aside
-        className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-surface-1 border-r border-white/5 flex flex-col h-full transition-transform duration-300 ${
+        className={`fixed lg:static inset-y-0 left-0 z-50 w-64 border-r flex flex-col h-full transition-transform duration-300 ${
           isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         }`}
+        style={{ backgroundColor: "rgb(var(--surface-1))", borderColor: "rgb(var(--border) / var(--border-opacity))" }}
       >
         {/* Logo */}
         <div className="p-5 flex items-center justify-between">
@@ -129,7 +131,7 @@ export function Sidebar() {
           </Link>
           <button
             onClick={() => setIsOpen(false)}
-            className="lg:hidden p-1 rounded-lg text-white/40 hover:text-white"
+            className="lg:hidden p-1 rounded-lg text-theme-tertiary hover:text-theme"
           >
             <X className="w-5 h-5" />
           </button>
@@ -167,7 +169,7 @@ export function Sidebar() {
         </nav>
 
         {/* Settings */}
-        <div className="p-3 border-t border-white/5">
+        <div className="p-3" style={{ borderTop: "1px solid rgb(var(--border) / var(--border-opacity))" }}>
           <Link
             href="/dashboard/settings"
             onClick={() => setIsOpen(false)}

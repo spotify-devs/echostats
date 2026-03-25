@@ -23,7 +23,7 @@ export function Header() {
 
   return (
     <>
-      <header className="h-16 border-b border-white/5 bg-surface-1/50 backdrop-blur-lg flex items-center justify-between px-4 sm:px-6">
+      <header className="h-16 border-b flex items-center justify-between px-4 sm:px-6 backdrop-blur-lg" style={{ backgroundColor: "rgb(var(--surface-1) / 0.5)", borderColor: "rgb(var(--border) / var(--border-opacity))" }}>
         {/* App name on mobile, spacer for hamburger */}
         <div className="flex items-center gap-2 lg:hidden flex-shrink-0">
           <div className="w-10" /> {/* hamburger spacer */}
