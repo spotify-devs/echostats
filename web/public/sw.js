@@ -1,15 +1,7 @@
-const CACHE_NAME = "echostats-v1";
-const STATIC_ASSETS = [
-  "/",
-  "/dashboard",
-  "/manifest.json",
-];
+const CACHE_NAME = "echostats-v2";
 
-// Install — cache static assets
-self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
-  );
+// Install — skip precaching dynamic pages (they require auth)
+self.addEventListener("install", () => {
   self.skipWaiting();
 });
 
@@ -23,21 +15,24 @@ self.addEventListener("activate", (event) => {
   self.clients.claim();
 });
 
-// Fetch — stale-while-revalidate for API, cache-first for assets
+// Fetch — network-first for API, stale-while-revalidate for assets
 self.addEventListener("fetch", (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Skip non-GET requests
+  // Skip non-GET and cross-origin requests
   if (request.method !== "GET") return;
+  if (url.origin !== self.location.origin) return;
 
-  // API requests: network-first with fallback
+  // API requests: network-first with cache fallback
   if (url.pathname.startsWith("/api/")) {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+          if (response.ok) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+          }
           return response;
         })
         .catch(() => caches.match(request))
@@ -45,15 +40,23 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Static assets: cache-first
+  // Static assets (_next/static): cache-first
+  if (url.pathname.startsWith("/_next/static/")) {
+    event.respondWith(
+      caches.match(request).then((cached) => {
+        if (cached) return cached;
+        return fetch(request).then((response) => {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+          return response;
+        });
+      })
+    );
+    return;
+  }
+
+  // Everything else: network-first (pages are dynamic/auth-gated)
   event.respondWith(
-    caches.match(request).then((cached) => {
-      const fetchPromise = fetch(request).then((response) => {
-        const clone = response.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
-        return response;
-      });
-      return cached || fetchPromise;
-    })
+    fetch(request).catch(() => caches.match(request))
   );
 });
