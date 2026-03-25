@@ -19,11 +19,11 @@ const config: Config = {
           900: "#0a001a",
         },
         surface: {
-          DEFAULT: "#0a0a0f",
-          1: "#111118",
-          2: "#1a1a24",
-          3: "#242432",
-          4: "#2e2e40",
+          DEFAULT: "rgb(var(--surface))",
+          1: "rgb(var(--surface-1))",
+          2: "rgb(var(--surface-2))",
+          3: "rgb(var(--surface-3))",
+          4: "rgb(var(--surface-4))",
         },
         spotify: {
           green: "#1DB954",

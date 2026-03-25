@@ -164,10 +164,10 @@
     color: rgb(var(--text));
   }
   .text-theme-secondary {
-    color: rgb(var(--text-secondary) / 0.6);
+    color: rgb(var(--text-secondary));
   }
   .text-theme-tertiary {
-    color: rgb(var(--text-tertiary) / 0.4);
+    color: rgb(var(--text-tertiary));
   }
 
   /* Theme-aware surface colors */
