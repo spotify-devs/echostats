@@ -39,14 +39,25 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         style={{ backgroundColor: "rgb(var(--surface))" }}
       >
         <div className="p-4 rounded-2xl bg-accent-gradient shadow-accent-glow animate-fade-in">
-          <svg className="w-10 h-10 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" />
+          <svg
+            className="w-10 h-10 text-white"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M9 18V5l12-2v13" />
+            <circle cx="6" cy="18" r="3" />
+            <circle cx="18" cy="16" r="3" />
           </svg>
         </div>
         <h1
           className="text-2xl font-bold animate-fade-in"
           style={{
-            background: "linear-gradient(135deg, var(--accent-gradient-from), var(--accent-gradient-via), var(--accent-gradient-to))",
+            background:
+              "linear-gradient(135deg, var(--accent-gradient-from), var(--accent-gradient-via), var(--accent-gradient-to))",
             WebkitBackgroundClip: "text",
             WebkitTextFillColor: "transparent",
           }}

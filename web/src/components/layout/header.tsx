@@ -68,13 +68,7 @@ export function Header() {
               <div className="flex items-center gap-2">
                 {user?.image_url ? (
                   <div className="relative w-8 h-8 rounded-full overflow-hidden ring-2 ring-spotify-green/30">
-                    <Image
-                      src={user.image_url}
-                      alt=""
-                      fill
-                      className="object-cover"
-                      sizes="32px"
-                    />
+                    <Image src={user.image_url} alt="" fill className="object-cover" sizes="32px" />
                   </div>
                 ) : (
                   <div className="w-8 h-8 rounded-full bg-accent-gradient flex items-center justify-center text-white text-sm font-bold">
