@@ -91,9 +91,9 @@ export default function PlayerPage() {
       </h1>
 
       {/* Now Playing Card */}
-      <div className="glass-card p-6 sm:p-8">
+      <div className="glass-card p-6 sm:p-8 overflow-hidden">
         {!noPlayback ? (
-          <div className="flex flex-col lg:flex-row items-center gap-8">
+          <div className="flex flex-col lg:flex-row items-center gap-8 min-w-0">
             {/* Album Art */}
             <div className="relative w-48 h-48 lg:w-64 lg:h-64 rounded-2xl overflow-hidden bg-theme-surface-3 shadow-2xl flex-shrink-0">
               {playback.album_image ? (
@@ -105,11 +105,11 @@ export default function PlayerPage() {
               )}
             </div>
 
-            <div className="flex-1 text-center lg:text-left space-y-4 min-w-0">
+            <div className="flex-1 text-center lg:text-left space-y-4 min-w-0 w-full overflow-hidden">
               {/* Track Info */}
-              <div>
+              <div className="min-w-0">
                 <h2 className="text-2xl lg:text-3xl font-bold text-theme truncate">{playback.track_name}</h2>
-                <p className="text-lg text-theme-secondary truncate mt-1">{playback.artist_name}</p>
+                <p className="text-base lg:text-lg text-theme-secondary truncate mt-1">{playback.artist_name}</p>
                 <p className="text-sm text-theme-tertiary truncate">{playback.album_name}</p>
               </div>
 
