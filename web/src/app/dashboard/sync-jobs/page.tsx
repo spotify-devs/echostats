@@ -79,6 +79,33 @@ export default function SyncJobsPage() {
   const totalPages = jobs?.pages || 1;
   const isRunning = (stats?.running || 0) > 0;
 
+  // Compute next scheduled sync (worker runs at :00, :15, :30, :45)
+  function getNextSyncTime(): Date {
+    const now = new Date();
+    const mins = now.getMinutes();
+    const nextSlot = Math.ceil((mins + 1) / 15) * 15;
+    const next = new Date(now);
+    if (nextSlot >= 60) {
+      next.setHours(next.getHours() + 1);
+      next.setMinutes(nextSlot - 60);
+    } else {
+      next.setMinutes(nextSlot);
+    }
+    next.setSeconds(0, 0);
+    return next;
+  }
+
+  function formatCountdown(target: Date): string {
+    const diffMs = target.getTime() - Date.now();
+    if (diffMs <= 0) return "any moment";
+    const mins = Math.floor(diffMs / 60000);
+    const secs = Math.floor((diffMs % 60000) / 1000);
+    if (mins > 0) return `${mins}m ${secs}s`;
+    return `${secs}s`;
+  }
+
+  const nextSync = getNextSyncTime();
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -133,13 +160,51 @@ export default function SyncJobsPage() {
         </div>
       ) : null}
 
-      {/* Last Sync Banner */}
-      {stats?.last_sync_at && (
-        <div className="glass-card p-3 flex items-center gap-2 text-sm">
-          <CheckCircle className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-          <span className="text-theme-secondary">
-            Last successful sync: <span className="text-theme font-medium">{timeAgo(stats.last_sync_at)}</span>
-          </span>
+      {/* Sync Schedule Info */}
+      {stats && (
+        <div className="glass-card p-4 space-y-3">
+          <h2 className="text-sm font-semibold text-theme flex items-center gap-2">
+            <Clock className="w-4 h-4 text-accent-dynamic" /> Sync Schedule
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {/* Last Sync */}
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/5">
+              <CheckCircle className={`w-5 h-5 flex-shrink-0 ${stats.last_sync_at ? "text-emerald-400" : "text-theme-tertiary"}`} />
+              <div className="min-w-0">
+                <p className="text-[10px] text-theme-tertiary uppercase tracking-wider">Last Sync</p>
+                <p className="text-sm font-medium text-theme truncate">
+                  {stats.last_sync_at ? timeAgo(stats.last_sync_at) : "Never"}
+                </p>
+                {stats.last_sync_at && (
+                  <p className="text-[10px] text-theme-tertiary">
+                    {new Date(stats.last_sync_at).toLocaleString([], { dateStyle: "short", timeStyle: "short" })}
+                  </p>
+                )}
+              </div>
+            </div>
+            {/* Next Sync */}
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/5">
+              <RefreshCw className={`w-5 h-5 flex-shrink-0 ${isRunning ? "text-accent-dynamic animate-spin" : "text-accent-dynamic"}`} />
+              <div className="min-w-0">
+                <p className="text-[10px] text-theme-tertiary uppercase tracking-wider">Next Sync</p>
+                <p className="text-sm font-medium text-theme">
+                  {isRunning ? "In progress…" : `in ~${formatCountdown(nextSync)}`}
+                </p>
+                <p className="text-[10px] text-theme-tertiary">
+                  {nextSync.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                </p>
+              </div>
+            </div>
+            {/* Frequency */}
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/5">
+              <Activity className="w-5 h-5 flex-shrink-0 text-accent-cyan" />
+              <div className="min-w-0">
+                <p className="text-[10px] text-theme-tertiary uppercase tracking-wider">Frequency</p>
+                <p className="text-sm font-medium text-theme">Every 15 minutes</p>
+                <p className="text-[10px] text-theme-tertiary">at :00, :15, :30, :45</p>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
