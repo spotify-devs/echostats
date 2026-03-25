@@ -124,7 +124,7 @@ export default function SyncJobsPage() {
   const { data: jobs, isLoading: loadingJobs } = useQuery({
     queryKey: ["sync-jobs", page, statusFilter],
     queryFn: () => {
-      let url = `/api/v1/sync-jobs?page=${page}&limit=20`;
+      let url = `/api/v1/sync-jobs?page=${page}&limit=10`;
       if (statusFilter !== "all") url += `&status=${statusFilter}`;
       return api.get<any>(url);
     },
@@ -466,29 +466,67 @@ export default function SyncJobsPage() {
       )}
 
       {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <span className="text-xs text-theme-tertiary">
-            Page {page} of {totalPages} ({jobs?.total || 0} jobs)
-          </span>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={page <= 1}
-              className="p-1.5 rounded-lg hover:bg-current/[0.05] text-theme-tertiary disabled:opacity-30 transition-all"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              disabled={page >= totalPages}
-              className="p-1.5 rounded-lg hover:bg-current/[0.05] text-theme-tertiary disabled:opacity-30 transition-all"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-theme-tertiary">
+          Showing {items.length > 0 ? (page - 1) * 10 + 1 : 0}–
+          {Math.min(page * 10, jobs?.total || 0)} of {jobs?.total || 0} jobs
+        </span>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => setPage(1)}
+            disabled={page <= 1}
+            className="px-2 py-1 text-xs rounded-lg hover:bg-current/[0.05] text-theme-tertiary disabled:opacity-30 transition-all"
+          >
+            First
+          </button>
+          <button
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page <= 1}
+            className="p-1.5 rounded-lg hover:bg-current/[0.05] text-theme-tertiary disabled:opacity-30 transition-all"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+            let pageNum: number;
+            if (totalPages <= 5) {
+              pageNum = i + 1;
+            } else if (page <= 3) {
+              pageNum = i + 1;
+            } else if (page >= totalPages - 2) {
+              pageNum = totalPages - 4 + i;
+            } else {
+              pageNum = page - 2 + i;
+            }
+            return (
+              <button
+                key={pageNum}
+                onClick={() => setPage(pageNum)}
+                className={`w-8 h-8 text-xs rounded-lg transition-all ${
+                  page === pageNum
+                    ? "bg-accent-dynamic/20 text-accent-dynamic font-bold"
+                    : "hover:bg-current/[0.05] text-theme-tertiary"
+                }`}
+              >
+                {pageNum}
+              </button>
+            );
+          })}
+          <button
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page >= totalPages}
+            className="p-1.5 rounded-lg hover:bg-current/[0.05] text-theme-tertiary disabled:opacity-30 transition-all"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => setPage(totalPages)}
+            disabled={page >= totalPages}
+            className="px-2 py-1 text-xs rounded-lg hover:bg-current/[0.05] text-theme-tertiary disabled:opacity-30 transition-all"
+          >
+            Last
+          </button>
         </div>
-      )}
+      </div>
     </div>
   );
 }
