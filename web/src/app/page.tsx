@@ -39,9 +39,12 @@ export default function LandingPage() {
   if (checking) {
     return (
       <main className="min-h-screen flex items-center justify-center bg-surface">
-        <div className="flex flex-col items-center gap-3">
-          <Loader2 className="w-8 h-8 text-accent-dynamic animate-spin" />
-          <p className="text-sm text-theme-tertiary">Checking authentication…</p>
+        <div className="flex flex-col items-center gap-5 animate-fade-in">
+          <div className="p-4 rounded-2xl bg-accent-gradient shadow-accent-glow">
+            <Music className="w-10 h-10 text-white" />
+          </div>
+          <h1 className="text-2xl font-bold text-gradient">EchoStats</h1>
+          <Loader2 className="w-5 h-5 text-accent-dynamic animate-spin" />
         </div>
       </main>
     );
