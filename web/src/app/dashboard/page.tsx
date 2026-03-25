@@ -11,6 +11,8 @@ import { TrackCard } from "@/components/music/track-card";
 import { ArtistCard } from "@/components/music/artist-card";
 import { BarChart } from "@/components/charts/bar-chart";
 import { PieChart } from "@/components/charts/pie-chart";
+import { AudioProfile } from "@/components/dashboard/audio-profile";
+import { StreakCalendar } from "@/components/charts/streak-calendar";
 import { CardSkeleton, ChartSkeleton, ListSkeleton } from "@/components/ui/loading-skeleton";
 
 function formatDuration(ms: number): string {
@@ -104,6 +106,20 @@ export default function DashboardPage() {
             ) : (
               <p className="text-white/40 text-center py-12">No data yet</p>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Audio Profile + Streak */}
+      {!isLoading && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <AudioProfile features={data?.avg_audio_features || null} />
+          <div className="glass-card p-6">
+            <h2 className="text-lg font-semibold text-theme mb-4">Listening Activity</h2>
+            <StreakCalendar data={{}} weeks={16} />
+            <p className="text-xs text-theme-tertiary text-center mt-3">
+              Streak data populates as you listen
+            </p>
           </div>
         </div>
       )}

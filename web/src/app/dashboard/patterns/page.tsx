@@ -6,6 +6,7 @@ import { BarChart3 } from "lucide-react";
 import { api } from "@/lib/api";
 import { Heatmap } from "@/components/charts/heatmap";
 import { BarChart } from "@/components/charts/bar-chart";
+import { ListeningClock } from "@/components/charts/listening-clock";
 import { TimeRangeSelector } from "@/components/ui/time-range-selector";
 import { DateRangeFilter } from "@/components/ui/date-range-filter";
 import { ChartSkeleton } from "@/components/ui/loading-skeleton";
@@ -81,14 +82,20 @@ export default function PatternsPage() {
         </div>
       ) : (
         <>
-          {/* Heatmap */}
-          <div className="glass-card p-6">
-            <h2 className="text-lg font-semibold text-white mb-4">Activity Heatmap</h2>
-            {heatmapData.length > 0 ? (
-              <Heatmap data={heatmapData} />
-            ) : (
-              <p className="text-white/40 text-center py-8">Not enough data for heatmap</p>
-            )}
+          {/* Listening Clock + Heatmap */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="glass-card p-6 flex flex-col items-center">
+              <h2 className="text-lg font-semibold text-white mb-4 self-start">Listening Clock</h2>
+              <ListeningClock hourlyData={data?.hourly_distribution || []} />
+            </div>
+            <div className="glass-card p-6 lg:col-span-2">
+              <h2 className="text-lg font-semibold text-white mb-4">Activity Heatmap</h2>
+              {heatmapData.length > 0 ? (
+                <Heatmap data={heatmapData} />
+              ) : (
+                <p className="text-white/40 text-center py-8">Not enough data for heatmap</p>
+              )}
+            </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

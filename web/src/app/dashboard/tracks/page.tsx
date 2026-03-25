@@ -2,12 +2,13 @@
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Music, LayoutGrid, Table2 } from "lucide-react";
+import { Music, LayoutGrid, Table2, Download } from "lucide-react";
 import { api } from "@/lib/api";
 import { TrackCard } from "@/components/music/track-card";
 import { TimeRangeSelector } from "@/components/ui/time-range-selector";
 import { DateRangeFilter } from "@/components/ui/date-range-filter";
 import { ListSkeleton } from "@/components/ui/loading-skeleton";
+import { exportTopItems } from "@/lib/export";
 
 export default function TopTracksPage() {
   const [period, setPeriod] = useState("all_time");
@@ -43,11 +44,18 @@ export default function TopTracksPage() {
             onEndDateChange={setEndDate}
             onClear={() => { setStartDate(""); setEndDate(""); }}
           />
+          <button
+            onClick={() => data?.items && exportTopItems(data.items, "tracks")}
+            disabled={!data?.items?.length}
+            className="flex items-center gap-2 px-3 py-2 text-sm text-theme-secondary bg-theme-surface-2 rounded-xl border border-white/10 hover:border-white/20 transition-all disabled:opacity-30"
+          >
+            <Download className="w-4 h-4" />
+          </button>
           <div className="flex gap-1 p-1 bg-surface-2 rounded-lg border border-white/5">
-            <button onClick={() => setView("cards")} className={`p-1.5 rounded-md ${view === "cards" ? "bg-accent-purple/20 text-accent-purple" : "text-white/40"}`}>
+            <button onClick={() => setView("cards")} className={`p-1.5 rounded-md ${view === "cards" ? "bg-accent-dynamic/20 text-accent-dynamic" : "text-white/40"}`}>
               <LayoutGrid className="w-4 h-4" />
             </button>
-            <button onClick={() => setView("table")} className={`p-1.5 rounded-md ${view === "table" ? "bg-accent-purple/20 text-accent-purple" : "text-white/40"}`}>
+            <button onClick={() => setView("table")} className={`p-1.5 rounded-md ${view === "table" ? "bg-accent-dynamic/20 text-accent-dynamic" : "text-white/40"}`}>
               <Table2 className="w-4 h-4" />
             </button>
           </div>

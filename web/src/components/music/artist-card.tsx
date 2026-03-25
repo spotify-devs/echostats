@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { Users } from "lucide-react";
 
 interface ArtistCardProps {
@@ -7,10 +8,11 @@ interface ArtistCardProps {
   imageUrl?: string;
   playCount?: number;
   genres?: string[];
+  spotifyId?: string;
 }
 
-export function ArtistCard({ rank, name, imageUrl, playCount, genres }: ArtistCardProps) {
-  return (
+export function ArtistCard({ rank, name, imageUrl, playCount, genres, spotifyId }: ArtistCardProps) {
+  const content = (
     <div className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/[0.03] transition-all group">
       {rank !== undefined && (
         <span className="w-6 text-center text-sm text-white/30 font-mono">{rank}</span>
@@ -35,4 +37,10 @@ export function ArtistCard({ rank, name, imageUrl, playCount, genres }: ArtistCa
       )}
     </div>
   );
+
+  if (spotifyId) {
+    return <Link href={`/dashboard/artists/${spotifyId}`}>{content}</Link>;
+  }
+
+  return content;
 }

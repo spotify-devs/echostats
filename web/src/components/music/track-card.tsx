@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { Play, Clock } from "lucide-react";
 
 interface TrackCardProps {
@@ -9,10 +10,11 @@ interface TrackCardProps {
   playCount?: number;
   duration?: string;
   spotifyUrl?: string;
+  spotifyId?: string;
 }
 
-export function TrackCard({ rank, name, artist, albumImageUrl, playCount, duration, spotifyUrl }: TrackCardProps) {
-  return (
+export function TrackCard({ rank, name, artist, albumImageUrl, playCount, duration, spotifyUrl, spotifyId }: TrackCardProps) {
+  const content = (
     <div className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/[0.03] transition-all group">
       {rank !== undefined && (
         <span className="w-6 text-center text-sm text-white/30 font-mono">{rank}</span>
@@ -40,4 +42,10 @@ export function TrackCard({ rank, name, artist, albumImageUrl, playCount, durati
       )}
     </div>
   );
+
+  if (spotifyId) {
+    return <Link href={`/dashboard/tracks/${spotifyId}`}>{content}</Link>;
+  }
+
+  return content;
 }
