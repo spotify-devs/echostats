@@ -13,6 +13,7 @@ export default defineConfig({
       },
       head: [
         { tag: "script", attrs: { src: "/echostats/particles.js", defer: true } },
+        { tag: "script", attrs: { src: "https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js", defer: true } },
       ],
       sidebar: [
         { label: "Getting Started", autogenerate: { directory: "getting-started" } },

@@ -17,6 +17,19 @@ hero:
 
 import { Card, CardGrid } from '@astrojs/starlight/components';
 
+{/* Floating Lottie music animations */}
+<div style="position: fixed; top: 8%; right: 4%; z-index: 0; pointer-events: none; opacity: 0.15;">
+  <lottie-player autoplay loop src="https://assets2.lottiefiles.com/packages/lf20_ikk4jhps.json" style="width: 200px; height: 200px;"></lottie-player>
+</div>
+
+<div style="position: fixed; bottom: 12%; left: 2%; z-index: 0; pointer-events: none; opacity: 0.12;">
+  <lottie-player autoplay loop speed="0.7" src="https://assets9.lottiefiles.com/packages/lf20_vwcugezu.json" style="width: 180px; height: 180px;"></lottie-player>
+</div>
+
+<div style="position: fixed; top: 45%; left: 6%; z-index: 0; pointer-events: none; opacity: 0.10;">
+  <lottie-player autoplay loop speed="0.5" src="https://assets5.lottiefiles.com/packages/lf20_jm7mv1ib.json" style="width: 140px; height: 140px;"></lottie-player>
+</div>
+
 ## Features
 
 <CardGrid stagger>
@@ -33,3 +46,25 @@ import { Card, CardGrid } from '@astrojs/starlight/components';
     Deploy with Docker Compose or Helm. Your data never leaves your server.
   </Card>
 </CardGrid>
+
+## Quick Start
+
+```bash
+# Clone and start in under 5 minutes
+git clone https://github.com/spotify-devs/echostats.git
+cd echostats && cp .env.example .env
+# Edit .env with your Spotify credentials
+docker compose up -d
+```
+
+Visit **http://localhost:3000** and connect your Spotify account. Data syncs automatically every 15 minutes.
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| **Frontend** | Next.js 16 · React 19 · TypeScript · Tailwind · Framer Motion |
+| **Backend** | Python 3.12 · FastAPI · Pydantic |
+| **Database** | MongoDB 7 · Beanie ODM |
+| **Cache** | Redis 7 · ARQ (background worker) |
+| **Deploy** | Docker · Helm 3 · Kubernetes |
