@@ -11,9 +11,8 @@ logger = structlog.get_logger()
 
 APP_VERSION = os.environ.get("APP_VERSION", "dev")
 GITHUB_REPO = os.environ.get("GITHUB_REPO", "spotify-devs/echostats")
-GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "")
 
-# Cache the latest release check (avoid hitting GitHub on every request)
+# Cache the latest release check
 _update_cache: dict = {"version": None, "url": None, "notes": None, "published": None, "checked_at": 0}
 
 
@@ -29,19 +28,14 @@ async def check_update() -> dict:
     import time
 
     now = time.time()
-    # Cache for 1 hour
     if _update_cache["version"] and now - _update_cache["checked_at"] < 3600:
         return _build_update_response()
-
-    headers = {"Accept": "application/vnd.github+json"}
-    if GITHUB_TOKEN:
-        headers["Authorization"] = f"Bearer {GITHUB_TOKEN}"
 
     try:
         async with httpx.AsyncClient(timeout=10) as client:
             resp = await client.get(
                 f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest",
-                headers=headers,
+                headers={"Accept": "application/vnd.github+json"},
             )
             if resp.status_code == 200:
                 data = resp.json()
@@ -51,12 +45,6 @@ async def check_update() -> dict:
                 _update_cache["published"] = data.get("published_at")
                 _update_cache["checked_at"] = now
                 return _build_update_response()
-
-            if resp.status_code == 404:
-                logger.info("GitHub releases not accessible (private repo without token?)")
-            else:
-                logger.warning("GitHub API error", status=resp.status_code)
-
     except Exception as e:
         logger.warning("Failed to check for updates", error=str(e))
 
