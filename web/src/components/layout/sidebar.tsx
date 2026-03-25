@@ -13,6 +13,9 @@ import {
   ListMusic,
   Sparkles,
   Heart,
+  Star,
+  Library,
+  Play,
   Settings,
   Menu,
   X,
@@ -26,8 +29,12 @@ const navItems = [
   { href: "/dashboard/history", icon: Clock, label: "History" },
   { href: "/dashboard/patterns", icon: BarChart3, label: "Patterns" },
   { href: "/dashboard/mood", icon: Heart, label: "Mood & Vibe" },
+  { href: "/dashboard/review", icon: Star, label: "Year in Review" },
+  { href: "/dashboard/albums", icon: Disc3, label: "Albums" },
   { href: "/dashboard/playlists", icon: ListMusic, label: "Playlists" },
+  { href: "/dashboard/library", icon: Library, label: "Library" },
   { href: "/dashboard/recommendations", icon: Sparkles, label: "Discover" },
+  { href: "/dashboard/player", icon: Play, label: "Player" },
 ];
 
 export function Sidebar() {
