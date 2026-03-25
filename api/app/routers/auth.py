@@ -213,21 +213,24 @@ async def auth_status(request: Request, response: Response) -> dict:
     # Single-user auto-login: if no session but exactly one user exists,
     # automatically create a session for them (self-hosted single-user app)
     if not user:
-        user_count = await User.count()
-        if user_count == 1:
-            user = await User.find_one()
-            if user:
-                session_token = _create_jwt(str(user.id), user.spotify_id)
-                response.set_cookie(
-                    key="session",
-                    value=session_token,
-                    httponly=True,
-                    secure=False,
-                    samesite="lax",
-                    max_age=30 * 24 * 3600,
-                    path="/",
-                )
-                logger.info("Single-user auto-login", spotify_id=user.spotify_id)
+        try:
+            user_count = await User.count()
+            if user_count == 1:
+                user = await User.find_one()
+                if user:
+                    session_token = _create_jwt(str(user.id), user.spotify_id)
+                    response.set_cookie(
+                        key="session",
+                        value=session_token,
+                        httponly=True,
+                        secure=False,
+                        samesite="lax",
+                        max_age=30 * 24 * 3600,
+                        path="/",
+                    )
+                    logger.info("Single-user auto-login", spotify_id=user.spotify_id)
+        except Exception:
+            pass  # DB not initialized or unavailable — skip auto-login
 
     if not user:
         return {"authenticated": False}
