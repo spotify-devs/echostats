@@ -1,16 +1,15 @@
 <div align="center">
 
-<img src="https://raw.githubusercontent.com/spotify-devs/echostats/main/web/public/icons/icon-192x192.png" alt="EchoStats" width="80" />
+# 🎵 EchoStats 🎧
 
-# EchoStats
-
-### 🎵 Your music. Your data. Your server. 🎧
+### Your music. Your data. Your server.
 
 *Self-hosted Spotify analytics dashboard — 40+ pages of deep insights into your listening habits.*
 
-[![GitHub Release](https://img.shields.io/github/v/release/spotify-devs/echostats?style=for-the-badge&logo=github&label=Release&color=7c3aed)](https://github.com/spotify-devs/echostats/releases)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](./LICENSE)
-[![CI](https://img.shields.io/github/actions/workflow/status/spotify-devs/echostats/ci.yml?style=for-the-badge&logo=github-actions&label=CI)](https://github.com/spotify-devs/echostats/actions)
+[![Release](https://img.shields.io/badge/Release-v0.14.0-7c3aed?style=for-the-badge&logo=github)](https://github.com/spotify-devs/echostats/releases)
+[![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](./LICENSE)
+[![CI](https://img.shields.io/badge/CI-passing-brightgreen?style=for-the-badge&logo=github-actions)](https://github.com/spotify-devs/echostats/actions)
+[![Docker](https://img.shields.io/badge/Docker-GHCR-2496ED?style=for-the-badge&logo=docker)](https://github.com/spotify-devs/echostats/pkgs/container/echostats-api)
 
 <br />
 
