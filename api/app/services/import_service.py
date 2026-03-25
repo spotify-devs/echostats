@@ -104,7 +104,7 @@ async def _parse_history_entry(
         )
 
     # Basic streaming history format (StreamingHistory*.json)
-    elif "endTime" in entry:
+    if "endTime" in entry:
         played_at_str = entry.get("endTime", "")
         track_name = entry.get("trackName", "")
         artist_name = entry.get("artistName", "")
@@ -113,7 +113,7 @@ async def _parse_history_entry(
         if not track_name:
             return None
 
-        played_at = datetime.strptime(played_at_str, "%Y-%m-%d %H:%M")  # noqa: DTZ007
+        played_at = datetime.strptime(played_at_str, "%Y-%m-%d %H:%M")
 
         return ListeningHistory(
             user_id=user_id,

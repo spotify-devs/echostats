@@ -58,7 +58,9 @@
 
   .light .glass-card {
     background: rgb(var(--surface-1));
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 4px 24px rgba(0, 0, 0, 0.04);
+    box-shadow:
+      0 1px 3px rgba(0, 0, 0, 0.08),
+      0 4px 24px rgba(0, 0, 0, 0.04);
   }
 
   .glass-card-hover {
@@ -73,7 +75,12 @@
   }
 
   .btn-primary {
-    background: linear-gradient(135deg, var(--accent-gradient-from), var(--accent-gradient-via), var(--accent-gradient-to));
+    background: linear-gradient(
+      135deg,
+      var(--accent-gradient-from),
+      var(--accent-gradient-via),
+      var(--accent-gradient-to)
+    );
     color: white;
     font-weight: 500;
     padding: 0.625rem 1.5rem;
@@ -93,14 +100,24 @@
   }
 
   .text-gradient {
-    background: linear-gradient(135deg, var(--accent-gradient-from), var(--accent-gradient-via), var(--accent-gradient-to));
+    background: linear-gradient(
+      135deg,
+      var(--accent-gradient-from),
+      var(--accent-gradient-via),
+      var(--accent-gradient-to)
+    );
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
   .bg-accent-gradient {
-    background: linear-gradient(135deg, var(--accent-gradient-from), var(--accent-gradient-via), var(--accent-gradient-to));
+    background: linear-gradient(
+      135deg,
+      var(--accent-gradient-from),
+      var(--accent-gradient-via),
+      var(--accent-gradient-to)
+    );
   }
 
   .metric-card {
@@ -172,7 +189,7 @@
     .glass-card {
       border-radius: 0.75rem;
     }
-    
+
     .metric-card {
       padding: 1rem;
     }
@@ -210,6 +227,10 @@
 }
 
 @keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
 }

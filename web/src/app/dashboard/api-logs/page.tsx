@@ -1,14 +1,22 @@
 "use client";
 
-import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
-  Terminal, RefreshCw, CheckCircle, AlertTriangle, XCircle,
-  Activity, Clock, Zap, Filter, ChevronLeft, ChevronRight,
+  Activity,
+  AlertTriangle,
+  CheckCircle,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Filter,
+  RefreshCw,
+  Terminal,
+  XCircle,
 } from "lucide-react";
-import { api } from "@/lib/api";
+import { useState } from "react";
 import { BarChart } from "@/components/charts/bar-chart";
-import { ChartSkeleton, CardSkeleton } from "@/components/ui/loading-skeleton";
+import { CardSkeleton } from "@/components/ui/loading-skeleton";
+import { api } from "@/lib/api";
 
 export default function ApiLogsPage() {
   const [page, setPage] = useState(1);
@@ -21,7 +29,13 @@ export default function ApiLogsPage() {
     refetchInterval: 30000,
   });
 
-  const { data: logs, isLoading: loadingLogs, refetch, isFetching, isError: logsError } = useQuery({
+  const {
+    data: logs,
+    isLoading: loadingLogs,
+    refetch,
+    isFetching,
+    isError: logsError,
+  } = useQuery({
     queryKey: ["api-logs", page, statusFilter, methodFilter],
     queryFn: () => {
       let url = `/api/v1/api-logs?page=${page}&limit=50`;
@@ -86,23 +100,31 @@ export default function ApiLogsPage() {
       {/* Stats Cards */}
       {loadingStats ? (
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-          {[...Array(5)].map((_, i) => <CardSkeleton key={i} />)}
+          {[...Array(5)].map((_, i) => (
+            <CardSkeleton key={i} />
+          ))}
         </div>
       ) : stats ? (
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
           <div className="glass-card p-4">
             <Activity className="w-5 h-5 text-accent-dynamic mb-2" />
-            <p className="text-2xl font-bold text-theme tabular-nums">{(stats.total_calls || 0).toLocaleString()}</p>
+            <p className="text-2xl font-bold text-theme tabular-nums">
+              {(stats.total_calls || 0).toLocaleString()}
+            </p>
             <p className="text-xs text-theme-tertiary">Total Calls</p>
           </div>
           <div className="glass-card p-4">
             <CheckCircle className="w-5 h-5 text-emerald-400 mb-2" />
-            <p className="text-2xl font-bold text-emerald-400 tabular-nums">{stats.success_rate || 0}%</p>
+            <p className="text-2xl font-bold text-emerald-400 tabular-nums">
+              {stats.success_rate || 0}%
+            </p>
             <p className="text-xs text-theme-tertiary">Success Rate</p>
           </div>
           <div className="glass-card p-4">
             <AlertTriangle className="w-5 h-5 text-amber-400 mb-2" />
-            <p className="text-2xl font-bold text-amber-400 tabular-nums">{stats.rate_limit_count || 0}</p>
+            <p className="text-2xl font-bold text-amber-400 tabular-nums">
+              {stats.rate_limit_count || 0}
+            </p>
             <p className="text-xs text-theme-tertiary">Rate Limits (429)</p>
           </div>
           <div className="glass-card p-4">
@@ -112,7 +134,9 @@ export default function ApiLogsPage() {
           </div>
           <div className="glass-card p-4">
             <Clock className="w-5 h-5 text-accent-cyan mb-2" />
-            <p className="text-2xl font-bold text-theme tabular-nums">{stats.avg_latency_ms || 0}ms</p>
+            <p className="text-2xl font-bold text-theme tabular-nums">
+              {stats.avg_latency_ms || 0}ms
+            </p>
             <p className="text-xs text-theme-tertiary">Avg Latency</p>
           </div>
         </div>
@@ -126,20 +150,40 @@ export default function ApiLogsPage() {
             <h2 className="text-lg font-semibold text-theme mb-4">Status Distribution</h2>
             <div className="space-y-3">
               {[
-                { label: "2xx Success", count: stats.status_distribution?.["2xx"] || 0, color: "#10b981" },
-                { label: "4xx Client Error", count: stats.status_distribution?.["4xx"] || 0, color: "#f59e0b" },
-                { label: "5xx Server Error", count: stats.status_distribution?.["5xx"] || 0, color: "#ef4444" },
+                {
+                  label: "2xx Success",
+                  count: stats.status_distribution?.["2xx"] || 0,
+                  color: "#10b981",
+                },
+                {
+                  label: "4xx Client Error",
+                  count: stats.status_distribution?.["4xx"] || 0,
+                  color: "#f59e0b",
+                },
+                {
+                  label: "5xx Server Error",
+                  count: stats.status_distribution?.["5xx"] || 0,
+                  color: "#ef4444",
+                },
               ].map((s) => {
-                const total = (stats.status_distribution?.["2xx"] || 0) + (stats.status_distribution?.["4xx"] || 0) + (stats.status_distribution?.["5xx"] || 0);
+                const total =
+                  (stats.status_distribution?.["2xx"] || 0) +
+                  (stats.status_distribution?.["4xx"] || 0) +
+                  (stats.status_distribution?.["5xx"] || 0);
                 const pct = total > 0 ? Math.round((s.count / total) * 100) : 0;
                 return (
                   <div key={s.label}>
                     <div className="flex justify-between text-sm mb-1">
                       <span className="text-theme-secondary">{s.label}</span>
-                      <span style={{ color: s.color }} className="font-medium">{s.count} ({pct}%)</span>
+                      <span style={{ color: s.color }} className="font-medium">
+                        {s.count} ({pct}%)
+                      </span>
                     </div>
                     <div className="w-full h-2 rounded-full bg-theme-surface-3 overflow-hidden">
-                      <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: s.color }} />
+                      <div
+                        className="h-full rounded-full transition-all"
+                        style={{ width: `${pct}%`, backgroundColor: s.color }}
+                      />
                     </div>
                   </div>
                 );
@@ -151,7 +195,13 @@ export default function ApiLogsPage() {
           <div className="glass-card p-6">
             <h2 className="text-lg font-semibold text-theme mb-4">Most Called Endpoints</h2>
             {endpointBarData.length > 0 ? (
-              <BarChart data={endpointBarData} xKey="name" bars={[{ key: "calls", color: "rgb(var(--accent))" }]} height={200} layout="vertical" />
+              <BarChart
+                data={endpointBarData}
+                xKey="name"
+                bars={[{ key: "calls", color: "rgb(var(--accent))" }]}
+                height={200}
+                layout="vertical"
+              />
             ) : (
               <p className="text-theme-tertiary text-center py-12">No data yet</p>
             )}
@@ -168,9 +218,14 @@ export default function ApiLogsPage() {
           {["all", "success", "errors", "rate-limited"].map((f) => (
             <button
               key={f}
-              onClick={() => { setStatusFilter(f); setPage(1); }}
+              onClick={() => {
+                setStatusFilter(f);
+                setPage(1);
+              }}
               className={`px-3 py-1 text-xs rounded-lg transition-all capitalize ${
-                statusFilter === f ? "bg-accent-dynamic/20 text-accent-dynamic" : "text-theme-tertiary hover:text-theme"
+                statusFilter === f
+                  ? "bg-accent-dynamic/20 text-accent-dynamic"
+                  : "text-theme-tertiary hover:text-theme"
               }`}
             >
               {f === "rate-limited" ? "429s" : f}
@@ -181,9 +236,14 @@ export default function ApiLogsPage() {
           {["all", "GET", "POST", "PUT", "DELETE"].map((m) => (
             <button
               key={m}
-              onClick={() => { setMethodFilter(m); setPage(1); }}
+              onClick={() => {
+                setMethodFilter(m);
+                setPage(1);
+              }}
               className={`px-2.5 py-1 text-xs rounded-lg transition-all ${
-                methodFilter === m ? "bg-accent-dynamic/20 text-accent-dynamic" : "text-theme-tertiary hover:text-theme"
+                methodFilter === m
+                  ? "bg-accent-dynamic/20 text-accent-dynamic"
+                  : "text-theme-tertiary hover:text-theme"
               }`}
             >
               {m === "all" ? "All" : m}
@@ -195,58 +255,88 @@ export default function ApiLogsPage() {
       {/* Log Table */}
       <div className="glass-card overflow-hidden">
         {loadingLogs ? (
-          <div className="p-8 text-center"><RefreshCw className="w-6 h-6 text-accent-dynamic animate-spin mx-auto" /></div>
+          <div className="p-8 text-center">
+            <RefreshCw className="w-6 h-6 text-accent-dynamic animate-spin mx-auto" />
+          </div>
         ) : (
           <>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-white/5">
-                    <th className="px-4 py-3 text-left text-xs text-theme-tertiary uppercase">Time</th>
-                    <th className="px-4 py-3 text-left text-xs text-theme-tertiary uppercase">Method</th>
-                    <th className="px-4 py-3 text-left text-xs text-theme-tertiary uppercase">Endpoint</th>
-                    <th className="px-4 py-3 text-left text-xs text-theme-tertiary uppercase">Status</th>
-                    <th className="px-4 py-3 text-left text-xs text-theme-tertiary uppercase">Latency</th>
-                    <th className="px-4 py-3 text-left text-xs text-theme-tertiary uppercase">Error</th>
+                    <th className="px-4 py-3 text-left text-xs text-theme-tertiary uppercase">
+                      Time
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs text-theme-tertiary uppercase">
+                      Method
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs text-theme-tertiary uppercase">
+                      Endpoint
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs text-theme-tertiary uppercase">
+                      Status
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs text-theme-tertiary uppercase">
+                      Latency
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs text-theme-tertiary uppercase">
+                      Error
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {items.length > 0 ? items.map((log: any, i: number) => (
-                    <tr key={log.id || i} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
-                      <td className="px-4 py-2.5 font-mono text-xs text-theme-tertiary whitespace-nowrap">
-                        {new Date(log.timestamp).toLocaleTimeString()}
-                      </td>
-                      <td className="px-4 py-2.5">
-                        <span className="px-1.5 py-0.5 text-[10px] font-bold rounded bg-accent-dynamic/15 text-accent-dynamic">
-                          {log.method}
-                        </span>
-                      </td>
-                      <td className="px-4 py-2.5 font-mono text-xs text-theme-secondary max-w-xs truncate">
-                        {log.endpoint}
-                      </td>
-                      <td className="px-4 py-2.5">
-                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full border ${statusBg(log.status_code)} ${statusColor(log.status_code)}`}>
-                          {log.status_code >= 200 && log.status_code < 300 && <CheckCircle className="w-3 h-3" />}
-                          {log.status_code === 429 && <AlertTriangle className="w-3 h-3" />}
-                          {log.status_code >= 400 && log.status_code !== 429 && <XCircle className="w-3 h-3" />}
-                          {log.status_code}
-                        </span>
-                      </td>
-                      <td className={`px-4 py-2.5 text-xs font-mono tabular-nums ${latencyColor(log.latency_ms)}`}>
-                        {log.latency_ms}ms
-                      </td>
-                      <td className="px-4 py-2.5 text-xs text-red-400 max-w-[200px] truncate" title={log.error || ""}>
-                        {log.error || "—"}
-                      </td>
-                    </tr>
-                  )) : (
+                  {items.length > 0 ? (
+                    items.map((log: any, i: number) => (
+                      <tr
+                        key={log.id || i}
+                        className="border-b border-white/5 hover:bg-white/[0.02] transition-colors"
+                      >
+                        <td className="px-4 py-2.5 font-mono text-xs text-theme-tertiary whitespace-nowrap">
+                          {new Date(log.timestamp).toLocaleTimeString()}
+                        </td>
+                        <td className="px-4 py-2.5">
+                          <span className="px-1.5 py-0.5 text-[10px] font-bold rounded bg-accent-dynamic/15 text-accent-dynamic">
+                            {log.method}
+                          </span>
+                        </td>
+                        <td className="px-4 py-2.5 font-mono text-xs text-theme-secondary max-w-xs truncate">
+                          {log.endpoint}
+                        </td>
+                        <td className="px-4 py-2.5">
+                          <span
+                            className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full border ${statusBg(log.status_code)} ${statusColor(log.status_code)}`}
+                          >
+                            {log.status_code >= 200 && log.status_code < 300 && (
+                              <CheckCircle className="w-3 h-3" />
+                            )}
+                            {log.status_code === 429 && <AlertTriangle className="w-3 h-3" />}
+                            {log.status_code >= 400 && log.status_code !== 429 && (
+                              <XCircle className="w-3 h-3" />
+                            )}
+                            {log.status_code}
+                          </span>
+                        </td>
+                        <td
+                          className={`px-4 py-2.5 text-xs font-mono tabular-nums ${latencyColor(log.latency_ms)}`}
+                        >
+                          {log.latency_ms}ms
+                        </td>
+                        <td
+                          className="px-4 py-2.5 text-xs text-red-400 max-w-[200px] truncate"
+                          title={log.error || ""}
+                        >
+                          {log.error || "—"}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
                     <tr>
                       <td colSpan={6} className="px-4 py-12 text-center text-theme-tertiary">
                         {logsError
                           ? "Failed to load logs — check authentication"
                           : statusFilter !== "all" || methodFilter !== "all"
-                          ? "No logs matching filters"
-                          : "No API calls logged yet. Sync data to generate logs."}
+                            ? "No logs matching filters"
+                            : "No API calls logged yet. Sync data to generate logs."}
                       </td>
                     </tr>
                   )}
@@ -284,9 +374,15 @@ export default function ApiLogsPage() {
 
       {/* Legend */}
       <div className="flex flex-wrap gap-4 text-[10px] text-theme-tertiary">
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-400" /> 2xx Success</span>
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-400" /> 429 Rate Limited</span>
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-400" /> 4xx/5xx Error</span>
+        <span className="flex items-center gap-1">
+          <span className="w-2 h-2 rounded-full bg-emerald-400" /> 2xx Success
+        </span>
+        <span className="flex items-center gap-1">
+          <span className="w-2 h-2 rounded-full bg-amber-400" /> 429 Rate Limited
+        </span>
+        <span className="flex items-center gap-1">
+          <span className="w-2 h-2 rounded-full bg-red-400" /> 4xx/5xx Error
+        </span>
         <span>Auto-refreshes every 15s</span>
       </div>
     </div>

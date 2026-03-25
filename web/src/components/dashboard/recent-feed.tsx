@@ -67,7 +67,13 @@ export function RecentFeed() {
             >
               <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-theme-surface-3 flex-shrink-0">
                 {item.track?.album_image_url ? (
-                  <Image src={item.track.album_image_url} alt="" fill className="object-cover group-hover:scale-105 transition-transform" sizes="40px" />
+                  <Image
+                    src={item.track.album_image_url}
+                    alt=""
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform"
+                    sizes="40px"
+                  />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-theme-tertiary">
                     <Clock className="w-4 h-4" />
@@ -75,8 +81,12 @@ export function RecentFeed() {
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-theme truncate">{item.track?.name || "Unknown"}</p>
-                <p className="text-xs text-theme-tertiary truncate">{item.track?.artist_name || "Unknown"}</p>
+                <p className="text-sm font-medium text-theme truncate">
+                  {item.track?.name || "Unknown"}
+                </p>
+                <p className="text-xs text-theme-tertiary truncate">
+                  {item.track?.artist_name || "Unknown"}
+                </p>
               </div>
               <span className="text-[10px] text-theme-tertiary whitespace-nowrap">
                 {timeAgo(item.played_at)}

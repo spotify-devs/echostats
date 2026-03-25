@@ -1,7 +1,6 @@
 """Spotify Web API client with rate limiting and error handling."""
 
 import time
-from datetime import datetime, timedelta
 from typing import Any
 
 import httpx

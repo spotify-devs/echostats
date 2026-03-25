@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Calendar, TrendingUp } from "lucide-react";
 import Image from "next/image";
-import { api } from "@/lib/api";
+import { useState } from "react";
 import { LineChart } from "@/components/charts/line-chart";
-import { TimeRangeSelector } from "@/components/ui/time-range-selector";
 import { ChartSkeleton } from "@/components/ui/loading-skeleton";
+import { TimeRangeSelector } from "@/components/ui/time-range-selector";
+import { api } from "@/lib/api";
 
 export default function TimelinePage() {
   const [period, setPeriod] = useState("all_time");
@@ -48,7 +48,10 @@ export default function TimelinePage() {
       </div>
 
       {isLoading ? (
-        <div className="space-y-6"><ChartSkeleton /><ChartSkeleton /></div>
+        <div className="space-y-6">
+          <ChartSkeleton />
+          <ChartSkeleton />
+        </div>
       ) : (
         <>
           {/* Weekly Trend */}
@@ -75,10 +78,20 @@ export default function TimelinePage() {
             {topArtist && (
               <div className="glass-card p-5 flex items-center gap-4">
                 <div className="relative w-14 h-14 rounded-full overflow-hidden bg-theme-surface-3 flex-shrink-0">
-                  {topArtist.image_url && <Image src={topArtist.image_url} alt="" fill className="object-cover" sizes="56px" />}
+                  {topArtist.image_url && (
+                    <Image
+                      src={topArtist.image_url}
+                      alt=""
+                      fill
+                      className="object-cover"
+                      sizes="56px"
+                    />
+                  )}
                 </div>
                 <div>
-                  <p className="text-[10px] text-accent-dynamic uppercase tracking-wider font-medium">Most Played Artist</p>
+                  <p className="text-[10px] text-accent-dynamic uppercase tracking-wider font-medium">
+                    Most Played Artist
+                  </p>
                   <p className="text-sm font-bold text-theme">{topArtist.name}</p>
                   <p className="text-xs text-theme-tertiary">{topArtist.play_count} plays</p>
                 </div>
@@ -87,11 +100,23 @@ export default function TimelinePage() {
             {topTrack && (
               <div className="glass-card p-5 flex items-center gap-4">
                 <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-theme-surface-3 flex-shrink-0">
-                  {topTrack.image_url && <Image src={topTrack.image_url} alt="" fill className="object-cover" sizes="56px" />}
+                  {topTrack.image_url && (
+                    <Image
+                      src={topTrack.image_url}
+                      alt=""
+                      fill
+                      className="object-cover"
+                      sizes="56px"
+                    />
+                  )}
                 </div>
                 <div>
-                  <p className="text-[10px] text-accent-dynamic uppercase tracking-wider font-medium">Most Played Track</p>
-                  <p className="text-sm font-bold text-theme truncate max-w-[160px]">{topTrack.name?.split(" — ")[0]}</p>
+                  <p className="text-[10px] text-accent-dynamic uppercase tracking-wider font-medium">
+                    Most Played Track
+                  </p>
+                  <p className="text-sm font-bold text-theme truncate max-w-[160px]">
+                    {topTrack.name?.split(" — ")[0]}
+                  </p>
                   <p className="text-xs text-theme-tertiary">{topTrack.play_count} plays</p>
                 </div>
               </div>
@@ -101,9 +126,13 @@ export default function TimelinePage() {
                 <TrendingUp className="w-6 h-6 text-accent-dynamic" />
               </div>
               <div>
-                <p className="text-[10px] text-accent-dynamic uppercase tracking-wider font-medium">Total Listening</p>
+                <p className="text-[10px] text-accent-dynamic uppercase tracking-wider font-medium">
+                  Total Listening
+                </p>
                 <p className="text-sm font-bold text-theme">{data?.total_hours || 0} hours</p>
-                <p className="text-xs text-theme-tertiary">{totalPlays.toLocaleString()} tracks played</p>
+                <p className="text-xs text-theme-tertiary">
+                  {totalPlays.toLocaleString()} tracks played
+                </p>
               </div>
             </div>
           </div>
@@ -115,16 +144,23 @@ export default function TimelinePage() {
               <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-theme-surface-3" />
               <div className="space-y-6">
                 {milestones.map((m, i) => (
-                  <div key={i} className={`relative flex items-center gap-4 pl-12 ${m.reached ? "" : "opacity-40"}`}>
-                    <div className={`absolute left-4 w-5 h-5 rounded-full flex items-center justify-center text-sm ${
-                      m.reached ? "bg-accent-dynamic" : "bg-theme-surface-3"
-                    }`}>
+                  <div
+                    key={i}
+                    className={`relative flex items-center gap-4 pl-12 ${m.reached ? "" : "opacity-40"}`}
+                  >
+                    <div
+                      className={`absolute left-4 w-5 h-5 rounded-full flex items-center justify-center text-sm ${
+                        m.reached ? "bg-accent-dynamic" : "bg-theme-surface-3"
+                      }`}
+                    >
                       {m.reached ? "✓" : ""}
                     </div>
                     <span className="text-xl">{m.icon}</span>
                     <div>
                       <p className="text-sm font-medium text-theme">{m.label}</p>
-                      <p className="text-xs text-theme-tertiary">{m.threshold.toLocaleString()} plays</p>
+                      <p className="text-xs text-theme-tertiary">
+                        {m.threshold.toLocaleString()} plays
+                      </p>
                     </div>
                   </div>
                 ))}

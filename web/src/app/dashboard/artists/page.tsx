@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Users } from "lucide-react";
-import { api } from "@/lib/api";
+import { useState } from "react";
 import { ArtistCard } from "@/components/music/artist-card";
-import { TimeRangeSelector } from "@/components/ui/time-range-selector";
 import { DateRangeFilter } from "@/components/ui/date-range-filter";
 import { ListSkeleton } from "@/components/ui/loading-skeleton";
+import { TimeRangeSelector } from "@/components/ui/time-range-selector";
+import { api } from "@/lib/api";
 
 export default function TopArtistsPage() {
   const [period, setPeriod] = useState("all_time");
@@ -40,7 +40,10 @@ export default function TopArtistsPage() {
             endDate={endDate}
             onStartDateChange={setStartDate}
             onEndDateChange={setEndDate}
-            onClear={() => { setStartDate(""); setEndDate(""); }}
+            onClear={() => {
+              setStartDate("");
+              setEndDate("");
+            }}
           />
         </div>
       </div>

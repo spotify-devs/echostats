@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { AlertCircle, CheckCircle, RefreshCw, Clock, Shield } from "lucide-react";
+import { AlertCircle, Clock, RefreshCw, Shield } from "lucide-react";
 import { api } from "@/lib/api";
 
 function timeUntil(date: Date): string {
@@ -24,12 +24,10 @@ export function SyncBanner() {
 
   if (!authStatus?.authenticated) return null;
 
-  const tokenExpires = authStatus.token_expires_at
-    ? new Date(authStatus.token_expires_at)
-    : null;
+  const tokenExpires = authStatus.token_expires_at ? new Date(authStatus.token_expires_at) : null;
   const isExpired = tokenExpires && tokenExpires < new Date();
-  const isExpiringSoon = tokenExpires && !isExpired &&
-    (tokenExpires.getTime() - Date.now()) < 10 * 60 * 1000; // < 10 minutes
+  const isExpiringSoon =
+    tokenExpires && !isExpired && tokenExpires.getTime() - Date.now() < 10 * 60 * 1000; // < 10 minutes
 
   // Token expired
   if (isExpired) {
@@ -38,9 +36,14 @@ export function SyncBanner() {
         <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0" />
         <div className="flex-1">
           <p className="text-xs text-red-300 font-medium">Spotify token expired</p>
-          <p className="text-[10px] text-red-300/60">Auto-refresh will attempt on next sync cycle</p>
+          <p className="text-[10px] text-red-300/60">
+            Auto-refresh will attempt on next sync cycle
+          </p>
         </div>
-        <a href="/api/v1/auth/login" className="text-xs text-red-400 hover:text-red-300 px-2.5 py-1 rounded-lg border border-red-400/30 hover:bg-red-400/10 transition-all">
+        <a
+          href="/api/v1/auth/login"
+          className="text-xs text-red-400 hover:text-red-300 px-2.5 py-1 rounded-lg border border-red-400/30 hover:bg-red-400/10 transition-all"
+        >
           Reconnect
         </a>
       </div>
@@ -56,7 +59,9 @@ export function SyncBanner() {
           <p className="text-xs text-amber-300 font-medium">
             Token expires in {timeUntil(tokenExpires)}
           </p>
-          <p className="text-[10px] text-amber-300/60">Auto-refresh is enabled — token will renew automatically</p>
+          <p className="text-[10px] text-amber-300/60">
+            Auto-refresh is enabled — token will renew automatically
+          </p>
         </div>
       </div>
     );

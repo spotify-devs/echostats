@@ -1,7 +1,7 @@
 """Security middleware — rate limiting, CSP headers, request logging."""
 
 import time
-from typing import Callable
+from collections.abc import Callable
 
 import structlog
 from fastapi import Request, Response

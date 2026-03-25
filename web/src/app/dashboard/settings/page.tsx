@@ -1,13 +1,23 @@
 "use client";
 
-import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Settings, User, RefreshCw, Upload, Shield, Palette, Paintbrush, Check, Loader2 } from "lucide-react";
-import { api } from "@/lib/api";
+import {
+  Check,
+  Loader2,
+  Paintbrush,
+  Palette,
+  RefreshCw,
+  Settings,
+  Shield,
+  Upload,
+  User,
+} from "lucide-react";
+import { useState } from "react";
 import { useTheme } from "@/components/theme-provider";
-import { themes, accents, type ThemeId, type AccentId } from "@/lib/themes";
 import { ImportHistoryModal } from "@/components/ui/import-modal";
 import { showToast } from "@/components/ui/toast";
+import { api } from "@/lib/api";
+import { accents, themes } from "@/lib/themes";
 
 export default function SettingsPage() {
   const [importOpen, setImportOpen] = useState(false);
@@ -49,7 +59,9 @@ export default function SettingsPage() {
                 }`}
               >
                 <span className="text-lg">{theme.emoji}</span>
-                <span className={`text-sm font-medium ${isActive ? "text-accent-dynamic" : "text-theme-secondary"}`}>
+                <span
+                  className={`text-sm font-medium ${isActive ? "text-accent-dynamic" : "text-theme-secondary"}`}
+                >
                   {theme.name}
                 </span>
                 {isActive && (
@@ -80,7 +92,9 @@ export default function SettingsPage() {
               >
                 <div
                   className={`w-8 h-8 rounded-full transition-all duration-200 ${
-                    isActive ? "ring-2 ring-white/50 ring-offset-2 ring-offset-transparent scale-110" : "group-hover:scale-110"
+                    isActive
+                      ? "ring-2 ring-white/50 ring-offset-2 ring-offset-transparent scale-110"
+                      : "group-hover:scale-110"
                   }`}
                   style={{ backgroundColor: accent.color }}
                 />
@@ -102,7 +116,9 @@ export default function SettingsPage() {
               />
             </div>
             <div className="flex-1">
-              <p className={`text-sm font-medium ${accentId === "custom" ? "text-accent-dynamic" : "text-theme-secondary"}`}>
+              <p
+                className={`text-sm font-medium ${accentId === "custom" ? "text-accent-dynamic" : "text-theme-secondary"}`}
+              >
                 Custom Color
               </p>
               <p className="text-xs text-theme-tertiary">
@@ -127,11 +143,15 @@ export default function SettingsPage() {
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-theme-secondary">Spotify ID</span>
-              <span className="text-sm text-theme font-mono">{authStatus.user?.spotify_id || "—"}</span>
+              <span className="text-sm text-theme font-mono">
+                {authStatus.user?.spotify_id || "—"}
+              </span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-theme-secondary">Plan</span>
-              <span className="text-sm text-theme capitalize">{authStatus.user?.product || "—"}</span>
+              <span className="text-sm text-theme capitalize">
+                {authStatus.user?.product || "—"}
+              </span>
             </div>
 
             {/* Token Status */}
@@ -140,7 +160,8 @@ export default function SettingsPage() {
                 <span className="text-sm font-medium text-theme flex items-center gap-2">
                   <Shield className="w-4 h-4 text-accent-dynamic" /> Token Status
                 </span>
-                {authStatus.token_expires_at && new Date(authStatus.token_expires_at) > new Date() ? (
+                {authStatus.token_expires_at &&
+                new Date(authStatus.token_expires_at) > new Date() ? (
                   <span className="flex items-center gap-1.5 text-xs text-emerald-400">
                     <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                     Active
@@ -155,7 +176,9 @@ export default function SettingsPage() {
               <div className="flex justify-between items-center">
                 <span className="text-xs text-theme-tertiary">Expires At</span>
                 <span className="text-xs text-theme-secondary font-mono">
-                  {authStatus.token_expires_at ? new Date(authStatus.token_expires_at).toLocaleString() : "—"}
+                  {authStatus.token_expires_at
+                    ? new Date(authStatus.token_expires_at).toLocaleString()
+                    : "—"}
                 </span>
               </div>
               <div className="flex justify-between items-center">
@@ -165,7 +188,8 @@ export default function SettingsPage() {
                 </span>
               </div>
               <p className="text-[10px] text-theme-tertiary border-t border-white/5 pt-2">
-                Tokens are automatically refreshed 5 minutes before expiry. Your tokens are encrypted at rest with AES-256-GCM.
+                Tokens are automatically refreshed 5 minutes before expiry. Your tokens are
+                encrypted at rest with AES-256-GCM.
               </p>
             </div>
           </div>
@@ -196,7 +220,11 @@ export default function SettingsPage() {
             disabled={syncing}
             className="btn-primary text-sm flex items-center gap-2 disabled:opacity-50"
           >
-            {syncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+            {syncing ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <RefreshCw className="w-4 h-4" />
+            )}
             {syncing ? "Syncing..." : "Force Sync"}
           </button>
           <button
@@ -221,11 +249,13 @@ export default function SettingsPage() {
         <h2 className="text-lg font-semibold text-theme flex items-center gap-2">
           <Shield className="w-5 h-5 text-accent-dynamic" /> Security
         </h2>
-        <p className="text-sm text-theme-secondary">Your Spotify tokens are encrypted at rest using AES-256-GCM.</p>
+        <p className="text-sm text-theme-secondary">
+          Your Spotify tokens are encrypted at rest using AES-256-GCM.
+        </p>
         <button
           onClick={() => {
             fetch("/api/v1/auth/logout", { method: "POST", credentials: "include" }).then(
-              () => (window.location.href = "/")
+              () => (window.location.href = "/"),
             );
           }}
           className="px-4 py-2 text-sm text-red-400 border border-red-400/30 rounded-xl hover:bg-red-400/10 transition-all"

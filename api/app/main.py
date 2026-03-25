@@ -12,7 +12,22 @@ from app.config import settings
 from app.database import close_db, init_db
 from app.middleware.rate_limit import RateLimitMiddleware
 from app.middleware.security import RequestLoggingMiddleware, SecurityHeadersMiddleware
-from app.routers import analytics, api_logs, artists, auth, browse, genres, health, history, library, playlists, player, recommendations, sync_jobs, tracks
+from app.routers import (
+    analytics,
+    api_logs,
+    artists,
+    auth,
+    browse,
+    genres,
+    health,
+    history,
+    library,
+    player,
+    playlists,
+    recommendations,
+    sync_jobs,
+    tracks,
+)
 
 logger = structlog.get_logger()
 

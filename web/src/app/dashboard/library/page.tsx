@@ -1,10 +1,10 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { Library, Users, Disc3 } from "lucide-react";
+import { Disc3, Library, Users } from "lucide-react";
 import Image from "next/image";
-import { api } from "@/lib/api";
 import { ListSkeleton } from "@/components/ui/loading-skeleton";
+import { api } from "@/lib/api";
 
 export default function LibraryPage() {
   const { data: followedArtists, isLoading: loadingArtists } = useQuery({
@@ -33,7 +33,9 @@ export default function LibraryPage() {
         <h2 className="text-lg font-semibold text-theme mb-4 flex items-center gap-2">
           <Users className="w-5 h-5 text-spotify-green" /> Followed Artists
           {followedArtists?.total !== undefined && (
-            <span className="text-sm font-normal text-theme-tertiary">({followedArtists.total})</span>
+            <span className="text-sm font-normal text-theme-tertiary">
+              ({followedArtists.total})
+            </span>
           )}
         </h2>
         {loadingArtists ? (
@@ -44,7 +46,13 @@ export default function LibraryPage() {
               <div key={artist.id} className="glass-card-hover p-4 text-center space-y-3 group">
                 <div className="relative w-20 h-20 rounded-full overflow-hidden bg-theme-surface-3 mx-auto">
                   {artist.image ? (
-                    <Image src={artist.image} alt={artist.name} fill className="object-cover group-hover:scale-105 transition-transform" sizes="80px" />
+                    <Image
+                      src={artist.image}
+                      alt={artist.name}
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform"
+                      sizes="80px"
+                    />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
                       <Users className="w-8 h-8 text-theme-tertiary" />
@@ -53,7 +61,9 @@ export default function LibraryPage() {
                 </div>
                 <div>
                   <p className="text-sm font-medium text-theme truncate">{artist.name}</p>
-                  <p className="text-xs text-theme-tertiary">{artist.followers?.toLocaleString()} followers</p>
+                  <p className="text-xs text-theme-tertiary">
+                    {artist.followers?.toLocaleString()} followers
+                  </p>
                 </div>
               </div>
             ))}
@@ -81,7 +91,13 @@ export default function LibraryPage() {
               <div key={album.id} className="glass-card-hover p-3 space-y-2 group">
                 <div className="relative aspect-square rounded-xl overflow-hidden bg-theme-surface-3">
                   {album.image ? (
-                    <Image src={album.image} alt={album.name} fill className="object-cover group-hover:scale-105 transition-transform" sizes="200px" />
+                    <Image
+                      src={album.image}
+                      alt={album.name}
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform"
+                      sizes="200px"
+                    />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
                       <Disc3 className="w-8 h-8 text-theme-tertiary" />

@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Target, Clock, Users, Disc3, Plus, Trophy } from "lucide-react";
+import { Clock, Disc3, Target, Trophy, Users } from "lucide-react";
 import { api } from "@/lib/api";
 
 interface Goal {
@@ -67,7 +66,9 @@ export default function GoalsPage() {
           <h1 className="text-2xl font-bold text-theme flex items-center gap-2">
             <Target className="w-6 h-6 text-accent-dynamic" /> Listening Goals
           </h1>
-          <p className="text-theme-secondary mt-1">Set targets and track your progress this month</p>
+          <p className="text-theme-secondary mt-1">
+            Set targets and track your progress this month
+          </p>
         </div>
       </div>
 
@@ -80,7 +81,10 @@ export default function GoalsPage() {
           const circumference = 2 * Math.PI * 44;
 
           return (
-            <div key={goal.id} className={`glass-card p-6 ${isComplete ? "ring-1 ring-emerald-400/20" : ""}`}>
+            <div
+              key={goal.id}
+              className={`glass-card p-6 ${isComplete ? "ring-1 ring-emerald-400/20" : ""}`}
+            >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-xl" style={{ backgroundColor: `${goal.color}20` }}>
@@ -93,16 +97,30 @@ export default function GoalsPage() {
                     </p>
                   </div>
                 </div>
-                {isComplete && <span className="text-xs text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-full">✓ Done</span>}
+                {isComplete && (
+                  <span className="text-xs text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-full">
+                    ✓ Done
+                  </span>
+                )}
               </div>
 
               {/* Circular Progress */}
               <div className="flex items-center gap-6">
                 <div className="relative flex-shrink-0">
                   <svg className="w-24 h-24 -rotate-90" viewBox="0 0 96 96">
-                    <circle cx="48" cy="48" r="44" fill="none" stroke="rgb(var(--surface-3))" strokeWidth="6" />
                     <circle
-                      cx="48" cy="48" r="44" fill="none"
+                      cx="48"
+                      cy="48"
+                      r="44"
+                      fill="none"
+                      stroke="rgb(var(--surface-3))"
+                      strokeWidth="6"
+                    />
+                    <circle
+                      cx="48"
+                      cy="48"
+                      r="44"
+                      fill="none"
                       stroke={isComplete ? "#10b981" : goal.color}
                       strokeWidth="6"
                       strokeDasharray={`${(progress / 100) * circumference} ${circumference}`}
@@ -119,7 +137,10 @@ export default function GoalsPage() {
                   <div className="w-full h-2 rounded-full bg-theme-surface-3 overflow-hidden">
                     <div
                       className="h-full rounded-full transition-all duration-1000"
-                      style={{ width: `${progress}%`, backgroundColor: isComplete ? "#10b981" : goal.color }}
+                      style={{
+                        width: `${progress}%`,
+                        backgroundColor: isComplete ? "#10b981" : goal.color,
+                      }}
                     />
                   </div>
                   <p className="text-xs text-theme-tertiary">
@@ -139,16 +160,20 @@ export default function GoalsPage() {
         <h2 className="text-lg font-semibold text-theme mb-3">💡 Tips to reach your goals</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="p-3 rounded-xl bg-theme-surface-2 text-sm text-theme-secondary">
-            🎧 Try the <span className="text-accent-dynamic font-medium">Discover</span> page to find new artists
+            🎧 Try the <span className="text-accent-dynamic font-medium">Discover</span> page to
+            find new artists
           </div>
           <div className="p-3 rounded-xl bg-theme-surface-2 text-sm text-theme-secondary">
-            🎵 Use the <span className="text-accent-dynamic font-medium">Playlist Generator</span> to explore new genres
+            🎵 Use the <span className="text-accent-dynamic font-medium">Playlist Generator</span>{" "}
+            to explore new genres
           </div>
           <div className="p-3 rounded-xl bg-theme-surface-2 text-sm text-theme-secondary">
-            📊 Check <span className="text-accent-dynamic font-medium">Music DNA</span> to see your genre diversity
+            📊 Check <span className="text-accent-dynamic font-medium">Music DNA</span> to see your
+            genre diversity
           </div>
           <div className="p-3 rounded-xl bg-theme-surface-2 text-sm text-theme-secondary">
-            🔄 Import your <span className="text-accent-dynamic font-medium">Spotify history</span> for complete data
+            🔄 Import your <span className="text-accent-dynamic font-medium">Spotify history</span>{" "}
+            for complete data
           </div>
         </div>
       </div>

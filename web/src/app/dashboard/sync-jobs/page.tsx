@@ -1,20 +1,48 @@
 "use client";
 
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  RefreshCw, CheckCircle, XCircle, Clock, Loader2,
-  Play, Activity, Database, AlertTriangle,
-  ChevronLeft, ChevronRight,
+  Activity,
+  AlertTriangle,
+  CheckCircle,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Database,
+  Loader2,
+  Play,
+  RefreshCw,
+  XCircle,
 } from "lucide-react";
-import { api } from "@/lib/api";
+import { useState } from "react";
 import { CardSkeleton } from "@/components/ui/loading-skeleton";
+import { api } from "@/lib/api";
 
 const STATUS_CONFIG: Record<string, { icon: any; color: string; bg: string; label: string }> = {
-  completed: { icon: CheckCircle, color: "text-emerald-400", bg: "bg-emerald-400/10 border-emerald-400/20", label: "Completed" },
-  failed: { icon: XCircle, color: "text-red-400", bg: "bg-red-400/10 border-red-400/20", label: "Failed" },
-  running: { icon: Loader2, color: "text-accent-dynamic", bg: "bg-accent-dynamic/10 border-accent-dynamic/20", label: "Running" },
-  pending: { icon: Clock, color: "text-amber-400", bg: "bg-amber-400/10 border-amber-400/20", label: "Pending" },
+  completed: {
+    icon: CheckCircle,
+    color: "text-emerald-400",
+    bg: "bg-emerald-400/10 border-emerald-400/20",
+    label: "Completed",
+  },
+  failed: {
+    icon: XCircle,
+    color: "text-red-400",
+    bg: "bg-red-400/10 border-red-400/20",
+    label: "Failed",
+  },
+  running: {
+    icon: Loader2,
+    color: "text-accent-dynamic",
+    bg: "bg-accent-dynamic/10 border-accent-dynamic/20",
+    label: "Running",
+  },
+  pending: {
+    icon: Clock,
+    color: "text-amber-400",
+    bg: "bg-amber-400/10 border-amber-400/20",
+    label: "Pending",
+  },
 };
 
 const TYPE_LABELS: Record<string, string> = {
@@ -133,7 +161,9 @@ export default function SyncJobsPage() {
       {/* Stats Cards */}
       {loadingStats ? (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {[...Array(4)].map((_, i) => <CardSkeleton key={i} />)}
+          {[...Array(4)].map((_, i) => (
+            <CardSkeleton key={i} />
+          ))}
         </div>
       ) : stats ? (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -154,7 +184,9 @@ export default function SyncJobsPage() {
           </div>
           <div className="glass-card p-4">
             <Database className="w-5 h-5 text-accent-cyan mb-2" />
-            <p className="text-2xl font-bold text-theme tabular-nums">{(stats.total_items_synced || 0).toLocaleString()}</p>
+            <p className="text-2xl font-bold text-theme tabular-nums">
+              {(stats.total_items_synced || 0).toLocaleString()}
+            </p>
             <p className="text-xs text-theme-tertiary">Items Synced</p>
           </div>
         </div>
@@ -169,24 +201,35 @@ export default function SyncJobsPage() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {/* Last Sync */}
             <div className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/5">
-              <CheckCircle className={`w-5 h-5 flex-shrink-0 ${stats.last_sync_at ? "text-emerald-400" : "text-theme-tertiary"}`} />
+              <CheckCircle
+                className={`w-5 h-5 flex-shrink-0 ${stats.last_sync_at ? "text-emerald-400" : "text-theme-tertiary"}`}
+              />
               <div className="min-w-0">
-                <p className="text-[10px] text-theme-tertiary uppercase tracking-wider">Last Sync</p>
+                <p className="text-[10px] text-theme-tertiary uppercase tracking-wider">
+                  Last Sync
+                </p>
                 <p className="text-sm font-medium text-theme truncate">
                   {stats.last_sync_at ? timeAgo(stats.last_sync_at) : "Never"}
                 </p>
                 {stats.last_sync_at && (
                   <p className="text-[10px] text-theme-tertiary">
-                    {new Date(stats.last_sync_at).toLocaleString([], { dateStyle: "short", timeStyle: "short" })}
+                    {new Date(stats.last_sync_at).toLocaleString([], {
+                      dateStyle: "short",
+                      timeStyle: "short",
+                    })}
                   </p>
                 )}
               </div>
             </div>
             {/* Next Sync */}
             <div className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/5">
-              <RefreshCw className={`w-5 h-5 flex-shrink-0 ${isRunning ? "text-accent-dynamic animate-spin" : "text-accent-dynamic"}`} />
+              <RefreshCw
+                className={`w-5 h-5 flex-shrink-0 ${isRunning ? "text-accent-dynamic animate-spin" : "text-accent-dynamic"}`}
+              />
               <div className="min-w-0">
-                <p className="text-[10px] text-theme-tertiary uppercase tracking-wider">Next Sync</p>
+                <p className="text-[10px] text-theme-tertiary uppercase tracking-wider">
+                  Next Sync
+                </p>
                 <p className="text-sm font-medium text-theme">
                   {isRunning ? "In progress…" : `in ~${formatCountdown(nextSync)}`}
                 </p>
@@ -199,7 +242,9 @@ export default function SyncJobsPage() {
             <div className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/5">
               <Activity className="w-5 h-5 flex-shrink-0 text-accent-cyan" />
               <div className="min-w-0">
-                <p className="text-[10px] text-theme-tertiary uppercase tracking-wider">Frequency</p>
+                <p className="text-[10px] text-theme-tertiary uppercase tracking-wider">
+                  Frequency
+                </p>
                 <p className="text-sm font-medium text-theme">Every 15 minutes</p>
                 <p className="text-[10px] text-theme-tertiary">at :00, :15, :30, :45</p>
               </div>
@@ -215,9 +260,14 @@ export default function SyncJobsPage() {
           {["all", "running", "completed", "failed"].map((f) => (
             <button
               key={f}
-              onClick={() => { setStatusFilter(f); setPage(1); }}
+              onClick={() => {
+                setStatusFilter(f);
+                setPage(1);
+              }}
               className={`px-3 py-1 text-xs rounded-lg transition-all capitalize ${
-                statusFilter === f ? "bg-accent-dynamic/20 text-accent-dynamic" : "text-theme-tertiary hover:text-theme"
+                statusFilter === f
+                  ? "bg-accent-dynamic/20 text-accent-dynamic"
+                  : "text-theme-tertiary hover:text-theme"
               }`}
             >
               {f}
@@ -229,7 +279,9 @@ export default function SyncJobsPage() {
       {/* Jobs List */}
       {loadingJobs ? (
         <div className="space-y-3">
-          {[...Array(5)].map((_, i) => <CardSkeleton key={i} />)}
+          {[...Array(5)].map((_, i) => (
+            <CardSkeleton key={i} />
+          ))}
         </div>
       ) : items.length > 0 ? (
         <div className="space-y-3">
@@ -240,14 +292,18 @@ export default function SyncJobsPage() {
               <div key={job.id} className="glass-card p-4">
                 <div className="flex items-start gap-3">
                   <div className={`p-2 rounded-xl border ${cfg.bg} flex-shrink-0`}>
-                    <StatusIcon className={`w-4 h-4 ${cfg.color} ${job.status === "running" ? "animate-spin" : ""}`} />
+                    <StatusIcon
+                      className={`w-4 h-4 ${cfg.color} ${job.status === "running" ? "animate-spin" : ""}`}
+                    />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
                       <h3 className="text-sm font-semibold text-theme">
                         {TYPE_LABELS[job.job_type] || job.job_type}
                       </h3>
-                      <span className={`text-[10px] px-2 py-0.5 rounded-full border font-medium ${cfg.bg} ${cfg.color}`}>
+                      <span
+                        className={`text-[10px] px-2 py-0.5 rounded-full border font-medium ${cfg.bg} ${cfg.color}`}
+                      >
                         {cfg.label}
                       </span>
                     </div>
@@ -272,7 +328,9 @@ export default function SyncJobsPage() {
                       <div className="mt-2 w-full h-1.5 rounded-full bg-theme-surface-3 overflow-hidden">
                         <div
                           className="h-full rounded-full bg-accent-dynamic transition-all"
-                          style={{ width: `${Math.min((job.items_processed / job.items_total) * 100, 100)}%` }}
+                          style={{
+                            width: `${Math.min((job.items_processed / job.items_total) * 100, 100)}%`,
+                          }}
                         />
                       </div>
                     )}

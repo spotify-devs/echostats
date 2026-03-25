@@ -1,12 +1,12 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { Star, Music, Users, Disc3, Flame, Trophy } from "lucide-react";
+import { Disc3, Flame, Music, Star, Trophy, Users } from "lucide-react";
 import Image from "next/image";
-import { api } from "@/lib/api";
-import { PieChart } from "@/components/charts/pie-chart";
 import { BarChart } from "@/components/charts/bar-chart";
-import { ChartSkeleton, CardSkeleton } from "@/components/ui/loading-skeleton";
+import { PieChart } from "@/components/charts/pie-chart";
+import { CardSkeleton, ChartSkeleton } from "@/components/ui/loading-skeleton";
+import { api } from "@/lib/api";
 
 export default function YearInReviewPage() {
   const { data, isLoading } = useQuery({
@@ -104,10 +104,30 @@ export default function YearInReviewPage() {
       {/* Stats Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
-          { icon: Music, label: "Tracks Played", value: (data?.total_tracks_played || 0).toLocaleString(), color: "text-spotify-green" },
-          { icon: Users, label: "Artists", value: (data?.unique_artists || 0).toLocaleString(), color: "text-accent-cyan" },
-          { icon: Disc3, label: "Genres", value: (data?.unique_genres || 0).toLocaleString(), color: "text-accent-pink" },
-          { icon: Flame, label: "Day Streak", value: streak.toLocaleString(), color: "text-accent-amber" },
+          {
+            icon: Music,
+            label: "Tracks Played",
+            value: (data?.total_tracks_played || 0).toLocaleString(),
+            color: "text-spotify-green",
+          },
+          {
+            icon: Users,
+            label: "Artists",
+            value: (data?.unique_artists || 0).toLocaleString(),
+            color: "text-accent-cyan",
+          },
+          {
+            icon: Disc3,
+            label: "Genres",
+            value: (data?.unique_genres || 0).toLocaleString(),
+            color: "text-accent-pink",
+          },
+          {
+            icon: Flame,
+            label: "Day Streak",
+            value: streak.toLocaleString(),
+            color: "text-accent-amber",
+          },
         ].map((stat) => (
           <div key={stat.label} className="glass-card p-4 text-center">
             <stat.icon className={`w-6 h-6 ${stat.color} mx-auto mb-2`} />
@@ -160,10 +180,16 @@ export default function YearInReviewPage() {
                 </div>
               )}
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-theme truncate">{track.name?.split(" — ")[0]}</p>
-                <p className="text-xs text-theme-tertiary truncate">{track.name?.split(" — ")[1]}</p>
+                <p className="text-sm font-medium text-theme truncate">
+                  {track.name?.split(" — ")[0]}
+                </p>
+                <p className="text-xs text-theme-tertiary truncate">
+                  {track.name?.split(" — ")[1]}
+                </p>
               </div>
-              <span className="text-sm font-medium text-accent-dynamic">{track.play_count} plays</span>
+              <span className="text-sm font-medium text-accent-dynamic">
+                {track.play_count} plays
+              </span>
             </div>
           ))}
         </div>

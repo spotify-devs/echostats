@@ -1,7 +1,7 @@
 """Spotify OAuth 2.0 authentication endpoints."""
 
 import secrets
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from urllib.parse import urlencode
 
 import structlog
@@ -17,6 +17,11 @@ from app.services.spotify_client import (
     SpotifyClient,
     exchange_code_for_tokens,
 )
+from app.services.sync_service import (
+    enrich_audio_features,
+    run_initial_sync,
+    sync_recently_played,
+)
 from app.services.token_service import get_valid_access_token, store_tokens
 
 logger = structlog.get_logger()
@@ -31,8 +36,8 @@ def _create_jwt(user_id: str, spotify_id: str) -> str:
     payload = {
         "sub": user_id,
         "spotify_id": spotify_id,
-        "iat": datetime.utcnow(),
-        "exp": datetime.utcnow() + timedelta(days=30),
+        "iat": datetime.now(tz=UTC),
+        "exp": datetime.now(tz=UTC) + timedelta(days=30),
     }
     return jwt.encode(payload, settings.jwt_secret, algorithm="HS256")
 
@@ -41,10 +46,10 @@ def _create_jwt(user_id: str, spotify_id: str) -> str:
 async def login(request: Request) -> dict[str, str]:
     """Generate Spotify authorization URL. Redirects browsers, returns JSON for JS clients."""
     state = secrets.token_urlsafe(32)
-    _oauth_states[state] = datetime.utcnow()
+    _oauth_states[state] = datetime.now(tz=UTC)
 
     # Clean expired states (older than 10 min)
-    cutoff = datetime.utcnow() - timedelta(minutes=10)
+    cutoff = datetime.now(tz=UTC) - timedelta(minutes=10)
     expired = [k for k, v in _oauth_states.items() if v < cutoff]
     for k in expired:
         del _oauth_states[k]
@@ -91,10 +96,10 @@ async def callback(
     try:
         token_data = await exchange_code_for_tokens(code)
     except Exception as e:
-        logger.error("Token exchange failed", error=str(e))
+        logger.exception("Token exchange failed", error=str(e))
         raise HTTPException(
             status_code=502, detail="Failed to exchange authorization code"
-        )
+        ) from e
 
     access_token = token_data["access_token"]
     refresh_token = token_data["refresh_token"]
@@ -282,15 +287,9 @@ async def dev_login(response: Response) -> dict:
 
 async def _run_post_auth_sync(user_id: str, is_new_user: bool) -> None:
     """Run data sync after OAuth authentication (background task)."""
-    from app.services.sync_service import (
-        enrich_audio_features,
-        run_initial_sync,
-        sync_recently_played,
-    )
+    from beanie import PydanticObjectId
 
     try:
-        from beanie import PydanticObjectId
-
         user = await User.get(PydanticObjectId(user_id))
         if not user:
             return
@@ -313,7 +312,7 @@ async def _run_post_auth_sync(user_id: str, is_new_user: bool) -> None:
         finally:
             await client.close()
     except Exception as e:
-        logger.error("Post-auth sync failed", user_id=user_id, error=str(e))
+        logger.exception("Post-auth sync failed", user_id=user_id, error=str(e))
 
 
 async def _get_current_user(request: Request) -> User | None:

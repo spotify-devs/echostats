@@ -1,15 +1,30 @@
 "use client";
 
+import { CheckCircle, Download, FileJson, FileSpreadsheet, Loader2 } from "lucide-react";
 import { useState } from "react";
-import { Download, FileJson, FileSpreadsheet, CheckCircle, Loader2 } from "lucide-react";
 import { api } from "@/lib/api";
 import { exportToCSV } from "@/lib/export";
 
 const EXPORT_TYPES = [
-  { id: "history", label: "Listening History", desc: "All played tracks with timestamps", icon: "📜" },
+  {
+    id: "history",
+    label: "Listening History",
+    desc: "All played tracks with timestamps",
+    icon: "📜",
+  },
   { id: "top-tracks", label: "Top Tracks", desc: "Your most played tracks ranked", icon: "🎵" },
-  { id: "top-artists", label: "Top Artists", desc: "Your most listened artists ranked", icon: "🎤" },
-  { id: "genres", label: "Genre Distribution", desc: "Genre breakdown with play counts", icon: "🎸" },
+  {
+    id: "top-artists",
+    label: "Top Artists",
+    desc: "Your most listened artists ranked",
+    icon: "🎤",
+  },
+  {
+    id: "genres",
+    label: "Genre Distribution",
+    desc: "Genre breakdown with play counts",
+    icon: "🎸",
+  },
   { id: "analytics", label: "Analytics Summary", desc: "Full analytics snapshot", icon: "📊" },
 ];
 
@@ -20,9 +35,7 @@ export default function ExportPage() {
   const [exported, setExported] = useState<string[]>([]);
 
   const toggleType = (id: string) => {
-    setSelectedTypes((prev) =>
-      prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]
-    );
+    setSelectedTypes((prev) => (prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]));
   };
 
   const downloadJson = (data: any, filename: string) => {
@@ -48,16 +61,22 @@ export default function ExportPage() {
             if (format === "csv") {
               exportToCSV(
                 (data.items || []).map((i: any) => ({
-                  track: i.track?.name, artist: i.track?.artist_name,
-                  album: i.track?.album_name, played_at: i.played_at,
-                  duration_ms: i.track?.duration_ms, source: i.source,
+                  track: i.track?.name,
+                  artist: i.track?.artist_name,
+                  album: i.track?.album_name,
+                  played_at: i.played_at,
+                  duration_ms: i.track?.duration_ms,
+                  source: i.source,
                 })),
                 [
-                  { key: "track", header: "Track" }, { key: "artist", header: "Artist" },
-                  { key: "album", header: "Album" }, { key: "played_at", header: "Played At" },
-                  { key: "duration_ms", header: "Duration (ms)" }, { key: "source", header: "Source" },
+                  { key: "track", header: "Track" },
+                  { key: "artist", header: "Artist" },
+                  { key: "album", header: "Album" },
+                  { key: "played_at", header: "Played At" },
+                  { key: "duration_ms", header: "Duration (ms)" },
+                  { key: "source", header: "Source" },
                 ],
-                "echostats-history"
+                "echostats-history",
               );
             } else {
               downloadJson(data.items, "echostats-history");
@@ -67,9 +86,19 @@ export default function ExportPage() {
             data = await api.get<any>("/api/v1/tracks/top?period=all_time&limit=50");
             if (format === "csv") {
               exportToCSV(
-                (data.items || []).map((i: any) => ({ rank: i.rank, name: i.name, plays: i.play_count, id: i.spotify_id })),
-                [{ key: "rank", header: "Rank" }, { key: "name", header: "Name" }, { key: "plays", header: "Plays" }, { key: "id", header: "Spotify ID" }],
-                "echostats-top-tracks"
+                (data.items || []).map((i: any) => ({
+                  rank: i.rank,
+                  name: i.name,
+                  plays: i.play_count,
+                  id: i.spotify_id,
+                })),
+                [
+                  { key: "rank", header: "Rank" },
+                  { key: "name", header: "Name" },
+                  { key: "plays", header: "Plays" },
+                  { key: "id", header: "Spotify ID" },
+                ],
+                "echostats-top-tracks",
               );
             } else {
               downloadJson(data.items, "echostats-top-tracks");
@@ -79,9 +108,19 @@ export default function ExportPage() {
             data = await api.get<any>("/api/v1/artists/top?period=all_time&limit=50");
             if (format === "csv") {
               exportToCSV(
-                (data.items || []).map((i: any) => ({ rank: i.rank, name: i.name, plays: i.play_count, id: i.spotify_id })),
-                [{ key: "rank", header: "Rank" }, { key: "name", header: "Name" }, { key: "plays", header: "Plays" }, { key: "id", header: "Spotify ID" }],
-                "echostats-top-artists"
+                (data.items || []).map((i: any) => ({
+                  rank: i.rank,
+                  name: i.name,
+                  plays: i.play_count,
+                  id: i.spotify_id,
+                })),
+                [
+                  { key: "rank", header: "Rank" },
+                  { key: "name", header: "Name" },
+                  { key: "plays", header: "Plays" },
+                  { key: "id", header: "Spotify ID" },
+                ],
+                "echostats-top-artists",
               );
             } else {
               downloadJson(data.items, "echostats-top-artists");
@@ -92,8 +131,11 @@ export default function ExportPage() {
             if (format === "csv") {
               exportToCSV(
                 (data.genres || []).map((g: any) => ({ name: g.name, plays: g.play_count })),
-                [{ key: "name", header: "Genre" }, { key: "plays", header: "Play Count" }],
-                "echostats-genres"
+                [
+                  { key: "name", header: "Genre" },
+                  { key: "plays", header: "Play Count" },
+                ],
+                "echostats-genres",
               );
             } else {
               downloadJson(data.genres, "echostats-genres");
@@ -128,7 +170,9 @@ export default function ExportPage() {
           <button
             onClick={() => setFormat("csv")}
             className={`flex-1 flex items-center justify-center gap-2 p-4 rounded-xl border transition-all ${
-              format === "csv" ? "border-accent-dynamic/50 bg-accent-dynamic/10" : "border-white/10 hover:border-white/20"
+              format === "csv"
+                ? "border-accent-dynamic/50 bg-accent-dynamic/10"
+                : "border-white/10 hover:border-white/20"
             }`}
           >
             <FileSpreadsheet className="w-5 h-5" />
@@ -137,7 +181,9 @@ export default function ExportPage() {
           <button
             onClick={() => setFormat("json")}
             className={`flex-1 flex items-center justify-center gap-2 p-4 rounded-xl border transition-all ${
-              format === "json" ? "border-accent-dynamic/50 bg-accent-dynamic/10" : "border-white/10 hover:border-white/20"
+              format === "json"
+                ? "border-accent-dynamic/50 bg-accent-dynamic/10"
+                : "border-white/10 hover:border-white/20"
             }`}
           >
             <FileJson className="w-5 h-5" />
@@ -158,7 +204,9 @@ export default function ExportPage() {
                 key={type.id}
                 onClick={() => toggleType(type.id)}
                 className={`w-full flex items-center gap-4 p-4 rounded-xl border text-left transition-all ${
-                  isSelected ? "border-accent-dynamic/50 bg-accent-dynamic/10" : "border-white/5 hover:border-white/15"
+                  isSelected
+                    ? "border-accent-dynamic/50 bg-accent-dynamic/10"
+                    : "border-white/5 hover:border-white/15"
                 }`}
               >
                 <span className="text-2xl">{type.icon}</span>
@@ -188,9 +236,14 @@ export default function ExportPage() {
         className="w-full btn-primary py-4 text-lg flex items-center justify-center gap-3 disabled:opacity-50"
       >
         {exporting ? (
-          <><Loader2 className="w-5 h-5 animate-spin" /> Exporting...</>
+          <>
+            <Loader2 className="w-5 h-5 animate-spin" /> Exporting...
+          </>
         ) : (
-          <><Download className="w-5 h-5" /> Export {selectedTypes.length} dataset{selectedTypes.length !== 1 ? "s" : ""}</>
+          <>
+            <Download className="w-5 h-5" /> Export {selectedTypes.length} dataset
+            {selectedTypes.length !== 1 ? "s" : ""}
+          </>
         )}
       </button>
     </div>

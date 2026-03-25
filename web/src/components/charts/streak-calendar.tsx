@@ -78,7 +78,12 @@ export function StreakCalendar({ data, weeks = 20 }: StreakCalendarProps) {
             <div
               key={i}
               className="text-[10px] text-theme-tertiary"
-              style={{ marginLeft: i === 0 ? `${m.col * 14}px` : `${(m.col - (months[i - 1]?.col || 0)) * 14 - 24}px` }}
+              style={{
+                marginLeft:
+                  i === 0
+                    ? `${m.col * 14}px`
+                    : `${(m.col - (months[i - 1]?.col || 0)) * 14 - 24}px`,
+              }}
             >
               {m.label}
             </div>
@@ -89,7 +94,10 @@ export function StreakCalendar({ data, weeks = 20 }: StreakCalendarProps) {
           {/* Day labels */}
           <div className="flex flex-col gap-0.5 mr-1">
             {DAYS.map((day, i) => (
-              <div key={i} className="h-[12px] w-6 text-[9px] text-theme-tertiary flex items-center justify-end pr-1">
+              <div
+                key={i}
+                className="h-[12px] w-6 text-[9px] text-theme-tertiary flex items-center justify-end pr-1"
+              >
                 {day}
               </div>
             ))}
@@ -118,9 +126,10 @@ export function StreakCalendar({ data, weeks = 20 }: StreakCalendarProps) {
               key={i}
               className="w-[12px] h-[12px] rounded-[2px]"
               style={{
-                backgroundColor: ratio === 0
-                  ? "rgb(var(--surface-3))"
-                  : `rgb(var(--accent) / ${0.2 + ratio * 0.8})`,
+                backgroundColor:
+                  ratio === 0
+                    ? "rgb(var(--surface-3))"
+                    : `rgb(var(--accent) / ${0.2 + ratio * 0.8})`,
               }}
             />
           ))}

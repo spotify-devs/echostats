@@ -15,14 +15,12 @@ function escapeCSV(value: unknown): string {
 export function exportToCSV(
   data: Row[],
   columns: { key: string; header: string }[],
-  filename: string = "export"
+  filename: string = "export",
 ) {
   if (data.length === 0) return;
 
   const header = columns.map((c) => escapeCSV(c.header)).join(",");
-  const rows = data.map((row) =>
-    columns.map((c) => escapeCSV(row[c.key])).join(",")
-  );
+  const rows = data.map((row) => columns.map((c) => escapeCSV(row[c.key])).join(","));
   const csv = [header, ...rows].join("\n");
 
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
@@ -52,7 +50,7 @@ export function exportListeningHistory(items: any[]) {
       { key: "duration_ms", header: "Duration (ms)" },
       { key: "source", header: "Source" },
     ],
-    "echostats-history"
+    "echostats-history",
   );
 }
 
@@ -70,6 +68,6 @@ export function exportTopItems(items: any[], type: "tracks" | "artists" | "genre
       { key: "play_count", header: "Play Count" },
       { key: "spotify_id", header: "Spotify ID" },
     ],
-    `echostats-top-${type}`
+    `echostats-top-${type}`,
   );
 }

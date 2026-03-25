@@ -1,16 +1,44 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { Sunrise, Sun, Sunset, Moon, Clock, Activity } from "lucide-react";
-import { api } from "@/lib/api";
+import { Activity, Moon, Sun, Sunrise, Sunset } from "lucide-react";
 import { BarChart } from "@/components/charts/bar-chart";
 import { ChartSkeleton } from "@/components/ui/loading-skeleton";
+import { api } from "@/lib/api";
 
 const TIME_SLOTS = [
-  { label: "Early Bird", range: "5AM – 9AM", hours: [5,6,7,8], icon: Sunrise, color: "#f59e0b", emoji: "🌅" },
-  { label: "Daytime", range: "9AM – 5PM", hours: [9,10,11,12,13,14,15,16], icon: Sun, color: "#ef4444", emoji: "☀️" },
-  { label: "Evening", range: "5PM – 10PM", hours: [17,18,19,20,21], icon: Sunset, color: "#a855f7", emoji: "🌆" },
-  { label: "Night Owl", range: "10PM – 5AM", hours: [22,23,0,1,2,3,4], icon: Moon, color: "#06b6d4", emoji: "🌙" },
+  {
+    label: "Early Bird",
+    range: "5AM – 9AM",
+    hours: [5, 6, 7, 8],
+    icon: Sunrise,
+    color: "#f59e0b",
+    emoji: "🌅",
+  },
+  {
+    label: "Daytime",
+    range: "9AM – 5PM",
+    hours: [9, 10, 11, 12, 13, 14, 15, 16],
+    icon: Sun,
+    color: "#ef4444",
+    emoji: "☀️",
+  },
+  {
+    label: "Evening",
+    range: "5PM – 10PM",
+    hours: [17, 18, 19, 20, 21],
+    icon: Sunset,
+    color: "#a855f7",
+    emoji: "🌆",
+  },
+  {
+    label: "Night Owl",
+    range: "10PM – 5AM",
+    hours: [22, 23, 0, 1, 2, 3, 4],
+    icon: Moon,
+    color: "#06b6d4",
+    emoji: "🌙",
+  },
 ];
 
 export default function ListeningHabitsPage() {
@@ -30,11 +58,11 @@ export default function ListeningHabitsPage() {
     const totalMs = hourlyDist
       .filter((h: any) => slot.hours.includes(h.hour))
       .reduce((sum: number, h: any) => sum + h.total_ms, 0);
-    return { ...slot, plays: total, hours: Math.round(totalMs / 3600000 * 10) / 10 };
+    return { ...slot, plays: total, hours: Math.round((totalMs / 3600000) * 10) / 10 };
   });
 
   const totalPlays = slotData.reduce((sum, s) => sum + s.plays, 0);
-  const peakSlot = slotData.reduce((max, s) => s.plays > max.plays ? s : max, slotData[0]);
+  const peakSlot = slotData.reduce((max, s) => (s.plays > max.plays ? s : max), slotData[0]);
 
   const hourlyData = hourlyDist.map((h: any) => ({
     hour: `${h.hour.toString().padStart(2, "0")}`,
@@ -58,7 +86,10 @@ export default function ListeningHabitsPage() {
       </div>
 
       {isLoading ? (
-        <div className="space-y-6"><ChartSkeleton /><ChartSkeleton /></div>
+        <div className="space-y-6">
+          <ChartSkeleton />
+          <ChartSkeleton />
+        </div>
       ) : (
         <>
           {/* Your Listening Personality */}
@@ -66,7 +97,9 @@ export default function ListeningHabitsPage() {
             <div className="glass-card p-8 text-center bg-gradient-to-br from-accent-dynamic/5 to-transparent">
               <span className="text-5xl mb-3 block">{peakSlot.emoji}</span>
               <h2 className="text-2xl font-bold text-theme mb-1">You&apos;re a {peakSlot.label}</h2>
-              <p className="text-theme-secondary">Most of your listening happens between {peakSlot.range}</p>
+              <p className="text-theme-secondary">
+                Most of your listening happens between {peakSlot.range}
+              </p>
             </div>
           )}
 
@@ -77,10 +110,17 @@ export default function ListeningHabitsPage() {
               const Icon = slot.icon;
               const isPeak = slot === peakSlot;
               return (
-                <div key={slot.label} className={`glass-card p-5 space-y-3 ${isPeak ? "ring-1 ring-accent-dynamic/30" : ""}`}>
+                <div
+                  key={slot.label}
+                  className={`glass-card p-5 space-y-3 ${isPeak ? "ring-1 ring-accent-dynamic/30" : ""}`}
+                >
                   <div className="flex items-center justify-between">
                     <Icon className="w-5 h-5" style={{ color: slot.color }} />
-                    {isPeak && <span className="text-[10px] text-accent-dynamic bg-accent-dynamic/15 px-2 py-0.5 rounded-full">Peak</span>}
+                    {isPeak && (
+                      <span className="text-[10px] text-accent-dynamic bg-accent-dynamic/15 px-2 py-0.5 rounded-full">
+                        Peak
+                      </span>
+                    )}
                   </div>
                   <div>
                     <p className="text-sm font-semibold text-theme">{slot.label}</p>
@@ -88,10 +128,15 @@ export default function ListeningHabitsPage() {
                   </div>
                   <div>
                     <p className="text-2xl font-bold text-theme">{percentage}%</p>
-                    <p className="text-xs text-theme-tertiary">{slot.plays.toLocaleString()} plays · {slot.hours}h</p>
+                    <p className="text-xs text-theme-tertiary">
+                      {slot.plays.toLocaleString()} plays · {slot.hours}h
+                    </p>
                   </div>
                   <div className="w-full h-1.5 rounded-full bg-theme-surface-3 overflow-hidden">
-                    <div className="h-full rounded-full" style={{ width: `${percentage}%`, backgroundColor: slot.color }} />
+                    <div
+                      className="h-full rounded-full"
+                      style={{ width: `${percentage}%`, backgroundColor: slot.color }}
+                    />
                   </div>
                 </div>
               );
@@ -101,13 +146,23 @@ export default function ListeningHabitsPage() {
           {/* Hourly Distribution */}
           <div className="glass-card p-6">
             <h2 className="text-lg font-semibold text-theme mb-4">Plays by Hour</h2>
-            <BarChart data={hourlyData} xKey="hour" bars={[{ key: "plays", color: "rgb(var(--accent))" }]} height={220} />
+            <BarChart
+              data={hourlyData}
+              xKey="hour"
+              bars={[{ key: "plays", color: "rgb(var(--accent))" }]}
+              height={220}
+            />
           </div>
 
           {/* Daily Distribution */}
           <div className="glass-card p-6">
             <h2 className="text-lg font-semibold text-theme mb-4">Plays by Day of Week</h2>
-            <BarChart data={dailyData} xKey="day" bars={[{ key: "plays", color: "#10b981", name: "Plays" }]} height={220} />
+            <BarChart
+              data={dailyData}
+              xKey="day"
+              bars={[{ key: "plays", color: "#10b981", name: "Plays" }]}
+              height={220}
+            />
           </div>
         </>
       )}

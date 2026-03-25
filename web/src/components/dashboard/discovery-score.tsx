@@ -1,6 +1,6 @@
 "use client";
 
-import { Compass, TrendingUp, Star } from "lucide-react";
+import { Compass } from "lucide-react";
 
 interface DiscoveryScoreProps {
   uniqueTracks: number;
@@ -18,15 +18,24 @@ export function DiscoveryScore({
   // Calculate discovery score: ratio of unique content to total plays
   // Higher ratio = more adventurous listener
   const trackRatio = totalPlays > 0 ? uniqueTracks / totalPlays : 0;
-  const score = Math.min(100, Math.round(
-    (trackRatio * 40 + // 40% from track diversity
-    Math.min(uniqueArtists / 20, 1) * 30 + // 30% from artist diversity (cap at 20)
-    Math.min(uniqueGenres / 15, 1) * 30) * 100 // 30% from genre diversity (cap at 15)
-  ));
+  const score = Math.min(
+    100,
+    Math.round(
+      (trackRatio * 40 + // 40% from track diversity
+        Math.min(uniqueArtists / 20, 1) * 30 + // 30% from artist diversity (cap at 20)
+        Math.min(uniqueGenres / 15, 1) * 30) *
+        100, // 30% from genre diversity (cap at 15)
+    ),
+  );
 
   const getLabel = (s: number) => {
     if (s >= 80) return { label: "Explorer", emoji: "🗺️", desc: "You love discovering new music!" };
-    if (s >= 60) return { label: "Adventurer", emoji: "🧭", desc: "A nice mix of old favorites and new finds" };
+    if (s >= 60)
+      return {
+        label: "Adventurer",
+        emoji: "🧭",
+        desc: "A nice mix of old favorites and new finds",
+      };
     if (s >= 40) return { label: "Curator", emoji: "🎯", desc: "You know what you like" };
     if (s >= 20) return { label: "Loyalist", emoji: "💎", desc: "Faithful to your favorites" };
     return { label: "Devotee", emoji: "🏠", desc: "Deep love for select artists" };
@@ -44,9 +53,19 @@ export function DiscoveryScore({
         {/* Score ring */}
         <div className="relative flex-shrink-0">
           <svg className="w-24 h-24 -rotate-90" viewBox="0 0 96 96">
-            <circle cx="48" cy="48" r="40" fill="none" stroke="rgb(var(--surface-3))" strokeWidth="8" />
             <circle
-              cx="48" cy="48" r="40" fill="none"
+              cx="48"
+              cy="48"
+              r="40"
+              fill="none"
+              stroke="rgb(var(--surface-3))"
+              strokeWidth="8"
+            />
+            <circle
+              cx="48"
+              cy="48"
+              r="40"
+              fill="none"
               stroke="rgb(var(--accent))"
               strokeWidth="8"
               strokeDasharray={`${(score / 100) * 251} 251`}

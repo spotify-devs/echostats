@@ -1,6 +1,6 @@
 "use client";
 
-import { Sparkles, Calendar, Zap } from "lucide-react";
+import { Calendar, Sparkles, Zap } from "lucide-react";
 
 interface ChangelogEntry {
   version: string;
@@ -70,7 +70,9 @@ export default function ChangelogPage() {
             <div className="flex-1">
               <div className="flex items-center gap-2">
                 <h2 className="text-lg font-bold text-theme">v{entry.version}</h2>
-                <span className="px-2 py-0.5 text-[10px] font-medium bg-accent-dynamic/15 text-accent-dynamic rounded-full">Latest</span>
+                <span className="px-2 py-0.5 text-[10px] font-medium bg-accent-dynamic/15 text-accent-dynamic rounded-full">
+                  Latest
+                </span>
               </div>
               <p className="text-sm text-theme-secondary">{entry.title}</p>
             </div>

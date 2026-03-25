@@ -1,13 +1,20 @@
 """Sync job tracking endpoints."""
 
+from datetime import UTC, datetime
 from typing import Annotated
 
+import structlog
+from beanie import PydanticObjectId
 from fastapi import APIRouter, BackgroundTasks, Depends, Query
 
 from app.middleware.auth import get_current_user
 from app.models.sync_job import SyncJob
 from app.models.user import User
+from app.services.spotify_client import SpotifyClient
+from app.services.sync_service import enrich_audio_features, sync_recently_played
+from app.services.token_service import get_valid_access_token
 
+logger = structlog.get_logger()
 router = APIRouter()
 
 
@@ -109,10 +116,6 @@ async def trigger_sync(
     background_tasks: BackgroundTasks,
 ) -> dict:
     """Trigger a manual data sync."""
-    from app.services.spotify_client import SpotifyClient
-    from app.services.sync_service import enrich_audio_features, sync_recently_played
-    from app.services.token_service import get_valid_access_token
-
     # Check if a sync is already running
     running = await SyncJob.find(
         SyncJob.user_id == str(user.id), SyncJob.status == "running"
@@ -124,7 +127,7 @@ async def trigger_sync(
         user_id=str(user.id),
         job_type="periodic",
         status="running",
-        started_at=__import__("datetime").datetime.utcnow(),
+        started_at=datetime.now(tz=UTC),
     )
     await job.insert()
 
@@ -139,14 +142,6 @@ async def trigger_sync(
 
 async def _run_manual_sync(user_id: str, job_id: str) -> None:
     """Run a manual sync in the background."""
-    from datetime import datetime
-
-    from beanie import PydanticObjectId
-
-    from app.services.spotify_client import SpotifyClient
-    from app.services.sync_service import enrich_audio_features, sync_recently_played
-    from app.services.token_service import get_valid_access_token
-
     job = await SyncJob.get(PydanticObjectId(job_id))
     if not job:
         return
@@ -173,7 +168,7 @@ async def _run_manual_sync(user_id: str, job_id: str) -> None:
                 count += await enrich_audio_features(client, batch_size=50)
             job.status = "completed"
             job.items_processed = count
-            job.completed_at = datetime.utcnow()
+            job.completed_at = datetime.now(tz=UTC)
         finally:
             await client.close()
     except Exception as e:

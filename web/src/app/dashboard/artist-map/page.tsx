@@ -4,9 +4,9 @@ import { useQuery } from "@tanstack/react-query";
 import { Network, Users } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { api } from "@/lib/api";
 import { PieChart } from "@/components/charts/pie-chart";
-import { ListSkeleton, ChartSkeleton } from "@/components/ui/loading-skeleton";
+import { ChartSkeleton, ListSkeleton } from "@/components/ui/loading-skeleton";
+import { api } from "@/lib/api";
 
 export default function ArtistMapPage() {
   const { data, isLoading } = useQuery({
@@ -33,11 +33,16 @@ export default function ArtistMapPage() {
         <h1 className="text-2xl font-bold text-theme flex items-center gap-2">
           <Network className="w-6 h-6 text-accent-dynamic" /> Artist Map
         </h1>
-        <p className="text-theme-secondary mt-1">Explore connections between your favorite artists</p>
+        <p className="text-theme-secondary mt-1">
+          Explore connections between your favorite artists
+        </p>
       </div>
 
       {isLoading ? (
-        <div className="space-y-6"><ChartSkeleton /><ListSkeleton rows={8} /></div>
+        <div className="space-y-6">
+          <ChartSkeleton />
+          <ListSkeleton rows={8} />
+        </div>
       ) : (
         <>
           {/* Artist distribution */}
@@ -64,7 +69,9 @@ export default function ArtistMapPage() {
                     <p className="text-[10px] text-theme-tertiary">Total Artist Plays</p>
                   </div>
                   <div className="p-4 rounded-xl bg-theme-surface-2 text-center">
-                    <p className="text-xl font-bold text-theme">{artists.length > 0 ? Math.round(totalPlays / artists.length) : 0}</p>
+                    <p className="text-xl font-bold text-theme">
+                      {artists.length > 0 ? Math.round(totalPlays / artists.length) : 0}
+                    </p>
                     <p className="text-[10px] text-theme-tertiary">Avg Plays / Artist</p>
                   </div>
                 </div>
@@ -74,10 +81,13 @@ export default function ArtistMapPage() {
 
           {/* Artist Grid */}
           <div className="glass-card p-6">
-            <h2 className="text-lg font-semibold text-theme mb-4">All Artists ({artists.length})</h2>
+            <h2 className="text-lg font-semibold text-theme mb-4">
+              All Artists ({artists.length})
+            </h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
               {artists.map((artist: any, i: number) => {
-                const sharePercent = totalPlays > 0 ? Math.round((artist.play_count / totalPlays) * 100) : 0;
+                const sharePercent =
+                  totalPlays > 0 ? Math.round((artist.play_count / totalPlays) * 100) : 0;
                 return (
                   <Link
                     key={artist.spotify_id || i}
@@ -86,14 +96,26 @@ export default function ArtistMapPage() {
                   >
                     <div className="relative w-16 h-16 rounded-full overflow-hidden bg-theme-surface-3 ring-2 ring-transparent group-hover:ring-accent-dynamic/30 transition-all">
                       {artist.image_url ? (
-                        <Image src={artist.image_url} alt="" fill className="object-cover" sizes="64px" />
+                        <Image
+                          src={artist.image_url}
+                          alt=""
+                          fill
+                          className="object-cover"
+                          sizes="64px"
+                        />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center"><Users className="w-6 h-6 text-theme-tertiary" /></div>
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Users className="w-6 h-6 text-theme-tertiary" />
+                        </div>
                       )}
                     </div>
                     <div className="text-center">
-                      <p className="text-xs font-medium text-theme truncate max-w-[100px]">{artist.name}</p>
-                      <p className="text-[10px] text-accent-dynamic">{artist.play_count} plays · {sharePercent}%</p>
+                      <p className="text-xs font-medium text-theme truncate max-w-[100px]">
+                        {artist.name}
+                      </p>
+                      <p className="text-[10px] text-accent-dynamic">
+                        {artist.play_count} plays · {sharePercent}%
+                      </p>
                     </div>
                   </Link>
                 );

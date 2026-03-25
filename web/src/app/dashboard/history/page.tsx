@@ -1,14 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Clock, Upload, Download } from "lucide-react";
-import { api } from "@/lib/api";
+import { Clock, Download, Upload } from "lucide-react";
+import { useEffect, useState } from "react";
 import { TrackCard } from "@/components/music/track-card";
 import { DateRangeFilter } from "@/components/ui/date-range-filter";
-import { ListSkeleton } from "@/components/ui/loading-skeleton";
-import { exportListeningHistory } from "@/lib/export";
 import { ImportHistoryModal } from "@/components/ui/import-modal";
+import { ListSkeleton } from "@/components/ui/loading-skeleton";
+import { api } from "@/lib/api";
+import { exportListeningHistory } from "@/lib/export";
 
 export default function HistoryPage() {
   const [page, setPage] = useState(1);
@@ -20,7 +20,7 @@ export default function HistoryPage() {
   // Reset to page 1 when date range changes
   useEffect(() => {
     setPage(1);
-  }, [startDate, endDate]);
+  }, []);
 
   const { data, isLoading } = useQuery({
     queryKey: ["history", page, startDate, endDate],
@@ -50,7 +50,10 @@ export default function HistoryPage() {
             endDate={endDate}
             onStartDateChange={setStartDate}
             onEndDateChange={setEndDate}
-            onClear={() => { setStartDate(""); setEndDate(""); }}
+            onClear={() => {
+              setStartDate("");
+              setEndDate("");
+            }}
           />
           <button
             onClick={() => data?.items && exportListeningHistory(data.items)}
@@ -86,10 +89,18 @@ export default function HistoryPage() {
                   name={item.track?.name || "Unknown"}
                   artist={item.track?.artist_name || "Unknown"}
                   albumImageUrl={item.track?.album_image_url}
-                  duration={item.track?.duration_ms ? `${Math.floor(item.track.duration_ms / 60000)}:${String(Math.floor((item.track.duration_ms % 60000) / 1000)).padStart(2, "0")}` : undefined}
+                  duration={
+                    item.track?.duration_ms
+                      ? `${Math.floor(item.track.duration_ms / 60000)}:${String(Math.floor((item.track.duration_ms % 60000) / 1000)).padStart(2, "0")}`
+                      : undefined
+                  }
                 />
                 <span className="text-xs text-white/30 pr-4 whitespace-nowrap">
-                  {new Date(item.played_at).toLocaleDateString()} {new Date(item.played_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                  {new Date(item.played_at).toLocaleDateString()}{" "}
+                  {new Date(item.played_at).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
                 </span>
               </div>
             ))}
@@ -101,11 +112,21 @@ export default function HistoryPage() {
           {/* Pagination */}
           {totalPages > 1 && (
             <div className="flex items-center justify-center gap-2">
-              <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1} className="px-4 py-2 text-sm glass-card hover:bg-white/5 disabled:opacity-30 transition-all">
+              <button
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page <= 1}
+                className="px-4 py-2 text-sm glass-card hover:bg-white/5 disabled:opacity-30 transition-all"
+              >
                 Previous
               </button>
-              <span className="text-sm text-white/40">Page {page} of {totalPages}</span>
-              <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page >= totalPages} className="px-4 py-2 text-sm glass-card hover:bg-white/5 disabled:opacity-30 transition-all">
+              <span className="text-sm text-white/40">
+                Page {page} of {totalPages}
+              </span>
+              <button
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={page >= totalPages}
+                className="px-4 py-2 text-sm glass-card hover:bg-white/5 disabled:opacity-30 transition-all"
+              >
                 Next
               </button>
             </div>

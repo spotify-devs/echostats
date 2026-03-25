@@ -54,21 +54,45 @@ export function ListeningClock({ hourlyData, size = 280 }: ListeningClockProps) 
 
   // Total plays
   const totalPlays = hourlyData.reduce((sum, h) => sum + h.count, 0);
-  const peakHour = hourlyData.reduce((peak, h) => (h.count > peak.count ? h : peak), { hour: 0, count: 0, total_ms: 0 });
+  const peakHour = hourlyData.reduce((peak, h) => (h.count > peak.count ? h : peak), {
+    hour: 0,
+    count: 0,
+    total_ms: 0,
+  });
 
   return (
     <div className="flex flex-col items-center">
       <svg width={size} height={size} className="drop-shadow-lg">
         {/* Background circle */}
-        <circle cx={center} cy={center} r={outerR} fill="none" stroke="rgb(var(--surface-3))" strokeWidth="1" opacity="0.3" />
-        <circle cx={center} cy={center} r={innerR} fill="rgb(var(--surface-1))" stroke="rgb(var(--surface-3))" strokeWidth="1" opacity="0.5" />
+        <circle
+          cx={center}
+          cy={center}
+          r={outerR}
+          fill="none"
+          stroke="rgb(var(--surface-3))"
+          strokeWidth="1"
+          opacity="0.3"
+        />
+        <circle
+          cx={center}
+          cy={center}
+          r={innerR}
+          fill="rgb(var(--surface-1))"
+          stroke="rgb(var(--surface-3))"
+          strokeWidth="1"
+          opacity="0.5"
+        />
 
         {/* Segments */}
         {segments.map((seg) => (
           <path
             key={seg.hour}
             d={seg.path}
-            fill={seg.count > 0 ? `rgb(var(--accent) / ${0.2 + seg.ratio * 0.8})` : "rgb(var(--surface-3) / 0.3)"}
+            fill={
+              seg.count > 0
+                ? `rgb(var(--accent) / ${0.2 + seg.ratio * 0.8})`
+                : "rgb(var(--surface-3) / 0.3)"
+            }
             stroke="rgb(var(--surface) / 0.5)"
             strokeWidth="0.5"
             className="transition-colors hover:brightness-125 cursor-pointer"
@@ -93,17 +117,30 @@ export function ListeningClock({ hourlyData, size = 280 }: ListeningClockProps) 
         ))}
 
         {/* Center text */}
-        <text x={center} y={center - 8} textAnchor="middle" className="text-lg font-bold" style={{ fill: "rgb(var(--text))" }}>
+        <text
+          x={center}
+          y={center - 8}
+          textAnchor="middle"
+          className="text-lg font-bold"
+          style={{ fill: "rgb(var(--text))" }}
+        >
           {totalPlays.toLocaleString()}
         </text>
-        <text x={center} y={center + 10} textAnchor="middle" className="text-[10px]" style={{ fill: "rgb(var(--text-secondary) / 0.5)" }}>
+        <text
+          x={center}
+          y={center + 10}
+          textAnchor="middle"
+          className="text-[10px]"
+          style={{ fill: "rgb(var(--text-secondary) / 0.5)" }}
+        >
           plays
         </text>
       </svg>
 
       <div className="text-center mt-2">
         <p className="text-xs text-theme-tertiary">
-          Peak: <span className="text-accent-dynamic font-medium">{peakHour.hour}:00</span> ({peakHour.count} plays)
+          Peak: <span className="text-accent-dynamic font-medium">{peakHour.hour}:00</span> (
+          {peakHour.count} plays)
         </p>
       </div>
     </div>

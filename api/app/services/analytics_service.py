@@ -25,13 +25,13 @@ def _get_period_range(period: str) -> tuple[datetime | None, datetime | None]:
     now = datetime.utcnow()
     if period == "week":
         return now - timedelta(days=7), now
-    elif period == "month":
+    if period == "month":
         return now - timedelta(days=30), now
-    elif period == "quarter":
+    if period == "quarter":
         return now - timedelta(days=90), now
-    elif period == "year":
+    if period == "year":
         return now - timedelta(days=365), now
-    elif period == "all_time":
+    if period == "all_time":
         return None, now
     return None, now
 
@@ -188,8 +188,8 @@ def _calculate_streak(dates_desc: list[str]) -> int:
             return 0
 
     for i in range(1, len(dates_desc)):
-        prev = datetime.strptime(dates_desc[i - 1], "%Y-%m-%d")  # noqa: DTZ007
-        curr = datetime.strptime(dates_desc[i], "%Y-%m-%d")  # noqa: DTZ007
+        prev = datetime.strptime(dates_desc[i - 1], "%Y-%m-%d")
+        curr = datetime.strptime(dates_desc[i], "%Y-%m-%d")
         if (prev - curr).days == 1:
             streak += 1
         else:

@@ -1,17 +1,25 @@
 "use client";
 
-import { useState } from "react";
 import {
-  useReactTable,
+  type ColumnDef,
+  flexRender,
   getCoreRowModel,
-  getSortedRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
-  flexRender,
-  type ColumnDef,
+  getSortedRowModel,
   type SortingState,
+  useReactTable,
 } from "@tanstack/react-table";
-import { ChevronUp, ChevronDown, ChevronsUpDown, ChevronLeft, ChevronRight, Search, Download } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsUpDown,
+  ChevronUp,
+  Download,
+  Search,
+} from "lucide-react";
+import { useState } from "react";
 
 interface DataTableProps<T> {
   data: T[];
@@ -65,7 +73,10 @@ export function DataTable<T>({
           </div>
         )}
         {exportable && onExport && (
-          <button onClick={onExport} className="flex items-center gap-2 px-3 py-2 text-sm text-white/60 hover:text-white bg-surface-2 rounded-xl border border-white/10 hover:border-white/20 transition-all">
+          <button
+            onClick={onExport}
+            className="flex items-center gap-2 px-3 py-2 text-sm text-white/60 hover:text-white bg-surface-2 rounded-xl border border-white/10 hover:border-white/20 transition-all"
+          >
             <Download className="w-4 h-4" /> Export CSV
           </button>
         )}
@@ -105,7 +116,10 @@ export function DataTable<T>({
             </thead>
             <tbody>
               {table.getRowModel().rows.map((row) => (
-                <tr key={row.id} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
+                <tr
+                  key={row.id}
+                  className="border-b border-white/5 hover:bg-white/[0.02] transition-colors"
+                >
                   {row.getVisibleCells().map((cell) => (
                     <td key={cell.id} className="px-4 py-3 text-sm text-white/80">
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -120,7 +134,8 @@ export function DataTable<T>({
         {/* Pagination */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between px-4 py-3 border-t border-white/5 gap-2">
           <span className="text-xs text-white/40">
-            Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()} ({table.getFilteredRowModel().rows.length} rows)
+            Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()} (
+            {table.getFilteredRowModel().rows.length} rows)
           </span>
           <div className="flex items-center gap-2 self-end">
             <button

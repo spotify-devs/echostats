@@ -1,16 +1,16 @@
 "use client";
 
-import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { BarChart3 } from "lucide-react";
-import { api } from "@/lib/api";
-import { Heatmap } from "@/components/charts/heatmap";
+import { useState } from "react";
 import { BarChart } from "@/components/charts/bar-chart";
+import { Heatmap } from "@/components/charts/heatmap";
 import { ListeningClock } from "@/components/charts/listening-clock";
-import { TimeRangeSelector } from "@/components/ui/time-range-selector";
 import { DateRangeFilter } from "@/components/ui/date-range-filter";
 import { ChartSkeleton } from "@/components/ui/loading-skeleton";
+import { TimeRangeSelector } from "@/components/ui/time-range-selector";
 import { useIsMobile } from "@/hooks/useIsMobile";
+import { api } from "@/lib/api";
 
 const DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
@@ -38,7 +38,10 @@ export default function PatternsPage() {
       for (let hour = 0; hour < 24; hour++) {
         const hourData = data.hourly_distribution.find((h: any) => h.hour === hour);
         // Approximate: spread daily counts across hours proportionally
-        const value = dayData && hourData ? Math.round((dayData.count * hourData.count) / Math.max(data.total_tracks_played, 1)) : 0;
+        const value =
+          dayData && hourData
+            ? Math.round((dayData.count * hourData.count) / Math.max(data.total_tracks_played, 1))
+            : 0;
         heatmapData.push({ day, hour, value });
       }
     }
@@ -53,7 +56,7 @@ export default function PatternsPage() {
   const dailyData = (data?.daily_distribution || []).map((d: any) => ({
     day: DAY_NAMES[d.day] || `Day ${d.day}`,
     plays: d.count,
-    hours: Math.round(d.total_ms / 3600000 * 10) / 10,
+    hours: Math.round((d.total_ms / 3600000) * 10) / 10,
   }));
 
   return (
@@ -72,7 +75,10 @@ export default function PatternsPage() {
             endDate={endDate}
             onStartDateChange={setStartDate}
             onEndDateChange={setEndDate}
-            onClear={() => { setStartDate(""); setEndDate(""); }}
+            onClear={() => {
+              setStartDate("");
+              setEndDate("");
+            }}
           />
         </div>
       </div>
@@ -88,7 +94,10 @@ export default function PatternsPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="glass-card p-6 flex flex-col items-center">
               <h2 className="text-lg font-semibold text-white mb-4 self-start">Listening Clock</h2>
-              <ListeningClock hourlyData={data?.hourly_distribution || []} size={isMobile ? 220 : 280} />
+              <ListeningClock
+                hourlyData={data?.hourly_distribution || []}
+                size={isMobile ? 220 : 280}
+              />
             </div>
             <div className="glass-card p-6 lg:col-span-2">
               <h2 className="text-lg font-semibold text-white mb-4">Activity Heatmap</h2>

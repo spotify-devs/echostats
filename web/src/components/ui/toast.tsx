@@ -1,7 +1,7 @@
 "use client";
 
+import { AlertCircle, CheckCircle, Info, X } from "lucide-react";
 import { useEffect, useState } from "react";
-import { X, CheckCircle, AlertCircle, Info } from "lucide-react";
 
 type ToastType = "success" | "error" | "info";
 

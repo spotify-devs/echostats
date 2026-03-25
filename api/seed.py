@@ -5,7 +5,6 @@ import random
 from datetime import datetime, timedelta
 
 from motor.motor_asyncio import AsyncIOMotorClient
-from beanie import init_beanie
 
 # ── Sample Data ──────────────────────────────────────────────────────────────
 
@@ -333,7 +332,7 @@ async def seed():
             "computed_at": now,
         })
 
-    print(f"📊 Computed analytics snapshots for 4 periods")
+    print("📊 Computed analytics snapshots for 4 periods")
 
     # ── Sync Job Record ─────────────────────────────────────────────────────
     await db["sync_jobs"].insert_one({
@@ -351,9 +350,9 @@ async def seed():
 
     # Summary
     print(f"\n{'='*50}")
-    print(f"🎵 EchoStats Seed Data Summary")
+    print("🎵 EchoStats Seed Data Summary")
     print(f"{'='*50}")
-    print(f"  User:      Demo User (demo_user)")
+    print("  User:      Demo User (demo_user)")
     print(f"  Artists:   {len(ARTISTS)}")
     print(f"  Tracks:    {len(TRACKS)} (with audio features)")
     print(f"  History:   {history_count} plays (90 days)")
@@ -362,7 +361,7 @@ async def seed():
     print(f"  Streak:    {streak} days")
     print(f"  Total:     {round(total_ms / 3600000, 1)} hours listened")
     print(f"{'='*50}")
-    print(f"\n🌐 Open http://localhost:3000/dashboard to see the data!")
+    print("\n🌐 Open http://localhost:3000/dashboard to see the data!")
 
     client.close()
 

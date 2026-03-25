@@ -1,14 +1,14 @@
 "use client";
 
-import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Disc3 } from "lucide-react";
-import { api } from "@/lib/api";
-import { PieChart } from "@/components/charts/pie-chart";
+import { useState } from "react";
 import { BarChart } from "@/components/charts/bar-chart";
-import { TimeRangeSelector } from "@/components/ui/time-range-selector";
+import { PieChart } from "@/components/charts/pie-chart";
 import { DateRangeFilter } from "@/components/ui/date-range-filter";
 import { ChartSkeleton } from "@/components/ui/loading-skeleton";
+import { TimeRangeSelector } from "@/components/ui/time-range-selector";
+import { api } from "@/lib/api";
 
 export default function GenresPage() {
   const [period, setPeriod] = useState("all_time");
@@ -45,7 +45,10 @@ export default function GenresPage() {
             endDate={endDate}
             onStartDateChange={setStartDate}
             onEndDateChange={setEndDate}
-            onClear={() => { setStartDate(""); setEndDate(""); }}
+            onClear={() => {
+              setStartDate("");
+              setEndDate("");
+            }}
           />
         </div>
       </div>
@@ -85,12 +88,17 @@ export default function GenresPage() {
           {/* Genre list */}
           <div className="glass-card">
             <div className="p-4 border-b border-white/5">
-              <h2 className="text-lg font-semibold text-white">All Genres ({data?.total_genres || 0})</h2>
+              <h2 className="text-lg font-semibold text-white">
+                All Genres ({data?.total_genres || 0})
+              </h2>
             </div>
             <div className="p-4">
               <div className="flex flex-wrap gap-2">
                 {genres.map((genre: any, i: number) => (
-                  <span key={i} className="px-3 py-1.5 text-xs rounded-full bg-surface-3 text-white/60 border border-white/5">
+                  <span
+                    key={i}
+                    className="px-3 py-1.5 text-xs rounded-full bg-surface-3 text-white/60 border border-white/5"
+                  >
                     {genre.name} <span className="text-white/30 ml-1">{genre.play_count}</span>
                   </span>
                 ))}

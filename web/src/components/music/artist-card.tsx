@@ -1,6 +1,6 @@
+import { Users } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { Users } from "lucide-react";
 
 interface ArtistCardProps {
   rank?: number;
@@ -11,7 +11,14 @@ interface ArtistCardProps {
   spotifyId?: string;
 }
 
-export function ArtistCard({ rank, name, imageUrl, playCount, genres, spotifyId }: ArtistCardProps) {
+export function ArtistCard({
+  rank,
+  name,
+  imageUrl,
+  playCount,
+  genres,
+  spotifyId,
+}: ArtistCardProps) {
   const content = (
     <div className="flex items-center gap-3 sm:gap-4 p-3 rounded-xl hover:bg-white/[0.03] transition-all group min-h-[44px]">
       {rank !== undefined && (
@@ -33,7 +40,9 @@ export function ArtistCard({ rank, name, imageUrl, playCount, genres, spotifyId 
         )}
       </div>
       {playCount !== undefined && (
-        <span className="text-xs text-white/40 tabular-nums">{playCount.toLocaleString()} plays</span>
+        <span className="text-xs text-white/40 tabular-nums">
+          {playCount.toLocaleString()} plays
+        </span>
       )}
     </div>
   );

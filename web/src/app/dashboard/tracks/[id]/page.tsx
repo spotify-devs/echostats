@@ -1,13 +1,13 @@
 "use client";
 
-import { use } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Music, Clock, ExternalLink, ArrowLeft, Disc3 } from "lucide-react";
+import { ArrowLeft, Clock, Disc3, ExternalLink, Music } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { api } from "@/lib/api";
+import { use } from "react";
 import { RadarChart } from "@/components/charts/radar-chart";
 import { ChartSkeleton } from "@/components/ui/loading-skeleton";
+import { api } from "@/lib/api";
 
 function formatMs(ms: number): string {
   const min = Math.floor(ms / 60000);
@@ -64,15 +64,33 @@ export default function TrackDetailPage({ params }: { params: Promise<{ id: stri
         { label: "Instrumentalness", value: af.instrumentalness, desc: "No vocals predicted" },
         { label: "Liveness", value: af.liveness, desc: "Audience presence" },
         { label: "Speechiness", value: af.speechiness, desc: "Spoken words" },
-        { label: "Tempo", value: null, raw: `${Math.round(af.tempo)} BPM`, desc: "Beats per minute" },
-        { label: "Key", value: null, raw: ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"][af.key] || "?", desc: "Musical key" },
-        { label: "Loudness", value: null, raw: `${af.loudness.toFixed(1)} dB`, desc: "Overall loudness" },
+        {
+          label: "Tempo",
+          value: null,
+          raw: `${Math.round(af.tempo)} BPM`,
+          desc: "Beats per minute",
+        },
+        {
+          label: "Key",
+          value: null,
+          raw: ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"][af.key] || "?",
+          desc: "Musical key",
+        },
+        {
+          label: "Loudness",
+          value: null,
+          raw: `${af.loudness.toFixed(1)} dB`,
+          desc: "Overall loudness",
+        },
       ]
     : [];
 
   return (
     <div className="space-y-6">
-      <Link href="/dashboard/tracks" className="inline-flex items-center gap-2 text-sm text-theme-secondary hover:text-theme transition-colors">
+      <Link
+        href="/dashboard/tracks"
+        className="inline-flex items-center gap-2 text-sm text-theme-secondary hover:text-theme transition-colors"
+      >
         <ArrowLeft className="w-4 h-4" /> Back to Tracks
       </Link>
 
@@ -80,7 +98,13 @@ export default function TrackDetailPage({ params }: { params: Promise<{ id: stri
       <div className="glass-card p-6 flex flex-col sm:flex-row items-center gap-6">
         <div className="relative w-40 h-40 rounded-2xl overflow-hidden bg-theme-surface-3 flex-shrink-0 shadow-lg">
           {track.album?.image_url ? (
-            <Image src={track.album.image_url} alt={track.name} fill className="object-cover" sizes="160px" />
+            <Image
+              src={track.album.image_url}
+              alt={track.name}
+              fill
+              className="object-cover"
+              sizes="160px"
+            />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
               <Music className="w-12 h-12 text-theme-tertiary" />
@@ -102,7 +126,9 @@ export default function TrackDetailPage({ params }: { params: Promise<{ id: stri
               <Clock className="w-4 h-4" /> {formatMs(track.duration_ms)}
             </span>
             {track.explicit && (
-              <span className="px-1.5 py-0.5 text-[10px] font-bold bg-theme-surface-3 rounded uppercase">E</span>
+              <span className="px-1.5 py-0.5 text-[10px] font-bold bg-theme-surface-3 rounded uppercase">
+                E
+              </span>
             )}
           </div>
           {track.external_url && (
@@ -136,7 +162,9 @@ export default function TrackDetailPage({ params }: { params: Promise<{ id: stri
                   <div className="flex justify-between text-sm mb-1">
                     <span className="text-theme-secondary">{f.label}</span>
                     <span className="text-theme font-medium">
-                      {f.value !== null && f.value !== undefined ? `${Math.round(f.value * 100)}%` : f.raw}
+                      {f.value !== null && f.value !== undefined
+                        ? `${Math.round(f.value * 100)}%`
+                        : f.raw}
                     </span>
                   </div>
                   {f.value !== null && f.value !== undefined && (

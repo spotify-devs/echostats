@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
 import { Calendar, ChevronDown, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 interface DateRangeFilterProps {
   startDate: string;
@@ -64,8 +64,10 @@ export function DateRangeFilter({
     if (startDate && endDate) {
       return `${new Date(startDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })} – ${new Date(endDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`;
     }
-    if (startDate) return `From ${new Date(startDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}`;
-    if (endDate) return `Until ${new Date(endDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}`;
+    if (startDate)
+      return `From ${new Date(startDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}`;
+    if (endDate)
+      return `Until ${new Date(endDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}`;
     return "All time";
   };
 
@@ -98,7 +100,9 @@ export function DateRangeFilter({
         <div className="absolute right-0 top-full mt-2 z-50 w-72 glass-card p-4 space-y-4 animate-scale-in">
           {/* Presets */}
           <div className="space-y-1">
-            <p className="text-xs text-theme-tertiary font-medium uppercase tracking-wider mb-2">Quick Select</p>
+            <p className="text-xs text-theme-tertiary font-medium uppercase tracking-wider mb-2">
+              Quick Select
+            </p>
             <div className="grid grid-cols-2 gap-1">
               {PRESETS.map((preset) => (
                 <button
@@ -114,7 +118,9 @@ export function DateRangeFilter({
 
           {/* Custom range */}
           <div className="border-t border-white/5 pt-3 space-y-3">
-            <p className="text-xs text-theme-tertiary font-medium uppercase tracking-wider">Custom Range</p>
+            <p className="text-xs text-theme-tertiary font-medium uppercase tracking-wider">
+              Custom Range
+            </p>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-[10px] text-theme-tertiary uppercase">From</label>

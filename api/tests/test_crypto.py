@@ -4,7 +4,6 @@ import pytest
 
 from app.utils.crypto import decrypt_token, encrypt_token
 
-
 TEST_KEY = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
 
 

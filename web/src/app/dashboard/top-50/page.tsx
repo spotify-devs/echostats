@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Crown, Medal, Award, ChevronDown, ChevronUp } from "lucide-react";
+import { Award, ChevronDown, ChevronUp, Crown, Medal } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { api } from "@/lib/api";
-import { TimeRangeSelector } from "@/components/ui/time-range-selector";
+import { useState } from "react";
 import { ListSkeleton } from "@/components/ui/loading-skeleton";
+import { TimeRangeSelector } from "@/components/ui/time-range-selector";
+import { api } from "@/lib/api";
 
 const RANK_COLORS: Record<number, string> = {
   1: "from-amber-500 to-yellow-400",
@@ -67,16 +67,30 @@ export default function Top50Page() {
                   onClick={() => setExpanded(isExpanded ? null : rank)}
                 >
                   {/* Rank */}
-                  <div className={`w-8 sm:w-10 h-8 sm:h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                    isTop3 ? `bg-gradient-to-br ${RANK_COLORS[rank]} text-black font-bold` : "bg-theme-surface-3 text-theme-tertiary"
-                  }`}>
-                    {RankIcon ? <RankIcon className="w-4 h-4 sm:w-5 sm:h-5" /> : <span className="text-sm">{rank}</span>}
+                  <div
+                    className={`w-8 sm:w-10 h-8 sm:h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                      isTop3
+                        ? `bg-gradient-to-br ${RANK_COLORS[rank]} text-black font-bold`
+                        : "bg-theme-surface-3 text-theme-tertiary"
+                    }`}
+                  >
+                    {RankIcon ? (
+                      <RankIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+                    ) : (
+                      <span className="text-sm">{rank}</span>
+                    )}
                   </div>
 
                   {/* Album art */}
                   {track.image_url && (
                     <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-xl overflow-hidden bg-theme-surface-3 flex-shrink-0">
-                      <Image src={track.image_url} alt="" fill className="object-cover" sizes="48px" />
+                      <Image
+                        src={track.image_url}
+                        alt=""
+                        fill
+                        className="object-cover"
+                        sizes="48px"
+                      />
                     </div>
                   )}
 
@@ -90,13 +104,20 @@ export default function Top50Page() {
                   <div className="flex items-center gap-3 flex-shrink-0">
                     <div className="hidden sm:block w-24">
                       <div className="w-full h-1.5 rounded-full bg-theme-surface-3 overflow-hidden">
-                        <div className="h-full rounded-full" style={{ width: `${barWidth}%`, backgroundColor: "rgb(var(--accent))" }} />
+                        <div
+                          className="h-full rounded-full"
+                          style={{ width: `${barWidth}%`, backgroundColor: "rgb(var(--accent))" }}
+                        />
                       </div>
                     </div>
                     <span className="text-sm font-semibold text-accent-dynamic tabular-nums min-w-[50px] text-right">
                       {track.play_count}
                     </span>
-                    {isExpanded ? <ChevronUp className="w-4 h-4 text-theme-tertiary" /> : <ChevronDown className="w-4 h-4 text-theme-tertiary" />}
+                    {isExpanded ? (
+                      <ChevronUp className="w-4 h-4 text-theme-tertiary" />
+                    ) : (
+                      <ChevronDown className="w-4 h-4 text-theme-tertiary" />
+                    )}
                   </div>
                 </div>
 
@@ -104,11 +125,21 @@ export default function Top50Page() {
                 {isExpanded && (
                   <div className="px-4 pb-4 pt-1 border-t border-white/5 animate-fade-in">
                     <div className="flex flex-wrap gap-4 text-xs text-theme-tertiary">
-                      <span>Spotify ID: <span className="font-mono text-theme-secondary">{track.spotify_id}</span></span>
-                      <span>Share of plays: <span className="text-accent-dynamic">{Math.round(barWidth)}%</span> of top track</span>
+                      <span>
+                        Spotify ID:{" "}
+                        <span className="font-mono text-theme-secondary">{track.spotify_id}</span>
+                      </span>
+                      <span>
+                        Share of plays:{" "}
+                        <span className="text-accent-dynamic">{Math.round(barWidth)}%</span> of top
+                        track
+                      </span>
                     </div>
                     {track.spotify_id && (
-                      <Link href={`/dashboard/tracks/${track.spotify_id}`} className="inline-block mt-2 text-xs text-accent-dynamic hover:underline">
+                      <Link
+                        href={`/dashboard/tracks/${track.spotify_id}`}
+                        className="inline-block mt-2 text-xs text-accent-dynamic hover:underline"
+                      >
                         View track details →
                       </Link>
                     )}

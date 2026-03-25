@@ -1,7 +1,5 @@
 "use client";
 
-import { useState } from "react";
-
 const TIME_RANGES = [
   { value: "week", label: "7 Days" },
   { value: "month", label: "30 Days" },

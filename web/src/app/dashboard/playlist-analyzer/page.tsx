@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Microscope, ListMusic, BarChart3, Music, Clock, Zap } from "lucide-react";
+import { BarChart3, Clock, ListMusic, Microscope, Music, Zap } from "lucide-react";
 import Image from "next/image";
-import { api } from "@/lib/api";
-import { RadarChart } from "@/components/charts/radar-chart";
+import { useState } from "react";
 import { PieChart } from "@/components/charts/pie-chart";
+import { RadarChart } from "@/components/charts/radar-chart";
 import { ListSkeleton } from "@/components/ui/loading-skeleton";
+import { api } from "@/lib/api";
 
 export default function PlaylistAnalyzerPage() {
   const [selectedPlaylist, setSelectedPlaylist] = useState<string | null>(null);
@@ -28,14 +28,16 @@ export default function PlaylistAnalyzerPage() {
   const selected = items.find((p: any) => p.spotify_id === selectedPlaylist);
   const af = analytics?.avg_audio_features;
 
-  const radarData = af ? [
-    { feature: "Dance", value: af.danceability },
-    { feature: "Energy", value: af.energy },
-    { feature: "Happy", value: af.valence },
-    { feature: "Acoustic", value: af.acousticness },
-    { feature: "Live", value: af.liveness },
-    { feature: "Speech", value: af.speechiness },
-  ] : [];
+  const radarData = af
+    ? [
+        { feature: "Dance", value: af.danceability },
+        { feature: "Energy", value: af.energy },
+        { feature: "Happy", value: af.valence },
+        { feature: "Acoustic", value: af.acousticness },
+        { feature: "Live", value: af.liveness },
+        { feature: "Speech", value: af.speechiness },
+      ]
+    : [];
 
   // Simulated playlist mood distribution
   const moodData = [
@@ -52,7 +54,9 @@ export default function PlaylistAnalyzerPage() {
         <h1 className="text-2xl font-bold text-theme flex items-center gap-2">
           <Microscope className="w-6 h-6 text-accent-dynamic" /> Playlist Analyzer
         </h1>
-        <p className="text-theme-secondary mt-1">Deep-dive into any playlist&apos;s audio profile</p>
+        <p className="text-theme-secondary mt-1">
+          Deep-dive into any playlist&apos;s audio profile
+        </p>
       </div>
 
       {/* Playlist Selector */}
@@ -74,7 +78,13 @@ export default function PlaylistAnalyzerPage() {
               >
                 {pl.images?.[0]?.url ? (
                   <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-theme-surface-3 flex-shrink-0">
-                    <Image src={pl.images[0].url} alt="" fill className="object-cover" sizes="48px" />
+                    <Image
+                      src={pl.images[0].url}
+                      alt=""
+                      fill
+                      className="object-cover"
+                      sizes="48px"
+                    />
                   </div>
                 ) : (
                   <div className="w-12 h-12 rounded-lg bg-theme-surface-3 flex items-center justify-center flex-shrink-0">
@@ -98,15 +108,27 @@ export default function PlaylistAnalyzerPage() {
           <div className="glass-card p-6 flex flex-col sm:flex-row items-center gap-6 bg-gradient-to-br from-accent-dynamic/5 to-transparent">
             {selected.images?.[0]?.url && (
               <div className="relative w-32 h-32 rounded-2xl overflow-hidden bg-theme-surface-3 flex-shrink-0 shadow-lg">
-                <Image src={selected.images[0].url} alt="" fill className="object-cover" sizes="128px" />
+                <Image
+                  src={selected.images[0].url}
+                  alt=""
+                  fill
+                  className="object-cover"
+                  sizes="128px"
+                />
               </div>
             )}
             <div className="text-center sm:text-left">
               <h2 className="text-2xl font-bold text-theme">{selected.name}</h2>
-              {selected.description && <p className="text-sm text-theme-secondary mt-1">{selected.description}</p>}
+              {selected.description && (
+                <p className="text-sm text-theme-secondary mt-1">{selected.description}</p>
+              )}
               <div className="flex flex-wrap gap-4 mt-3 justify-center sm:justify-start text-sm text-theme-tertiary">
-                <span className="flex items-center gap-1"><Music className="w-4 h-4" /> {selected.total_tracks} tracks</span>
-                <span className="flex items-center gap-1"><Clock className="w-4 h-4" /> ~{Math.round(selected.total_tracks * 3.5)}min</span>
+                <span className="flex items-center gap-1">
+                  <Music className="w-4 h-4" /> {selected.total_tracks} tracks
+                </span>
+                <span className="flex items-center gap-1">
+                  <Clock className="w-4 h-4" /> ~{Math.round(selected.total_tracks * 3.5)}min
+                </span>
               </div>
             </div>
           </div>
@@ -129,18 +151,39 @@ export default function PlaylistAnalyzerPage() {
 
           {/* Quick Stats */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            {af && [
-              { label: "Avg Energy", value: `${Math.round(af.energy * 100)}%`, icon: Zap, color: "text-accent-amber" },
-              { label: "Avg Dance", value: `${Math.round(af.danceability * 100)}%`, icon: Music, color: "text-accent-purple" },
-              { label: "Avg Happy", value: `${Math.round(af.valence * 100)}%`, icon: BarChart3, color: "text-spotify-green" },
-              { label: "Avg BPM", value: `${Math.round(af.tempo)}`, icon: Clock, color: "text-accent-cyan" },
-            ].map((stat) => (
-              <div key={stat.label} className="glass-card p-4 text-center">
-                <stat.icon className={`w-5 h-5 ${stat.color} mx-auto mb-2`} />
-                <p className="text-xl font-bold text-theme">{stat.value}</p>
-                <p className="text-[10px] text-theme-tertiary">{stat.label}</p>
-              </div>
-            ))}
+            {af &&
+              [
+                {
+                  label: "Avg Energy",
+                  value: `${Math.round(af.energy * 100)}%`,
+                  icon: Zap,
+                  color: "text-accent-amber",
+                },
+                {
+                  label: "Avg Dance",
+                  value: `${Math.round(af.danceability * 100)}%`,
+                  icon: Music,
+                  color: "text-accent-purple",
+                },
+                {
+                  label: "Avg Happy",
+                  value: `${Math.round(af.valence * 100)}%`,
+                  icon: BarChart3,
+                  color: "text-spotify-green",
+                },
+                {
+                  label: "Avg BPM",
+                  value: `${Math.round(af.tempo)}`,
+                  icon: Clock,
+                  color: "text-accent-cyan",
+                },
+              ].map((stat) => (
+                <div key={stat.label} className="glass-card p-4 text-center">
+                  <stat.icon className={`w-5 h-5 ${stat.color} mx-auto mb-2`} />
+                  <p className="text-xl font-bold text-theme">{stat.value}</p>
+                  <p className="text-[10px] text-theme-tertiary">{stat.label}</p>
+                </div>
+              ))}
           </div>
         </>
       )}

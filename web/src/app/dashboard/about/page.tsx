@@ -1,6 +1,17 @@
 "use client";
 
-import { Info, Github, Heart, Code, Database, Globe, Shield, Cpu, Palette, Smartphone } from "lucide-react";
+import {
+  Code,
+  Cpu,
+  Database,
+  Github,
+  Globe,
+  Heart,
+  Info,
+  Palette,
+  Shield,
+  Smartphone,
+} from "lucide-react";
 import Link from "next/link";
 
 const TECH_STACK = [
@@ -41,7 +52,8 @@ export default function AboutPage() {
         </div>
         <h1 className="text-4xl font-bold text-gradient">EchoStats</h1>
         <p className="text-theme-secondary max-w-md mx-auto">
-          Self-hosted Spotify analytics dashboard. Discover insights about your listening habits with beautiful visualizations.
+          Self-hosted Spotify analytics dashboard. Discover insights about your listening habits
+          with beautiful visualizations.
         </p>
         <p className="text-xs text-theme-tertiary">Version 0.1.0 · MIT License</p>
       </div>
@@ -68,7 +80,10 @@ export default function AboutPage() {
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {TECH_STACK.map((tech) => (
-            <div key={tech.name} className="p-3 rounded-xl bg-theme-surface-2 text-center space-y-1.5">
+            <div
+              key={tech.name}
+              className="p-3 rounded-xl bg-theme-surface-2 text-center space-y-1.5"
+            >
               <tech.icon className="w-6 h-6 mx-auto" style={{ color: tech.color }} />
               <p className="text-sm font-medium text-theme">{tech.name}</p>
               <p className="text-[10px] text-theme-tertiary">{tech.desc}</p>
@@ -92,10 +107,18 @@ export default function AboutPage() {
 
       {/* Links */}
       <div className="flex justify-center gap-4">
-        <a href="https://github.com/spotify-devs/echostats" target="_blank" rel="noopener noreferrer" className="glass-card px-5 py-3 flex items-center gap-2 text-sm text-theme-secondary hover:text-theme transition-colors">
+        <a
+          href="https://github.com/spotify-devs/echostats"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="glass-card px-5 py-3 flex items-center gap-2 text-sm text-theme-secondary hover:text-theme transition-colors"
+        >
           <Github className="w-5 h-5" /> GitHub
         </a>
-        <Link href="/dashboard/settings" className="glass-card px-5 py-3 flex items-center gap-2 text-sm text-theme-secondary hover:text-theme transition-colors">
+        <Link
+          href="/dashboard/settings"
+          className="glass-card px-5 py-3 flex items-center gap-2 text-sm text-theme-secondary hover:text-theme transition-colors"
+        >
           <Palette className="w-5 h-5" /> Customize Theme
         </Link>
       </div>

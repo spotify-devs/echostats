@@ -1,11 +1,24 @@
 "use client";
 
-import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { CalendarDays, ChevronLeft, ChevronRight, Music, Star, BarChart3 } from "lucide-react";
+import { BarChart3, CalendarDays, ChevronLeft, ChevronRight, Music, Star } from "lucide-react";
+import { useMemo, useState } from "react";
 import { api } from "@/lib/api";
 
-const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+const MONTHS = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 function getIntensityColor(plays: number, max: number): string {
@@ -81,10 +94,15 @@ export default function CalendarPage() {
       <div className="glass-card p-6">
         {/* Month Navigation */}
         <div className="flex items-center justify-between mb-6">
-          <button onClick={prevMonth} className="p-2 rounded-lg hover:bg-white/5 text-theme-tertiary hover:text-theme transition-colors">
+          <button
+            onClick={prevMonth}
+            className="p-2 rounded-lg hover:bg-white/5 text-theme-tertiary hover:text-theme transition-colors"
+          >
             <ChevronLeft className="w-5 h-5" />
           </button>
-          <h2 className="text-lg font-semibold text-theme">{MONTHS[month]} {year}</h2>
+          <h2 className="text-lg font-semibold text-theme">
+            {MONTHS[month]} {year}
+          </h2>
           <button
             onClick={nextMonth}
             disabled={isCurrentMonth}
@@ -97,7 +115,9 @@ export default function CalendarPage() {
         {/* Day Headers */}
         <div className="grid grid-cols-7 gap-1 mb-2">
           {DAYS.map((day) => (
-            <div key={day} className="text-center text-xs text-theme-tertiary font-medium py-1">{day}</div>
+            <div key={day} className="text-center text-xs text-theme-tertiary font-medium py-1">
+              {day}
+            </div>
           ))}
         </div>
 
@@ -118,13 +138,18 @@ export default function CalendarPage() {
                 onClick={() => !isFuture && setSelectedDay(isSelected ? null : dateStr)}
                 disabled={isFuture}
                 className={`aspect-square rounded-xl flex flex-col items-center justify-center text-sm transition-all relative ${
-                  isFuture ? "opacity-20 cursor-default" :
-                  isSelected ? "ring-2 ring-accent-dynamic scale-105 " + getIntensityColor(plays, maxPlays) :
-                  isToday ? "ring-1 ring-accent-dynamic/50 " + getIntensityColor(plays, maxPlays) :
-                  getIntensityColor(plays, maxPlays) + " hover:scale-105 cursor-pointer"
+                  isFuture
+                    ? "opacity-20 cursor-default"
+                    : isSelected
+                      ? `ring-2 ring-accent-dynamic scale-105 ${getIntensityColor(plays, maxPlays)}`
+                      : isToday
+                        ? `ring-1 ring-accent-dynamic/50 ${getIntensityColor(plays, maxPlays)}`
+                        : `${getIntensityColor(plays, maxPlays)} hover:scale-105 cursor-pointer`
                 }`}
               >
-                <span className={`font-medium ${isToday ? "text-accent-dynamic" : "text-theme"}`}>{day}</span>
+                <span className={`font-medium ${isToday ? "text-accent-dynamic" : "text-theme"}`}>
+                  {day}
+                </span>
                 {plays > 0 && !isFuture && (
                   <span className="text-[9px] text-theme-tertiary">{plays}</span>
                 )}
@@ -150,12 +175,19 @@ export default function CalendarPage() {
         <div className="glass-card p-6 animate-slide-up">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-lg font-semibold text-theme">
-              {new Date(selectedDay + "T00:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
+              {new Date(`${selectedDay}T00:00:00`).toLocaleDateString("en-US", {
+                weekday: "long",
+                month: "long",
+                day: "numeric",
+              })}
             </h3>
-            <span className="text-sm text-accent-dynamic font-medium">{dailyPlays[selectedDay] || 0} plays</span>
+            <span className="text-sm text-accent-dynamic font-medium">
+              {dailyPlays[selectedDay] || 0} plays
+            </span>
           </div>
           <p className="text-sm text-theme-tertiary">
-            Detailed track-level history for specific dates will be available with a live Spotify connection.
+            Detailed track-level history for specific dates will be available with a live Spotify
+            connection.
           </p>
         </div>
       )}
@@ -163,10 +195,33 @@ export default function CalendarPage() {
       {/* Monthly Summary */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
-          { label: "Days Active", value: Object.values(dailyPlays).filter((p) => p > 0).length, icon: CalendarDays, color: "text-accent-dynamic" },
-          { label: "Total Plays", value: Object.values(dailyPlays).reduce((a, b) => a + b, 0), icon: Music, color: "text-spotify-green" },
-          { label: "Best Day", value: Math.max(...Object.values(dailyPlays), 0), icon: Star, color: "text-accent-amber" },
-          { label: "Avg/Day", value: Math.round(Object.values(dailyPlays).reduce((a, b) => a + b, 0) / Math.max(Object.values(dailyPlays).length, 1)), icon: BarChart3, color: "text-accent-cyan" },
+          {
+            label: "Days Active",
+            value: Object.values(dailyPlays).filter((p) => p > 0).length,
+            icon: CalendarDays,
+            color: "text-accent-dynamic",
+          },
+          {
+            label: "Total Plays",
+            value: Object.values(dailyPlays).reduce((a, b) => a + b, 0),
+            icon: Music,
+            color: "text-spotify-green",
+          },
+          {
+            label: "Best Day",
+            value: Math.max(...Object.values(dailyPlays), 0),
+            icon: Star,
+            color: "text-accent-amber",
+          },
+          {
+            label: "Avg/Day",
+            value: Math.round(
+              Object.values(dailyPlays).reduce((a, b) => a + b, 0) /
+                Math.max(Object.values(dailyPlays).length, 1),
+            ),
+            icon: BarChart3,
+            color: "text-accent-cyan",
+          },
         ].map((stat) => (
           <div key={stat.label} className="glass-card p-4 text-center">
             <stat.icon className={`w-5 h-5 ${stat.color} mx-auto mb-1.5`} />

@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
-import { Search as SearchIcon, Music, Users, Disc3, X, Loader2 } from "lucide-react";
+import { Loader2, Music, Search as SearchIcon, Users, X } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api";
 
 interface SearchResult {
@@ -142,7 +142,11 @@ export function GlobalSearch() {
       />
       {query && (
         <button
-          onClick={() => { setQuery(""); setResults([]); setIsOpen(false); }}
+          onClick={() => {
+            setQuery("");
+            setResults([]);
+            setIsOpen(false);
+          }}
           className="absolute right-3 top-1/2 -translate-y-1/2 text-theme-tertiary hover:text-theme"
         >
           <X className="w-4 h-4" />
@@ -150,7 +154,7 @@ export function GlobalSearch() {
       )}
 
       {/* Results dropdown */}
-      {isOpen && (query.length >= 2) && (
+      {isOpen && query.length >= 2 && (
         <div className="absolute top-full left-0 right-0 mt-2 glass-card overflow-hidden z-50 animate-scale-in">
           {isSearching ? (
             <div className="flex items-center justify-center py-6">
@@ -166,7 +170,13 @@ export function GlobalSearch() {
                 >
                   <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-theme-surface-3 flex-shrink-0">
                     {result.imageUrl ? (
-                      <Image src={result.imageUrl} alt={result.name} fill className="object-cover" sizes="40px" />
+                      <Image
+                        src={result.imageUrl}
+                        alt={result.name}
+                        fill
+                        className="object-cover"
+                        sizes="40px"
+                      />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-theme-tertiary">
                         <Icon type={result.type} />

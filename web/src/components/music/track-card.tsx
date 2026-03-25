@@ -1,6 +1,6 @@
+import { Clock, Play } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { Play, Clock } from "lucide-react";
 
 interface TrackCardProps {
   rank?: number;
@@ -13,7 +13,16 @@ interface TrackCardProps {
   spotifyId?: string;
 }
 
-export function TrackCard({ rank, name, artist, albumImageUrl, playCount, duration, spotifyUrl, spotifyId }: TrackCardProps) {
+export function TrackCard({
+  rank,
+  name,
+  artist,
+  albumImageUrl,
+  playCount,
+  duration,
+  spotifyUrl,
+  spotifyId,
+}: TrackCardProps) {
   const content = (
     <div className="flex items-center gap-3 sm:gap-4 p-3 rounded-xl hover:bg-white/[0.03] transition-all group min-h-[44px]">
       {rank !== undefined && (
@@ -33,7 +42,9 @@ export function TrackCard({ rank, name, artist, albumImageUrl, playCount, durati
         <p className="text-xs text-white/40 truncate">{artist}</p>
       </div>
       {playCount !== undefined && (
-        <span className="text-xs text-white/40 tabular-nums">{playCount.toLocaleString()} plays</span>
+        <span className="text-xs text-white/40 tabular-nums">
+          {playCount.toLocaleString()} plays
+        </span>
       )}
       {duration && (
         <span className="text-xs text-white/30 flex items-center gap-1">

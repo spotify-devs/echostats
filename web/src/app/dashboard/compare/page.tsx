@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { GitCompare, TrendingUp, TrendingDown, Minus } from "lucide-react";
-import { api } from "@/lib/api";
+import { GitCompare, Minus, TrendingDown, TrendingUp } from "lucide-react";
+import { useState } from "react";
 import { ChartSkeleton } from "@/components/ui/loading-skeleton";
+import { api } from "@/lib/api";
 
 const PERIODS = [
   { value: "week", label: "This Week" },
@@ -13,14 +13,25 @@ const PERIODS = [
   { value: "all_time", label: "All Time" },
 ];
 
-function CompareRow({ label, left, right, unit }: { label: string; left: number; right: number; unit?: string }) {
+function CompareRow({
+  label,
+  left,
+  right,
+  unit,
+}: {
+  label: string;
+  left: number;
+  right: number;
+  unit?: string;
+}) {
   const diff = left - right;
   const pct = right > 0 ? Math.round((diff / right) * 100) : 0;
   return (
     <div className="flex items-center py-3 border-b border-white/5 last:border-0">
       <span className="flex-1 text-sm text-theme-secondary">{label}</span>
       <span className="w-24 text-right text-sm font-semibold text-theme tabular-nums">
-        {left.toLocaleString()}{unit}
+        {left.toLocaleString()}
+        {unit}
       </span>
       <div className="w-20 text-center">
         {diff > 0 ? (
@@ -38,7 +49,8 @@ function CompareRow({ label, left, right, unit }: { label: string; left: number;
         )}
       </div>
       <span className="w-24 text-right text-sm text-theme-tertiary tabular-nums">
-        {right.toLocaleString()}{unit}
+        {right.toLocaleString()}
+        {unit}
       </span>
     </div>
   );
@@ -72,16 +84,36 @@ export default function ComparePage() {
       {/* Period selectors */}
       <div className="flex flex-col sm:flex-row items-center gap-4">
         <div className="flex-1 w-full">
-          <label className="text-xs text-theme-tertiary uppercase tracking-wider mb-2 block">Period A</label>
-          <select value={periodA} onChange={(e) => setPeriodA(e.target.value)} className="w-full px-4 py-2.5 bg-theme-surface-2 border border-white/10 rounded-xl text-sm text-theme focus:outline-none focus:border-accent-dynamic/50">
-            {PERIODS.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
+          <label className="text-xs text-theme-tertiary uppercase tracking-wider mb-2 block">
+            Period A
+          </label>
+          <select
+            value={periodA}
+            onChange={(e) => setPeriodA(e.target.value)}
+            className="w-full px-4 py-2.5 bg-theme-surface-2 border border-white/10 rounded-xl text-sm text-theme focus:outline-none focus:border-accent-dynamic/50"
+          >
+            {PERIODS.map((p) => (
+              <option key={p.value} value={p.value}>
+                {p.label}
+              </option>
+            ))}
           </select>
         </div>
         <GitCompare className="w-6 h-6 text-theme-tertiary mt-5" />
         <div className="flex-1 w-full">
-          <label className="text-xs text-theme-tertiary uppercase tracking-wider mb-2 block">Period B</label>
-          <select value={periodB} onChange={(e) => setPeriodB(e.target.value)} className="w-full px-4 py-2.5 bg-theme-surface-2 border border-white/10 rounded-xl text-sm text-theme focus:outline-none focus:border-accent-dynamic/50">
-            {PERIODS.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
+          <label className="text-xs text-theme-tertiary uppercase tracking-wider mb-2 block">
+            Period B
+          </label>
+          <select
+            value={periodB}
+            onChange={(e) => setPeriodB(e.target.value)}
+            className="w-full px-4 py-2.5 bg-theme-surface-2 border border-white/10 rounded-xl text-sm text-theme focus:outline-none focus:border-accent-dynamic/50"
+          >
+            {PERIODS.map((p) => (
+              <option key={p.value} value={p.value}>
+                {p.label}
+              </option>
+            ))}
           </select>
         </div>
       </div>
@@ -93,17 +125,47 @@ export default function ComparePage() {
           {/* Header */}
           <div className="flex items-center py-2 mb-2">
             <span className="flex-1" />
-            <span className="w-24 text-right text-xs text-accent-dynamic font-medium uppercase">{PERIODS.find((p) => p.value === periodA)?.label}</span>
+            <span className="w-24 text-right text-xs text-accent-dynamic font-medium uppercase">
+              {PERIODS.find((p) => p.value === periodA)?.label}
+            </span>
             <span className="w-20 text-center text-xs text-theme-tertiary">Change</span>
-            <span className="w-24 text-right text-xs text-theme-tertiary font-medium uppercase">{PERIODS.find((p) => p.value === periodB)?.label}</span>
+            <span className="w-24 text-right text-xs text-theme-tertiary font-medium uppercase">
+              {PERIODS.find((p) => p.value === periodB)?.label}
+            </span>
           </div>
 
-          <CompareRow label="Tracks Played" left={dataA?.total_tracks_played || 0} right={dataB?.total_tracks_played || 0} />
-          <CompareRow label="Listening Hours" left={dataA?.total_hours || 0} right={dataB?.total_hours || 0} unit="h" />
-          <CompareRow label="Unique Tracks" left={dataA?.unique_tracks || 0} right={dataB?.unique_tracks || 0} />
-          <CompareRow label="Unique Artists" left={dataA?.unique_artists || 0} right={dataB?.unique_artists || 0} />
-          <CompareRow label="Unique Genres" left={dataA?.unique_genres || 0} right={dataB?.unique_genres || 0} />
-          <CompareRow label="Day Streak" left={dataA?.listening_streak_days || 0} right={dataB?.listening_streak_days || 0} unit="d" />
+          <CompareRow
+            label="Tracks Played"
+            left={dataA?.total_tracks_played || 0}
+            right={dataB?.total_tracks_played || 0}
+          />
+          <CompareRow
+            label="Listening Hours"
+            left={dataA?.total_hours || 0}
+            right={dataB?.total_hours || 0}
+            unit="h"
+          />
+          <CompareRow
+            label="Unique Tracks"
+            left={dataA?.unique_tracks || 0}
+            right={dataB?.unique_tracks || 0}
+          />
+          <CompareRow
+            label="Unique Artists"
+            left={dataA?.unique_artists || 0}
+            right={dataB?.unique_artists || 0}
+          />
+          <CompareRow
+            label="Unique Genres"
+            left={dataA?.unique_genres || 0}
+            right={dataB?.unique_genres || 0}
+          />
+          <CompareRow
+            label="Day Streak"
+            left={dataA?.listening_streak_days || 0}
+            right={dataB?.listening_streak_days || 0}
+            unit="d"
+          />
         </div>
       )}
     </div>

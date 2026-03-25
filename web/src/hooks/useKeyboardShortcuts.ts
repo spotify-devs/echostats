@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 const SHORTCUTS: Record<string, string> = {
   "g+d": "/dashboard",

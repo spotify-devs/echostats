@@ -1,13 +1,12 @@
 "use client";
 
-import { use } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Users, Music, Disc3, ExternalLink, ArrowLeft } from "lucide-react";
+import { ArrowLeft, ExternalLink, Users } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { use } from "react";
+import { ChartSkeleton, ListSkeleton } from "@/components/ui/loading-skeleton";
 import { api } from "@/lib/api";
-import { BarChart } from "@/components/charts/bar-chart";
-import { ListSkeleton, ChartSkeleton } from "@/components/ui/loading-skeleton";
 
 export default function ArtistDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -38,7 +37,7 @@ export default function ArtistDetailPage({ params }: { params: Promise<{ id: str
     );
   }
 
-  const genreData = (artist.genres || []).map((g: string, i: number) => ({
+  const _genreData = (artist.genres || []).map((g: string, _i: number) => ({
     name: g,
     value: 1,
   }));
@@ -46,7 +45,10 @@ export default function ArtistDetailPage({ params }: { params: Promise<{ id: str
   return (
     <div className="space-y-6">
       {/* Back */}
-      <Link href="/dashboard/artists" className="inline-flex items-center gap-2 text-sm text-theme-secondary hover:text-theme transition-colors">
+      <Link
+        href="/dashboard/artists"
+        className="inline-flex items-center gap-2 text-sm text-theme-secondary hover:text-theme transition-colors"
+      >
         <ArrowLeft className="w-4 h-4" /> Back to Artists
       </Link>
 
@@ -54,7 +56,13 @@ export default function ArtistDetailPage({ params }: { params: Promise<{ id: str
       <div className="glass-card p-6 flex flex-col sm:flex-row items-center gap-6">
         <div className="relative w-32 h-32 rounded-full overflow-hidden bg-theme-surface-3 flex-shrink-0 ring-4 ring-accent-dynamic/20">
           {artist.images?.[0]?.url ? (
-            <Image src={artist.images[0].url} alt={artist.name} fill className="object-cover" sizes="128px" />
+            <Image
+              src={artist.images[0].url}
+              alt={artist.name}
+              fill
+              className="object-cover"
+              sizes="128px"
+            />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
               <Users className="w-12 h-12 text-theme-tertiary" />
@@ -75,7 +83,10 @@ export default function ArtistDetailPage({ params }: { params: Promise<{ id: str
           {artist.genres?.length > 0 && (
             <div className="flex flex-wrap gap-2 mt-3 justify-center sm:justify-start">
               {artist.genres.map((g: string) => (
-                <span key={g} className="px-2.5 py-1 text-xs rounded-full bg-accent-dynamic/15 text-accent-dynamic">
+                <span
+                  key={g}
+                  className="px-2.5 py-1 text-xs rounded-full bg-accent-dynamic/15 text-accent-dynamic"
+                >
                   {g}
                 </span>
               ))}
@@ -97,9 +108,19 @@ export default function ArtistDetailPage({ params }: { params: Promise<{ id: str
         <div className="flex flex-col items-center gap-1">
           <div className="relative w-20 h-20">
             <svg className="w-20 h-20 -rotate-90" viewBox="0 0 80 80">
-              <circle cx="40" cy="40" r="35" fill="none" stroke="rgb(var(--surface-3))" strokeWidth="6" />
               <circle
-                cx="40" cy="40" r="35" fill="none"
+                cx="40"
+                cy="40"
+                r="35"
+                fill="none"
+                stroke="rgb(var(--surface-3))"
+                strokeWidth="6"
+              />
+              <circle
+                cx="40"
+                cy="40"
+                r="35"
+                fill="none"
                 stroke="rgb(var(--accent))"
                 strokeWidth="6"
                 strokeDasharray={`${(artist.popularity / 100) * 220} 220`}
@@ -110,7 +131,9 @@ export default function ArtistDetailPage({ params }: { params: Promise<{ id: str
               {artist.popularity}
             </span>
           </div>
-          <span className="text-[10px] text-theme-tertiary uppercase tracking-wider">Popularity</span>
+          <span className="text-[10px] text-theme-tertiary uppercase tracking-wider">
+            Popularity
+          </span>
         </div>
       </div>
     </div>

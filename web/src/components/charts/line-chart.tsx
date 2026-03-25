@@ -1,14 +1,14 @@
 "use client";
 
 import {
-  LineChart as RechartsLineChart,
+  CartesianGrid,
+  Legend,
   Line,
+  LineChart as RechartsLineChart,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
 } from "recharts";
 
 interface LineChartProps {
@@ -27,7 +27,8 @@ const CustomTooltip = ({ active, payload, label }: any) => {
       <p className="text-white/70 mb-1">{label}</p>
       {payload.map((entry: any, i: number) => (
         <p key={i} style={{ color: entry.color }} className="font-medium">
-          {entry.name}: {typeof entry.value === "number" ? entry.value.toLocaleString() : entry.value}
+          {entry.name}:{" "}
+          {typeof entry.value === "number" ? entry.value.toLocaleString() : entry.value}
         </p>
       ))}
     </div>

@@ -1,8 +1,7 @@
 "use client";
 
+import { BarChart3, Clock, Disc3, Music, Shield, Smartphone, TrendingUp } from "lucide-react";
 import { useState } from "react";
-import Link from "next/link";
-import { Music, BarChart3, Disc3, TrendingUp, Shield, Smartphone, Clock } from "lucide-react";
 import { SpotifyConnectModal } from "@/components/ui/spotify-connect-modal";
 
 export default function LandingPage() {
@@ -21,8 +20,7 @@ export default function LandingPage() {
 
         {/* Tagline */}
         <p className="text-xl text-white/60 max-w-md mx-auto">
-          Discover deep insights about your Spotify listening habits with
-          beautiful analytics.
+          Discover deep insights about your Spotify listening habits with beautiful analytics.
         </p>
 
         {/* Features */}
@@ -46,9 +44,15 @@ export default function LandingPage() {
 
         {/* More highlights */}
         <div className="flex flex-wrap justify-center gap-4 text-xs text-white/40">
-          <span className="flex items-center gap-1"><Shield className="w-3.5 h-3.5" /> Self-hosted & private</span>
-          <span className="flex items-center gap-1"><Smartphone className="w-3.5 h-3.5" /> PWA — install on any device</span>
-          <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> Import full Spotify history</span>
+          <span className="flex items-center gap-1">
+            <Shield className="w-3.5 h-3.5" /> Self-hosted & private
+          </span>
+          <span className="flex items-center gap-1">
+            <Smartphone className="w-3.5 h-3.5" /> PWA — install on any device
+          </span>
+          <span className="flex items-center gap-1">
+            <Clock className="w-3.5 h-3.5" /> Import full Spotify history
+          </span>
         </div>
 
         {/* Connect Button */}
@@ -69,10 +73,7 @@ export default function LandingPage() {
       </div>
 
       {/* Spotify Connect Modal */}
-      <SpotifyConnectModal
-        isOpen={connectOpen}
-        onClose={() => setConnectOpen(false)}
-      />
+      <SpotifyConnectModal isOpen={connectOpen} onClose={() => setConnectOpen(false)} />
     </main>
   );
 }

@@ -217,7 +217,7 @@ async def sync_playlists(client: SpotifyClient, user_id: str) -> int:
 async def enrich_audio_features(client: SpotifyClient, batch_size: int = 100) -> int:
     """Fetch audio features for tracks that don't have them yet."""
     count = 0
-    tracks = await Track.find(Track.audio_features == None).limit(batch_size).to_list()  # noqa: E711
+    tracks = await Track.find(Track.audio_features == None).limit(batch_size).to_list()
 
     if not tracks:
         return 0

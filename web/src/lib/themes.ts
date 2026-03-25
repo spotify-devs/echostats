@@ -1,5 +1,14 @@
 export type ThemeId = "dark" | "light" | "dim" | "blue" | "midnight" | "forest";
-export type AccentId = "purple" | "pink" | "cyan" | "green" | "amber" | "red" | "blue" | "orange" | "custom";
+export type AccentId =
+  | "purple"
+  | "pink"
+  | "cyan"
+  | "green"
+  | "amber"
+  | "red"
+  | "blue"
+  | "orange"
+  | "custom";
 
 export interface ThemeColors {
   surface: string;

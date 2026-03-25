@@ -1,14 +1,14 @@
 "use client";
 
-import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Heart, Smile, Frown, Meh } from "lucide-react";
-import { api } from "@/lib/api";
+import { Heart } from "lucide-react";
+import { useState } from "react";
 import { LineChart } from "@/components/charts/line-chart";
 import { RadarChart } from "@/components/charts/radar-chart";
-import { TimeRangeSelector } from "@/components/ui/time-range-selector";
 import { DateRangeFilter } from "@/components/ui/date-range-filter";
 import { ChartSkeleton } from "@/components/ui/loading-skeleton";
+import { TimeRangeSelector } from "@/components/ui/time-range-selector";
+import { api } from "@/lib/api";
 
 const MOOD_EMOJIS: Record<string, { emoji: string; label: string; color: string }> = {
   euphoric: { emoji: "🎉", label: "Euphoric", color: "#10b981" },
@@ -48,8 +48,12 @@ export default function MoodPage() {
   // Simulate mood timeline from hourly data (in real app, this would come from aggregated daily valence)
   const moodTimeline = (data?.hourly_distribution || []).map((h: any) => ({
     time: `${h.hour.toString().padStart(2, "0")}:00`,
-    valence: avgFeatures ? Math.max(0, Math.min(1, avgFeatures.valence + (Math.random() - 0.5) * 0.3)) : 0.5,
-    energy: avgFeatures ? Math.max(0, Math.min(1, avgFeatures.energy + (Math.random() - 0.5) * 0.2)) : 0.5,
+    valence: avgFeatures
+      ? Math.max(0, Math.min(1, avgFeatures.valence + (Math.random() - 0.5) * 0.3))
+      : 0.5,
+    energy: avgFeatures
+      ? Math.max(0, Math.min(1, avgFeatures.energy + (Math.random() - 0.5) * 0.2))
+      : 0.5,
     plays: h.count,
   }));
 
@@ -91,7 +95,10 @@ export default function MoodPage() {
             endDate={endDate}
             onStartDateChange={setStartDate}
             onEndDateChange={setEndDate}
-            onClear={() => { setStartDate(""); setEndDate(""); }}
+            onClear={() => {
+              setStartDate("");
+              setEndDate("");
+            }}
           />
         </div>
       </div>
@@ -113,7 +120,8 @@ export default function MoodPage() {
                 <span className="text-accent-dynamic">{moodInfo?.label || "Neutral"}</span>
               </h2>
               <p className="text-theme-secondary mt-1">
-                Based on the average valence ({avgFeatures ? Math.round(avgFeatures.valence * 100) : 0}%) of your listened tracks
+                Based on the average valence (
+                {avgFeatures ? Math.round(avgFeatures.valence * 100) : 0}%) of your listened tracks
               </p>
             </div>
             <div className="flex gap-6 mt-2">

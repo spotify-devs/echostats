@@ -1,11 +1,10 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { Globe, Music } from "lucide-react";
-import Image from "next/image";
-import { api } from "@/lib/api";
+import { Globe } from "lucide-react";
 import { BarChart } from "@/components/charts/bar-chart";
 import { ChartSkeleton } from "@/components/ui/loading-skeleton";
+import { api } from "@/lib/api";
 
 const DECADE_COLORS: Record<string, string> = {
   "2020s": "#a855f7",
@@ -14,7 +13,7 @@ const DECADE_COLORS: Record<string, string> = {
   "1990s": "#10b981",
   "1980s": "#f59e0b",
   "1970s": "#ef4444",
-  "Earlier": "#6366f1",
+  Earlier: "#6366f1",
 };
 
 export default function DecadesPage() {
@@ -54,7 +53,9 @@ export default function DecadesPage() {
                 <div key={d.decade}>
                   <div className="flex justify-between text-sm mb-2">
                     <span className="text-theme font-medium">{d.decade}</span>
-                    <span className="text-theme-secondary">{d.percentage}% · {d.tracks} tracks</span>
+                    <span className="text-theme-secondary">
+                      {d.percentage}% · {d.tracks} tracks
+                    </span>
                   </div>
                   <div className="w-full h-4 rounded-full bg-theme-surface-3 overflow-hidden">
                     <div
@@ -84,7 +85,10 @@ export default function DecadesPage() {
           {/* Decade Cards */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
             {decadeData.map((d) => (
-              <div key={d.decade} className="glass-card p-4 text-center space-y-2 group hover:shadow-accent-glow/10 transition-shadow">
+              <div
+                key={d.decade}
+                className="glass-card p-4 text-center space-y-2 group hover:shadow-accent-glow/10 transition-shadow"
+              >
                 <div
                   className="w-16 h-16 rounded-2xl mx-auto flex items-center justify-center text-2xl font-bold text-white"
                   style={{ backgroundColor: DECADE_COLORS[d.decade] || "rgb(var(--accent))" }}

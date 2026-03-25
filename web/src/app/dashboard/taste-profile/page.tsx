@@ -1,10 +1,10 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { Fingerprint, Zap, Heart, Gauge } from "lucide-react";
-import { api } from "@/lib/api";
+import { Fingerprint, Gauge, Heart, Zap } from "lucide-react";
 import { RadarChart } from "@/components/charts/radar-chart";
 import { ChartSkeleton } from "@/components/ui/loading-skeleton";
+import { api } from "@/lib/api";
 
 const TASTE_LABELS: Record<string, { high: string; low: string; emoji: string }> = {
   danceability: { high: "Groovy Dancer", low: "Chill Listener", emoji: "💃" },
@@ -23,14 +23,16 @@ export default function TasteProfilePage() {
 
   const af = data?.avg_audio_features;
 
-  const radarData = af ? [
-    { feature: "Dance", value: af.danceability },
-    { feature: "Energy", value: af.energy },
-    { feature: "Happy", value: af.valence },
-    { feature: "Acoustic", value: af.acousticness },
-    { feature: "Live", value: af.liveness },
-    { feature: "Speech", value: af.speechiness },
-  ] : [];
+  const radarData = af
+    ? [
+        { feature: "Dance", value: af.danceability },
+        { feature: "Energy", value: af.energy },
+        { feature: "Happy", value: af.valence },
+        { feature: "Acoustic", value: af.acousticness },
+        { feature: "Live", value: af.liveness },
+        { feature: "Speech", value: af.speechiness },
+      ]
+    : [];
 
   const getTasteLabel = (key: string, value: number) => {
     const labels = TASTE_LABELS[key];
@@ -40,12 +42,41 @@ export default function TasteProfilePage() {
 
   const getPersonality = () => {
     if (!af) return { title: "Unknown", emoji: "❓", desc: "" };
-    if (af.energy > 0.7 && af.danceability > 0.7) return { title: "Party Animal", emoji: "🎉", desc: "You love high-energy, danceable music that gets everyone moving" };
-    if (af.valence > 0.7 && af.energy > 0.5) return { title: "Sunshine Vibes", emoji: "🌞", desc: "Your music is upbeat, positive, and full of good energy" };
-    if (af.acousticness > 0.5 && af.energy < 0.5) return { title: "Indie Soul", emoji: "🍂", desc: "You appreciate acoustic, organic sounds and intimate performances" };
-    if (af.valence < 0.4 && af.energy > 0.6) return { title: "Dark Horse", emoji: "🖤", desc: "You gravitate towards intense, emotionally charged music" };
-    if (af.danceability > 0.6 && af.valence > 0.5) return { title: "Feel-Good Curator", emoji: "✨", desc: "Your taste is well-balanced with a lean towards feel-good tracks" };
-    return { title: "Eclectic Explorer", emoji: "🌍", desc: "Your taste spans multiple moods and styles — truly diverse" };
+    if (af.energy > 0.7 && af.danceability > 0.7)
+      return {
+        title: "Party Animal",
+        emoji: "🎉",
+        desc: "You love high-energy, danceable music that gets everyone moving",
+      };
+    if (af.valence > 0.7 && af.energy > 0.5)
+      return {
+        title: "Sunshine Vibes",
+        emoji: "🌞",
+        desc: "Your music is upbeat, positive, and full of good energy",
+      };
+    if (af.acousticness > 0.5 && af.energy < 0.5)
+      return {
+        title: "Indie Soul",
+        emoji: "🍂",
+        desc: "You appreciate acoustic, organic sounds and intimate performances",
+      };
+    if (af.valence < 0.4 && af.energy > 0.6)
+      return {
+        title: "Dark Horse",
+        emoji: "🖤",
+        desc: "You gravitate towards intense, emotionally charged music",
+      };
+    if (af.danceability > 0.6 && af.valence > 0.5)
+      return {
+        title: "Feel-Good Curator",
+        emoji: "✨",
+        desc: "Your taste is well-balanced with a lean towards feel-good tracks",
+      };
+    return {
+      title: "Eclectic Explorer",
+      emoji: "🌍",
+      desc: "Your taste spans multiple moods and styles — truly diverse",
+    };
   };
 
   const personality = getPersonality();
@@ -60,7 +91,10 @@ export default function TasteProfilePage() {
       </div>
 
       {isLoading ? (
-        <div className="space-y-6"><ChartSkeleton /><ChartSkeleton /></div>
+        <div className="space-y-6">
+          <ChartSkeleton />
+          <ChartSkeleton />
+        </div>
       ) : af ? (
         <>
           {/* Personality Card */}
@@ -94,9 +128,17 @@ export default function TasteProfilePage() {
                         <span className="text-xs text-accent-dynamic font-medium">{label}</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] text-theme-tertiary w-16 text-right">{labels.low}</span>
+                        <span className="text-[10px] text-theme-tertiary w-16 text-right">
+                          {labels.low}
+                        </span>
                         <div className="flex-1 h-2 rounded-full bg-theme-surface-3 overflow-hidden">
-                          <div className="h-full rounded-full" style={{ width: `${value * 100}%`, backgroundColor: "rgb(var(--accent))" }} />
+                          <div
+                            className="h-full rounded-full"
+                            style={{
+                              width: `${value * 100}%`,
+                              backgroundColor: "rgb(var(--accent))",
+                            }}
+                          />
                         </div>
                         <span className="text-[10px] text-theme-tertiary w-16">{labels.high}</span>
                       </div>
@@ -127,7 +169,9 @@ export default function TasteProfilePage() {
           </div>
         </>
       ) : (
-        <div className="glass-card p-12 text-center text-theme-tertiary">Not enough data to build your taste profile yet</div>
+        <div className="glass-card p-12 text-center text-theme-tertiary">
+          Not enough data to build your taste profile yet
+        </div>
       )}
     </div>
   );

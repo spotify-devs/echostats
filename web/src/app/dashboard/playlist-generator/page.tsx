@@ -1,25 +1,55 @@
 "use client";
 
-import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { Wand2, Plus, Sparkles, Loader2, Check } from "lucide-react";
+import { Check, Loader2, Plus, Sparkles, Wand2 } from "lucide-react";
 import Image from "next/image";
+import { useState } from "react";
 import { api } from "@/lib/api";
 
 const MOODS = [
   { id: "happy", emoji: "😊", label: "Happy", params: { min_valence: 0.7, min_energy: 0.5 } },
   { id: "chill", emoji: "😌", label: "Chill", params: { max_energy: 0.4, min_acousticness: 0.3 } },
-  { id: "energetic", emoji: "⚡", label: "Energetic", params: { min_energy: 0.8, min_danceability: 0.6 } },
+  {
+    id: "energetic",
+    emoji: "⚡",
+    label: "Energetic",
+    params: { min_energy: 0.8, min_danceability: 0.6 },
+  },
   { id: "sad", emoji: "😢", label: "Melancholy", params: { max_valence: 0.3, max_energy: 0.5 } },
-  { id: "focus", emoji: "🎯", label: "Focus", params: { min_instrumentalness: 0.3, max_speechiness: 0.1 } },
+  {
+    id: "focus",
+    emoji: "🎯",
+    label: "Focus",
+    params: { min_instrumentalness: 0.3, max_speechiness: 0.1 },
+  },
   { id: "party", emoji: "🎉", label: "Party", params: { min_danceability: 0.8, min_energy: 0.7 } },
-  { id: "romantic", emoji: "💕", label: "Romantic", params: { min_valence: 0.5, max_energy: 0.6, min_acousticness: 0.2 } },
+  {
+    id: "romantic",
+    emoji: "💕",
+    label: "Romantic",
+    params: { min_valence: 0.5, max_energy: 0.6, min_acousticness: 0.2 },
+  },
   { id: "workout", emoji: "💪", label: "Workout", params: { min_energy: 0.8, min_tempo: 120 } },
 ];
 
 const GENRES = [
-  "pop", "rock", "hip-hop", "r-n-b", "electronic", "indie", "jazz", "classical",
-  "country", "latin", "metal", "folk", "reggae", "blues", "soul", "punk", "k-pop",
+  "pop",
+  "rock",
+  "hip-hop",
+  "r-n-b",
+  "electronic",
+  "indie",
+  "jazz",
+  "classical",
+  "country",
+  "latin",
+  "metal",
+  "folk",
+  "reggae",
+  "blues",
+  "soul",
+  "punk",
+  "k-pop",
 ];
 
 export default function PlaylistGeneratorPage() {
@@ -43,14 +73,20 @@ export default function PlaylistGeneratorPage() {
       setGeneratedTracks(tracks);
       if (!playlistName) {
         const mood = MOODS.find((m) => m.id === selectedMood);
-        setPlaylistName(`${mood?.label || "My"} Mix — ${new Date().toLocaleDateString("en-US", { month: "short", day: "numeric" })}`);
+        setPlaylistName(
+          `${mood?.label || "My"} Mix — ${new Date().toLocaleDateString("en-US", { month: "short", day: "numeric" })}`,
+        );
       }
     },
   });
 
   const toggleGenre = (genre: string) => {
     setSelectedGenres((prev) =>
-      prev.includes(genre) ? prev.filter((g) => g !== genre) : prev.length < 5 ? [...prev, genre] : prev
+      prev.includes(genre)
+        ? prev.filter((g) => g !== genre)
+        : prev.length < 5
+          ? [...prev, genre]
+          : prev,
     );
   };
 
@@ -88,7 +124,10 @@ export default function PlaylistGeneratorPage() {
 
           {/* Genre Selection */}
           <div className="glass-card p-6 space-y-4">
-            <h2 className="text-lg font-semibold text-theme">2. Select Genres <span className="text-xs text-theme-tertiary font-normal">(up to 5)</span></h2>
+            <h2 className="text-lg font-semibold text-theme">
+              2. Select Genres{" "}
+              <span className="text-xs text-theme-tertiary font-normal">(up to 5)</span>
+            </h2>
             <div className="flex flex-wrap gap-2">
               {GENRES.map((genre) => {
                 const isSelected = selectedGenres.includes(genre);
@@ -115,7 +154,9 @@ export default function PlaylistGeneratorPage() {
             <h2 className="text-lg font-semibold text-theme">3. Settings</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="text-xs text-theme-tertiary uppercase tracking-wider mb-2 block">Playlist Name</label>
+                <label className="text-xs text-theme-tertiary uppercase tracking-wider mb-2 block">
+                  Playlist Name
+                </label>
                 <input
                   type="text"
                   value={playlistName}
@@ -125,7 +166,9 @@ export default function PlaylistGeneratorPage() {
                 />
               </div>
               <div>
-                <label className="text-xs text-theme-tertiary uppercase tracking-wider mb-2 block">Number of Tracks: {trackCount}</label>
+                <label className="text-xs text-theme-tertiary uppercase tracking-wider mb-2 block">
+                  Number of Tracks: {trackCount}
+                </label>
                 <input
                   type="range"
                   min={5}
@@ -135,7 +178,8 @@ export default function PlaylistGeneratorPage() {
                   className="w-full accent-[rgb(var(--accent))]"
                 />
                 <div className="flex justify-between text-[10px] text-theme-tertiary">
-                  <span>5</span><span>50</span>
+                  <span>5</span>
+                  <span>50</span>
                 </div>
               </div>
             </div>
@@ -148,9 +192,13 @@ export default function PlaylistGeneratorPage() {
             className="w-full btn-primary py-4 text-lg flex items-center justify-center gap-3 disabled:opacity-50"
           >
             {generateMutation.isPending ? (
-              <><Loader2 className="w-5 h-5 animate-spin" /> Generating...</>
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" /> Generating...
+              </>
             ) : (
-              <><Sparkles className="w-5 h-5" /> Generate Playlist</>
+              <>
+                <Sparkles className="w-5 h-5" /> Generate Playlist
+              </>
             )}
           </button>
         </>
@@ -161,10 +209,15 @@ export default function PlaylistGeneratorPage() {
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h2 className="text-xl font-bold text-theme">{playlistName}</h2>
-                <p className="text-sm text-theme-secondary">{generatedTracks.length} tracks · Generated just now</p>
+                <p className="text-sm text-theme-secondary">
+                  {generatedTracks.length} tracks · Generated just now
+                </p>
               </div>
               <button
-                onClick={() => { setGeneratedTracks([]); setPlaylistName(""); }}
+                onClick={() => {
+                  setGeneratedTracks([]);
+                  setPlaylistName("");
+                }}
                 className="text-sm text-theme-tertiary hover:text-theme transition-colors"
               >
                 Start Over
@@ -176,10 +229,18 @@ export default function PlaylistGeneratorPage() {
                 const [name, artist] = (track.name || "").split(" — ");
                 return (
                   <div key={i} className="flex items-center gap-3 py-3">
-                    <span className="w-6 text-center text-sm text-theme-tertiary font-mono">{i + 1}</span>
+                    <span className="w-6 text-center text-sm text-theme-tertiary font-mono">
+                      {i + 1}
+                    </span>
                     {track.image_url && (
                       <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-theme-surface-3 flex-shrink-0">
-                        <Image src={track.image_url} alt="" fill className="object-cover" sizes="40px" />
+                        <Image
+                          src={track.image_url}
+                          alt=""
+                          fill
+                          className="object-cover"
+                          sizes="40px"
+                        />
                       </div>
                     )}
                     <div className="flex-1 min-w-0">

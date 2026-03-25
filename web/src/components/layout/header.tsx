@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Bell, LogIn } from "lucide-react";
 import Image from "next/image";
+import { useState } from "react";
 import { GlobalSearch } from "@/components/layout/search";
 import { SpotifyConnectModal } from "@/components/ui/spotify-connect-modal";
 import { api } from "@/lib/api";
@@ -23,7 +23,13 @@ export function Header() {
 
   return (
     <>
-      <header className="h-16 border-b flex items-center justify-between px-4 sm:px-6 backdrop-blur-lg" style={{ backgroundColor: "rgb(var(--surface-1) / 0.5)", borderColor: "rgb(var(--border) / var(--border-opacity))" }}>
+      <header
+        className="h-16 border-b flex items-center justify-between px-4 sm:px-6 backdrop-blur-lg"
+        style={{
+          backgroundColor: "rgb(var(--surface-1) / 0.5)",
+          borderColor: "rgb(var(--border) / var(--border-opacity))",
+        }}
+      >
         {/* App name on mobile, spacer for hamburger */}
         <div className="flex items-center gap-2 lg:hidden flex-shrink-0">
           <div className="w-10" /> {/* hamburger spacer */}
@@ -37,7 +43,6 @@ export function Header() {
 
         {/* Right side */}
         <div className="flex items-center gap-3">
-
           {isAuthed ? (
             <>
               <button className="p-2 rounded-lg hover:bg-white/5 text-theme-tertiary hover:text-theme transition-colors">
@@ -71,10 +76,7 @@ export function Header() {
         </div>
       </header>
 
-      <SpotifyConnectModal
-        isOpen={connectOpen}
-        onClose={() => setConnectOpen(false)}
-      />
+      <SpotifyConnectModal isOpen={connectOpen} onClose={() => setConnectOpen(false)} />
     </>
   );
 }

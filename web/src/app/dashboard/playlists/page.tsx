@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ListMusic } from "lucide-react";
 import Image from "next/image";
-import { api } from "@/lib/api";
+import { useState } from "react";
 import { DateRangeFilter } from "@/components/ui/date-range-filter";
 import { ListSkeleton } from "@/components/ui/loading-skeleton";
+import { api } from "@/lib/api";
 
 export default function PlaylistsPage() {
   const [startDate, setStartDate] = useState("");
@@ -31,7 +31,10 @@ export default function PlaylistsPage() {
           endDate={endDate}
           onStartDateChange={setStartDate}
           onEndDateChange={setEndDate}
-          onClear={() => { setStartDate(""); setEndDate(""); }}
+          onClear={() => {
+            setStartDate("");
+            setEndDate("");
+          }}
         />
       </div>
 
@@ -43,7 +46,13 @@ export default function PlaylistsPage() {
             <div key={playlist.spotify_id} className="glass-card-hover p-4 space-y-3">
               <div className="relative w-full aspect-square rounded-xl overflow-hidden bg-surface-3">
                 {playlist.images?.[0]?.url ? (
-                  <Image src={playlist.images[0].url} alt={playlist.name} fill className="object-cover" sizes="300px" />
+                  <Image
+                    src={playlist.images[0].url}
+                    alt={playlist.name}
+                    fill
+                    className="object-cover"
+                    sizes="300px"
+                  />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
                     <ListMusic className="w-12 h-12 text-white/10" />

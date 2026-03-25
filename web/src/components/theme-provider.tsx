@@ -1,20 +1,13 @@
 "use client";
 
+import { createContext, type ReactNode, useCallback, useContext, useEffect, useState } from "react";
 import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useState,
-  type ReactNode,
-} from "react";
-import {
-  type ThemeId,
-  type AccentId,
   type AccentColors,
-  themes,
+  type AccentId,
   accents,
   buildCustomAccent,
+  type ThemeId,
+  themes,
 } from "@/lib/themes";
 
 interface ThemeContextValue {
@@ -128,19 +121,16 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     applyThemeVars(themeId, accentId, customAccentColor);
     localStorage.setItem(
       "echostats-theme",
-      JSON.stringify({ themeId, accentId, customAccentColor })
+      JSON.stringify({ themeId, accentId, customAccentColor }),
     );
   }, [themeId, accentId, customAccentColor, mounted]);
 
   const setTheme = useCallback((id: ThemeId) => setThemeId(id), []);
   const setAccent = useCallback((id: AccentId) => setAccentId(id), []);
-  const setCustomAccentColor = useCallback(
-    (hex: string) => {
-      setCustomAccentColorState(hex);
-      setAccentId("custom");
-    },
-    []
-  );
+  const setCustomAccentColor = useCallback((hex: string) => {
+    setCustomAccentColorState(hex);
+    setAccentId("custom");
+  }, []);
 
   // Prevent flash of wrong theme
   if (!mounted) {

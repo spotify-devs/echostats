@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Sparkles, Music, Clock, ExternalLink, RefreshCw } from "lucide-react";
+import { Clock, ExternalLink, Music, RefreshCw, Sparkles } from "lucide-react";
 import Image from "next/image";
-import { api } from "@/lib/api";
+import { useState } from "react";
 import { ListSkeleton } from "@/components/ui/loading-skeleton";
+import { api } from "@/lib/api";
 
 type SeedType = "mixed" | "artists" | "tracks" | "genres";
 
@@ -37,7 +37,12 @@ export default function RecommendationsPage() {
           </h1>
           <p className="text-theme-secondary mt-1">
             Personalized tracks based on your listening
-            {seedInfo.top_artist && <span> · seeded from <strong>{seedInfo.top_artist}</strong></span>}
+            {seedInfo.top_artist && (
+              <span>
+                {" "}
+                · seeded from <strong>{seedInfo.top_artist}</strong>
+              </span>
+            )}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -72,7 +77,9 @@ export default function RecommendationsPage() {
         <div className="glass-card p-12 text-center space-y-4">
           <Sparkles className="w-12 h-12 text-accent-dynamic/30 mx-auto" />
           <p className="text-theme-secondary">No recommendations yet</p>
-          <p className="text-sm text-theme-tertiary">Listen to more music so we can learn your taste</p>
+          <p className="text-sm text-theme-tertiary">
+            Listen to more music so we can learn your taste
+          </p>
         </div>
       )}
 
@@ -83,10 +90,7 @@ export default function RecommendationsPage() {
       {items.length > 0 && (
         <div className="space-y-2">
           {items.map((track: any, idx: number) => (
-            <div
-              key={track.id}
-              className="glass-card-hover p-3 flex items-center gap-4 group"
-            >
+            <div key={track.id} className="glass-card-hover p-3 flex items-center gap-4 group">
               {/* Index */}
               <span className="w-6 text-right text-xs text-theme-tertiary font-mono">
                 {idx + 1}

@@ -1,11 +1,30 @@
 "use client";
 
-import { PieChart as RechartsPieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
+import {
+  Cell,
+  Legend,
+  Pie,
+  PieChart as RechartsPieChart,
+  ResponsiveContainer,
+  Tooltip,
+} from "recharts";
 
 const COLORS = [
-  "#a855f7", "#ec4899", "#06b6d4", "#10b981", "#f59e0b",
-  "#6366f1", "#f43f5e", "#14b8a6", "#8b5cf6", "#22c55e",
-  "#3b82f6", "#ef4444", "#eab308", "#0ea5e9", "#d946ef",
+  "#a855f7",
+  "#ec4899",
+  "#06b6d4",
+  "#10b981",
+  "#f59e0b",
+  "#6366f1",
+  "#f43f5e",
+  "#14b8a6",
+  "#8b5cf6",
+  "#22c55e",
+  "#3b82f6",
+  "#ef4444",
+  "#eab308",
+  "#0ea5e9",
+  "#d946ef",
 ];
 
 interface PieChartProps {
@@ -26,7 +45,12 @@ const CustomTooltip = ({ active, payload }: any) => {
   );
 };
 
-export function PieChart({ data, height = 300, innerRadius = 60, showLegend = true }: PieChartProps) {
+export function PieChart({
+  data,
+  height = 300,
+  innerRadius = 60,
+  showLegend = true,
+}: PieChartProps) {
   return (
     <ResponsiveContainer width="100%" height={height}>
       <RechartsPieChart>
@@ -47,7 +71,9 @@ export function PieChart({ data, height = 300, innerRadius = 60, showLegend = tr
         {showLegend && (
           <Legend
             wrapperStyle={{ fontSize: "11px", lineHeight: "20px", paddingTop: "8px" }}
-            formatter={(value: string) => <span className="text-white/70 text-[10px] sm:text-xs">{value}</span>}
+            formatter={(value: string) => (
+              <span className="text-white/70 text-[10px] sm:text-xs">{value}</span>
+            )}
           />
         )}
       </RechartsPieChart>

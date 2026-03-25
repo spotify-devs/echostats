@@ -1,6 +1,6 @@
 """Application configuration with Pydantic Settings."""
 
-from pydantic import Field, MongoDsn, RedisDsn
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 

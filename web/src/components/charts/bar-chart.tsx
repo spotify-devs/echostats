@@ -1,13 +1,13 @@
 "use client";
 
 import {
-  BarChart as RechartsBarChart,
   Bar,
+  CartesianGrid,
+  BarChart as RechartsBarChart,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
 } from "recharts";
 
 interface BarChartProps {
@@ -25,7 +25,8 @@ const CustomTooltip = ({ active, payload, label }: any) => {
       <p className="text-white/70 mb-1">{label}</p>
       {payload.map((entry: any, i: number) => (
         <p key={i} style={{ color: entry.color }} className="font-medium">
-          {entry.name}: {typeof entry.value === "number" ? entry.value.toLocaleString() : entry.value}
+          {entry.name}:{" "}
+          {typeof entry.value === "number" ? entry.value.toLocaleString() : entry.value}
         </p>
       ))}
     </div>
@@ -35,7 +36,11 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 export function BarChart({ data, xKey, bars, height = 300, layout = "horizontal" }: BarChartProps) {
   return (
     <ResponsiveContainer width="100%" height={height}>
-      <RechartsBarChart data={data} layout={layout} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
+      <RechartsBarChart
+        data={data}
+        layout={layout}
+        margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
+      >
         <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
         {layout === "horizontal" ? (
           <>
@@ -45,12 +50,25 @@ export function BarChart({ data, xKey, bars, height = 300, layout = "horizontal"
         ) : (
           <>
             <XAxis type="number" stroke="rgba(255,255,255,0.3)" fontSize={12} tickLine={false} />
-            <YAxis dataKey={xKey} type="category" stroke="rgba(255,255,255,0.3)" fontSize={12} tickLine={false} width={120} />
+            <YAxis
+              dataKey={xKey}
+              type="category"
+              stroke="rgba(255,255,255,0.3)"
+              fontSize={12}
+              tickLine={false}
+              width={120}
+            />
           </>
         )}
         <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(255,255,255,0.05)" }} />
         {bars.map((bar) => (
-          <Bar key={bar.key} dataKey={bar.key} fill={bar.color} name={bar.name || bar.key} radius={[4, 4, 0, 0]} />
+          <Bar
+            key={bar.key}
+            dataKey={bar.key}
+            fill={bar.color}
+            name={bar.name || bar.key}
+            radius={[4, 4, 0, 0]}
+          />
         ))}
       </RechartsBarChart>
     </ResponsiveContainer>

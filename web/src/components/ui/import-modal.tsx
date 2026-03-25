@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
-import { Upload, X, FileJson, CheckCircle, AlertCircle, Loader2, Info } from "lucide-react";
-import { api } from "@/lib/api";
+import { AlertCircle, CheckCircle, FileJson, Info, Loader2, Upload, X } from "lucide-react";
+import { useCallback, useRef, useState } from "react";
 
 interface ImportModalProps {
   isOpen: boolean;
@@ -28,11 +27,11 @@ export function ImportHistoryModal({ isOpen, onClose, onComplete }: ImportModalP
   const handleFiles = useCallback((newFiles: FileList | null) => {
     if (!newFiles) return;
     const jsonFiles = Array.from(newFiles).filter(
-      (f) => f.name.endsWith(".json") && (
-        f.name.startsWith("StreamingHistory") ||
-        f.name.startsWith("endsong") ||
-        f.name.includes("Streaming")
-      )
+      (f) =>
+        f.name.endsWith(".json") &&
+        (f.name.startsWith("StreamingHistory") ||
+          f.name.startsWith("endsong") ||
+          f.name.includes("Streaming")),
     );
     if (jsonFiles.length === 0) {
       setError("Please select Spotify export files (StreamingHistory*.json or endsong*.json)");
@@ -47,7 +46,7 @@ export function ImportHistoryModal({ isOpen, onClose, onComplete }: ImportModalP
       e.preventDefault();
       handleFiles(e.dataTransfer.files);
     },
-    [handleFiles]
+    [handleFiles],
   );
 
   const removeFile = (index: number) => {
@@ -123,13 +122,38 @@ export function ImportHistoryModal({ isOpen, onClose, onComplete }: ImportModalP
         <div className="flex gap-3 p-3 rounded-xl bg-accent-dynamic/5 border border-accent-dynamic/10">
           <Info className="w-5 h-5 text-accent-dynamic flex-shrink-0 mt-0.5" />
           <div className="text-xs text-theme-secondary space-y-1">
-            <p><strong>How to get your data:</strong></p>
+            <p>
+              <strong>How to get your data:</strong>
+            </p>
             <ol className="list-decimal list-inside space-y-0.5 text-theme-tertiary">
-              <li>Go to <a href="https://www.spotify.com/account/privacy/" target="_blank" rel="noopener noreferrer" className="text-accent-dynamic hover:underline">Spotify Privacy Settings</a></li>
-              <li>Request &quot;Extended streaming history&quot; (recommended) or &quot;Account data&quot;</li>
+              <li>
+                Go to{" "}
+                <a
+                  href="https://www.spotify.com/account/privacy/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-accent-dynamic hover:underline"
+                >
+                  Spotify Privacy Settings
+                </a>
+              </li>
+              <li>
+                Request &quot;Extended streaming history&quot; (recommended) or &quot;Account
+                data&quot;
+              </li>
               <li>Wait for the email (up to 30 days for extended data)</li>
               <li>Download and extract the ZIP file</li>
-              <li>Upload the <code className="px-1 py-0.5 bg-theme-surface-3 rounded text-[10px]">endsong*.json</code> or <code className="px-1 py-0.5 bg-theme-surface-3 rounded text-[10px]">StreamingHistory*.json</code> files below</li>
+              <li>
+                Upload the{" "}
+                <code className="px-1 py-0.5 bg-theme-surface-3 rounded text-[10px]">
+                  endsong*.json
+                </code>{" "}
+                or{" "}
+                <code className="px-1 py-0.5 bg-theme-surface-3 rounded text-[10px]">
+                  StreamingHistory*.json
+                </code>{" "}
+                files below
+              </li>
             </ol>
           </div>
         </div>
@@ -167,13 +191,19 @@ export function ImportHistoryModal({ isOpen, onClose, onComplete }: ImportModalP
               const result = results[i];
               const isCurrent = currentFile === file.name;
               return (
-                <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-theme-surface-2 border border-white/5">
-                  <FileJson className={`w-5 h-5 flex-shrink-0 ${result ? "text-emerald-400" : isCurrent ? "text-accent-dynamic" : "text-theme-tertiary"}`} />
+                <div
+                  key={i}
+                  className="flex items-center gap-3 p-3 rounded-xl bg-theme-surface-2 border border-white/5"
+                >
+                  <FileJson
+                    className={`w-5 h-5 flex-shrink-0 ${result ? "text-emerald-400" : isCurrent ? "text-accent-dynamic" : "text-theme-tertiary"}`}
+                  />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-theme truncate">{file.name}</p>
                     <p className="text-[10px] text-theme-tertiary">
                       {(file.size / 1024).toFixed(0)} KB
-                      {result && ` · ${result.items_processed.toLocaleString()} of ${result.items_total.toLocaleString()} imported`}
+                      {result &&
+                        ` · ${result.items_processed.toLocaleString()} of ${result.items_total.toLocaleString()} imported`}
                     </p>
                   </div>
                   {result ? (
@@ -181,7 +211,10 @@ export function ImportHistoryModal({ isOpen, onClose, onComplete }: ImportModalP
                   ) : isCurrent ? (
                     <Loader2 className="w-5 h-5 text-accent-dynamic animate-spin flex-shrink-0" />
                   ) : !importing ? (
-                    <button onClick={() => removeFile(i)} className="text-theme-tertiary hover:text-red-400">
+                    <button
+                      onClick={() => removeFile(i)}
+                      className="text-theme-tertiary hover:text-red-400"
+                    >
                       <X className="w-4 h-4" />
                     </button>
                   ) : null}
@@ -205,8 +238,10 @@ export function ImportHistoryModal({ isOpen, onClose, onComplete }: ImportModalP
             <CheckCircle className="w-8 h-8 text-emerald-400 mx-auto" />
             <p className="text-sm font-medium text-theme">Import Complete!</p>
             <p className="text-xs text-theme-tertiary">
-              {totalProcessed.toLocaleString()} new entries imported from {results.length} file{results.length !== 1 ? "s" : ""}
-              {totalItems > 0 && ` (${totalItems.toLocaleString()} total entries processed, duplicates skipped)`}
+              {totalProcessed.toLocaleString()} new entries imported from {results.length} file
+              {results.length !== 1 ? "s" : ""}
+              {totalItems > 0 &&
+                ` (${totalItems.toLocaleString()} total entries processed, duplicates skipped)`}
             </p>
           </div>
         )}
@@ -215,7 +250,10 @@ export function ImportHistoryModal({ isOpen, onClose, onComplete }: ImportModalP
         <div className="flex gap-3 justify-end">
           {allDone ? (
             <>
-              <button onClick={reset} className="px-4 py-2 text-sm text-theme-secondary border border-white/10 rounded-xl hover:bg-white/5 transition-all">
+              <button
+                onClick={reset}
+                className="px-4 py-2 text-sm text-theme-secondary border border-white/10 rounded-xl hover:bg-white/5 transition-all"
+              >
                 Import More
               </button>
               <button onClick={onClose} className="btn-primary text-sm">
@@ -224,7 +262,10 @@ export function ImportHistoryModal({ isOpen, onClose, onComplete }: ImportModalP
             </>
           ) : (
             <>
-              <button onClick={onClose} className="px-4 py-2 text-sm text-theme-secondary border border-white/10 rounded-xl hover:bg-white/5 transition-all">
+              <button
+                onClick={onClose}
+                className="px-4 py-2 text-sm text-theme-secondary border border-white/10 rounded-xl hover:bg-white/5 transition-all"
+              >
                 Cancel
               </button>
               <button
@@ -238,7 +279,8 @@ export function ImportHistoryModal({ isOpen, onClose, onComplete }: ImportModalP
                   </>
                 ) : (
                   <>
-                    <Upload className="w-4 h-4" /> Import {files.length} file{files.length !== 1 ? "s" : ""}
+                    <Upload className="w-4 h-4" /> Import {files.length} file
+                    {files.length !== 1 ? "s" : ""}
                   </>
                 )}
               </button>

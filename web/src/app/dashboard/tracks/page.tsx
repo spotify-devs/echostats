@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Music, LayoutGrid, Table2, Download } from "lucide-react";
-import { api } from "@/lib/api";
+import { Download, LayoutGrid, Music, Table2 } from "lucide-react";
+import { useState } from "react";
 import { TrackCard } from "@/components/music/track-card";
-import { TimeRangeSelector } from "@/components/ui/time-range-selector";
 import { DateRangeFilter } from "@/components/ui/date-range-filter";
 import { ListSkeleton } from "@/components/ui/loading-skeleton";
+import { TimeRangeSelector } from "@/components/ui/time-range-selector";
+import { api } from "@/lib/api";
 import { exportTopItems } from "@/lib/export";
 
 export default function TopTracksPage() {
@@ -42,7 +42,10 @@ export default function TopTracksPage() {
             endDate={endDate}
             onStartDateChange={setStartDate}
             onEndDateChange={setEndDate}
-            onClear={() => { setStartDate(""); setEndDate(""); }}
+            onClear={() => {
+              setStartDate("");
+              setEndDate("");
+            }}
           />
           <button
             onClick={() => data?.items && exportTopItems(data.items, "tracks")}
@@ -52,10 +55,16 @@ export default function TopTracksPage() {
             <Download className="w-4 h-4" />
           </button>
           <div className="flex gap-1 p-1 bg-surface-2 rounded-lg border border-white/5">
-            <button onClick={() => setView("cards")} className={`p-1.5 rounded-md ${view === "cards" ? "bg-accent-dynamic/20 text-accent-dynamic" : "text-white/40"}`}>
+            <button
+              onClick={() => setView("cards")}
+              className={`p-1.5 rounded-md ${view === "cards" ? "bg-accent-dynamic/20 text-accent-dynamic" : "text-white/40"}`}
+            >
               <LayoutGrid className="w-4 h-4" />
             </button>
-            <button onClick={() => setView("table")} className={`p-1.5 rounded-md ${view === "table" ? "bg-accent-dynamic/20 text-accent-dynamic" : "text-white/40"}`}>
+            <button
+              onClick={() => setView("table")}
+              className={`p-1.5 rounded-md ${view === "table" ? "bg-accent-dynamic/20 text-accent-dynamic" : "text-white/40"}`}
+            >
               <Table2 className="w-4 h-4" />
             </button>
           </div>

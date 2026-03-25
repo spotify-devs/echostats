@@ -9,6 +9,7 @@ from app.config import settings
 async def startup(ctx: dict) -> None:
     """Worker startup — initialize database."""
     import structlog
+
     from app.database import init_db
 
     logger = structlog.get_logger()

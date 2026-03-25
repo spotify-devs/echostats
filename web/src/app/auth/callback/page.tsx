@@ -1,8 +1,8 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { CheckCircle, Loader2, Music, XCircle } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Music, Loader2, CheckCircle, XCircle } from "lucide-react";
+import { Suspense, useEffect, useState } from "react";
 
 function CallbackContent() {
   const router = useRouter();

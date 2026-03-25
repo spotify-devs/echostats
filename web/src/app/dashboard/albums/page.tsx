@@ -3,8 +3,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { Disc3, Music } from "lucide-react";
 import Image from "next/image";
-import { api } from "@/lib/api";
 import { ListSkeleton } from "@/components/ui/loading-skeleton";
+import { api } from "@/lib/api";
 
 export default function AlbumsPage() {
   const { data, isLoading } = useQuery({

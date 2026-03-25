@@ -20,7 +20,7 @@ export function useCountUp(target: number, duration: number = 1000): number {
       const elapsed = now - startTime.current;
       const progress = Math.min(elapsed / duration, 1);
       // Ease out cubic
-      const eased = 1 - Math.pow(1 - progress, 3);
+      const eased = 1 - (1 - progress) ** 3;
       setValue(Math.round(startVal + (target - startVal) * eased));
 
       if (progress < 1) {

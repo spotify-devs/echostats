@@ -1,17 +1,52 @@
 "use client";
 
-import { useState } from "react";
+import {
+  Activity,
+  BarChart3,
+  Bell,
+  Calendar,
+  CalendarDays,
+  Clock,
+  Crown,
+  Disc3,
+  Dna,
+  Download,
+  FileText,
+  Fingerprint,
+  Gift,
+  GitCompare,
+  Globe,
+  Heart,
+  Info,
+  LayoutDashboard,
+  Library,
+  ListMusic,
+  Menu,
+  Mic2,
+  Microscope,
+  Music,
+  Network,
+  Newspaper,
+  Play,
+  Podcast,
+  Radio,
+  RefreshCw,
+  Repeat,
+  Settings,
+  Shuffle,
+  Sparkles,
+  Star,
+  Target,
+  Terminal,
+  Trophy,
+  Users,
+  Wand2,
+  X,
+  Zap,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  LayoutDashboard, Music, Users, Disc3, Clock, BarChart3,
-  ListMusic, Sparkles, Heart, Star, Library, Play, Settings,
-  Menu, X, Activity, Headphones, Zap, GitCompare, Terminal,
-  Radio, Podcast, Trophy, Mic2, Globe, Repeat, Dna, Gift,
-  Calendar, Fingerprint, Crown, Network, FileText, Bell,
-  Wand2, Microscope, Target, Download, CalendarDays, Shuffle,
-  Newspaper, Info, RefreshCw,
-} from "lucide-react";
+import { useState } from "react";
 
 interface NavSection {
   title: string;
@@ -102,7 +137,10 @@ export function Sidebar() {
       <button
         onClick={() => setIsOpen(true)}
         className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-xl border text-theme-secondary hover:text-theme transition-colors"
-        style={{ backgroundColor: "rgb(var(--surface-2))", borderColor: "rgb(var(--border) / 0.1)" }}
+        style={{
+          backgroundColor: "rgb(var(--surface-2))",
+          borderColor: "rgb(var(--border) / 0.1)",
+        }}
       >
         <Menu className="w-5 h-5" />
       </button>
@@ -120,7 +158,10 @@ export function Sidebar() {
         className={`fixed lg:static inset-y-0 left-0 z-50 w-64 border-r flex flex-col h-full transition-transform duration-300 ${
           isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         }`}
-        style={{ backgroundColor: "rgb(var(--surface-1))", borderColor: "rgb(var(--border) / var(--border-opacity))" }}
+        style={{
+          backgroundColor: "rgb(var(--surface-1))",
+          borderColor: "rgb(var(--border) / var(--border-opacity))",
+        }}
       >
         {/* Logo */}
         <div className="p-5 flex items-center justify-between">
@@ -147,7 +188,8 @@ export function Sidebar() {
               </p>
               <div className="space-y-0.5">
                 {section.items.map(({ href, icon: Icon, label }) => {
-                  const isActive = pathname === href || (href !== "/dashboard" && pathname.startsWith(href + "/"));
+                  const isActive =
+                    pathname === href || (href !== "/dashboard" && pathname.startsWith(`${href}/`));
                   return (
                     <Link
                       key={href}
@@ -170,7 +212,10 @@ export function Sidebar() {
         </nav>
 
         {/* Settings */}
-        <div className="p-3" style={{ borderTop: "1px solid rgb(var(--border) / var(--border-opacity))" }}>
+        <div
+          className="p-3"
+          style={{ borderTop: "1px solid rgb(var(--border) / var(--border-opacity))" }}
+        >
           <Link
             href="/dashboard/settings"
             onClick={() => setIsOpen(false)}

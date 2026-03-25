@@ -1,10 +1,17 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
 import {
-  X, Music, Shield, Clock, ListMusic, BarChart3,
-  Disc3, Headphones, CheckCircle, Loader2, ExternalLink
+  BarChart3,
+  CheckCircle,
+  Disc3,
+  Headphones,
+  ListMusic,
+  Loader2,
+  Music,
+  Shield,
+  X,
 } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface SpotifyConnectModalProps {
   isOpen: boolean;
@@ -100,7 +107,7 @@ export function SpotifyConnectModal({ isOpen, onClose, onConnected }: SpotifyCon
       // Get the Spotify auth URL from our API
       const res = await fetch("/api/v1/auth/login", {
         credentials: "include",
-        headers: { "Accept": "application/json" },
+        headers: { Accept: "application/json" },
       });
       const data = await res.json();
 
@@ -117,7 +124,7 @@ export function SpotifyConnectModal({ isOpen, onClose, onConnected }: SpotifyCon
       popupRef.current = window.open(
         data.url,
         "spotify-auth",
-        `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no,location=yes`
+        `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no,location=yes`,
       );
 
       if (!popupRef.current) {
@@ -152,7 +159,10 @@ export function SpotifyConnectModal({ isOpen, onClose, onConnected }: SpotifyCon
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-md" onClick={status === "waiting" ? undefined : onClose} />
+      <div
+        className="absolute inset-0 bg-black/70 backdrop-blur-md"
+        onClick={status === "waiting" ? undefined : onClose}
+      />
       <div className="relative glass-card p-0 max-w-md w-full animate-scale-in overflow-hidden">
         {/* Header with gradient */}
         <div className="relative p-8 pb-6 text-center bg-gradient-to-b from-spotify-green/10 to-transparent">
