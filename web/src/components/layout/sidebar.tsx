@@ -211,9 +211,9 @@ export function Sidebar() {
           ))}
         </nav>
 
-        {/* Settings */}
+        {/* Settings + Version */}
         <div
-          className="p-3"
+          className="p-3 space-y-2"
           style={{ borderTop: "1px solid rgb(var(--border) / var(--border-opacity))" }}
         >
           <Link
@@ -228,6 +228,12 @@ export function Sidebar() {
             <Settings className="w-[16px] h-[16px]" />
             Settings
           </Link>
+          <div className="px-3 flex items-center justify-between">
+            <span className="text-[10px] text-theme-tertiary">EchoStats</span>
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/5 text-theme-tertiary font-mono">
+              {process.env.NEXT_PUBLIC_APP_VERSION || "dev"}
+            </span>
+          </div>
         </div>
       </aside>
     </>

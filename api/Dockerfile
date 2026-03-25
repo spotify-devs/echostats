@@ -36,6 +36,9 @@ RUN mkdir -p /home/echostats/.cache/uv && chown -R echostats:echostats /home/ech
 
 USER echostats
 
+ARG APP_VERSION=dev
+ENV APP_VERSION=${APP_VERSION}
+
 EXPOSE 8000
 
 CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

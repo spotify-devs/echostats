@@ -25,6 +25,9 @@ COPY web/public ./public
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV INTERNAL_API_URL=http://api:8000
 
+ARG APP_VERSION=dev
+ENV APP_VERSION=${APP_VERSION}
+
 RUN pnpm build
 
 # ── Stage 3: Runtime ─────────────────────────────────────────────────────────

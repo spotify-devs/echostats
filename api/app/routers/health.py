@@ -1,14 +1,18 @@
 """Health check endpoints."""
 
+import os
+
 from fastapi import APIRouter
 
 router = APIRouter()
+
+APP_VERSION = os.environ.get("APP_VERSION", "dev")
 
 
 @router.get("/health")
 async def health_check() -> dict[str, str]:
     """Basic health check."""
-    return {"status": "healthy", "service": "echostats-api"}
+    return {"status": "healthy", "service": "echostats-api", "version": APP_VERSION}
 
 
 @router.get("/health/ready")

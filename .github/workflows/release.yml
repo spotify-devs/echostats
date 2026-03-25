@@ -97,6 +97,8 @@ jobs:
           tags: |
             ghcr.io/${{ github.repository }}-${{ matrix.image }}:${{ needs.version-tag.outputs.version }}
             ghcr.io/${{ github.repository }}-${{ matrix.image }}:latest
+          build-args: |
+            APP_VERSION=${{ needs.version-tag.outputs.version }}
           cache-from: type=gha,scope=${{ matrix.image }}
           cache-to: type=gha,mode=max,scope=${{ matrix.image }}
 
