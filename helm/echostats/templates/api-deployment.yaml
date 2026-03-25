@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "echostats.fullname" . }}-api
+  namespace: {{ .Release.Namespace }}
   labels:
     {{- include "echostats.labels" . | nindent 4 }}
     app.kubernetes.io/component: api
@@ -13,6 +14,9 @@ spec:
       app.kubernetes.io/component: api
   template:
     metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
       labels:
         {{- include "echostats.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: api

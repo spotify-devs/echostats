@@ -3,6 +3,7 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: {{ include "echostats.fullname" . }}-api
+  namespace: {{ .Release.Namespace }}
   labels:
     {{- include "echostats.labels" . | nindent 4 }}
     app.kubernetes.io/component: api
@@ -35,6 +36,7 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: {{ include "echostats.fullname" . }}-web
+  namespace: {{ .Release.Namespace }}
   labels:
     {{- include "echostats.labels" . | nindent 4 }}
     app.kubernetes.io/component: web

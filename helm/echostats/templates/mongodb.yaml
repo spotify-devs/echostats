@@ -3,6 +3,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "echostats.fullname" . }}-mongodb
+  namespace: {{ .Release.Namespace }}
   labels:
     {{- include "echostats.labels" . | nindent 4 }}
     app.kubernetes.io/component: mongodb
@@ -56,6 +57,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: {{ include "echostats.fullname" . }}-mongodb
+  namespace: {{ .Release.Namespace }}
   labels:
     {{- include "echostats.labels" . | nindent 4 }}
     app.kubernetes.io/component: mongodb
@@ -73,6 +75,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: {{ include "echostats.fullname" . }}-mongodb
+  namespace: {{ .Release.Namespace }}
   labels:
     {{- include "echostats.labels" . | nindent 4 }}
 spec:

@@ -3,11 +3,12 @@ apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
   name: {{ include "echostats.fullname" . }}-api
+  namespace: {{ .Release.Namespace }}
   labels:
     {{- include "echostats.labels" . | nindent 4 }}
     app.kubernetes.io/component: api
 spec:
-  minAvailable: {{ .Values.pdb.api.minAvailable }}
+  minAvailable:{{ .Values.pdb.api.minAvailable }}
   selector:
     matchLabels:
       {{- include "echostats.selectorLabels" . | nindent 6 }}
@@ -19,11 +20,12 @@ apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
   name: {{ include "echostats.fullname" . }}-web
+  namespace: {{ .Release.Namespace }}
   labels:
     {{- include "echostats.labels" . | nindent 4 }}
     app.kubernetes.io/component: web
 spec:
-  minAvailable: {{ .Values.pdb.web.minAvailable }}
+  minAvailable:{{ .Values.pdb.web.minAvailable }}
   selector:
     matchLabels:
       {{- include "echostats.selectorLabels" . | nindent 6 }}
