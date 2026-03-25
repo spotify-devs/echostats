@@ -4,9 +4,9 @@
   var BARS = 48, BAR_WIDTH = 3, BAR_GAP = 2, MAX_BAR_H = 60;
 
   var WAVE_TRACES = [
-    { yFrac: 0.20, amp: 18, freq: 0.012, speed: 0.6, opacity: 0.08 },
-    { yFrac: 0.50, amp: 28, freq: 0.008, speed: 1.0, opacity: 0.10 },
-    { yFrac: 0.82, amp: 14, freq: 0.015, speed: 0.5, opacity: 0.06 },
+    { yFrac: 0.20, amp: 24, freq: 0.012, speed: 0.6, opacity: 0.18 },
+    { yFrac: 0.50, amp: 36, freq: 0.008, speed: 1.0, opacity: 0.22 },
+    { yFrac: 0.82, amp: 18, freq: 0.015, speed: 0.5, opacity: 0.14 },
   ];
 
   var CHIPS_DATA = [
@@ -43,7 +43,7 @@
     WAVE_TRACES.forEach(function (tr, i) {
       scrolls[i] += tr.speed * dt / 16.67;
       var cy = tr.yFrac * H;
-      ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = 1.2;
+      ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = 1.8;
       ctx.lineJoin = "round"; ctx.globalAlpha = tr.opacity; ctx.beginPath();
       for (var px = 0; px <= W; px += 2) {
         var phase = scrolls[i] + px * tr.freq;
@@ -64,7 +64,7 @@
             * (0.4 + 0.6 * Math.sin(t * 0.001 + i * 0.2)) * MAX_BAR_H;
       h = Math.max(2, Math.abs(h));
       ctx.fillStyle = color;
-      ctx.globalAlpha = 0.12 + 0.08 * Math.sin(t * 0.003 + i);
+      ctx.globalAlpha = 0.22 + 0.12 * Math.sin(t * 0.003 + i);
       ctx.fillRect(startX + i * (BAR_WIDTH + BAR_GAP), baseY - h, BAR_WIDTH, h);
     }
     ctx.restore();
@@ -82,8 +82,8 @@
     pulses.forEach(function (p) {
       p.r += p.speed * dt / 16.67;
       ctx.save(); ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-      ctx.strokeStyle = color; ctx.lineWidth = 1.2;
-      ctx.globalAlpha = (1 - p.r / p.maxR) * 0.25;
+      ctx.strokeStyle = color; ctx.lineWidth = 1.8;
+      ctx.globalAlpha = (1 - p.r / p.maxR) * 0.40;
       ctx.stroke(); ctx.restore();
     });
   }
@@ -137,3 +137,4 @@
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
   else init();
 })();
+
