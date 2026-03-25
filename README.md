@@ -36,7 +36,7 @@ EchoStats is a self-hosted web application that connects to your Spotify account
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/echostats.git
+git clone https://github.com/spotify-devs/echostats.git
 cd echostats
 
 # Copy environment file

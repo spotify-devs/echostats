@@ -7,11 +7,11 @@ replicaCount:
 
 image:
   api:
-    repository: ghcr.io/yourusername/echostats-api
+    repository: ghcr.io/spotify-devs/echostats-api
     tag: latest
     pullPolicy: IfNotPresent
   web:
-    repository: ghcr.io/yourusername/echostats-web
+    repository: ghcr.io/spotify-devs/echostats-web
     tag: latest
     pullPolicy: IfNotPresent
 
@@ -30,7 +30,12 @@ security:
 
 # MongoDB
 mongodb:
+  # Set to false to use an external MongoDB instance
   enabled: true
+  # External MongoDB URI (used when enabled: false)
+  external:
+    uri: ""
+    # e.g. "mongodb://user:pass@mongo.example.com:27017/echostats?authSource=admin"
   image:
     repository: mongo
     tag: "7"
@@ -45,7 +50,12 @@ mongodb:
 
 # Redis
 redis:
+  # Set to false to use an external Redis instance
   enabled: true
+  # External Redis URL (used when enabled: false)
+  external:
+    url: ""
+    # e.g. "redis://redis.example.com:6379/0"
   image:
     repository: redis
     tag: 7-alpine
@@ -53,6 +63,16 @@ redis:
     enabled: true
     size: 1Gi
     storageClass: ""
+
+# Example: Using external services
+# mongodb:
+#   enabled: false
+#   external:
+#     uri: "mongodb://user:pass@192.168.1.100:27017/echostats?authSource=admin"
+# redis:
+#   enabled: false
+#   external:
+#     url: "redis://192.168.1.100:6379/0"
 
 # API
 api:
@@ -97,16 +117,48 @@ ingress:
   enabled: false
   className: ""
   annotations: {}
+  # kubernetes.io/ingress.class: nginx
+  # cert-manager.io/cluster-issuer: letsencrypt-prod
+  # nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+
+  # Option 1: Host-based routing (separate subdomains)
+  # api:
+  #   host: api.echostats.example.com
+  #   tls: true
+  #   secretName: echostats-api-tls
+  # web:
+  #   host: echostats.example.com
+  #   tls: true
+  #   secretName: echostats-web-tls
+
+  # Option 2: Path-based routing (single domain)
   hosts:
     - host: echostats.local
       paths:
-        - path: /
-          pathType: Prefix
-          service: web
         - path: /api
           pathType: Prefix
           service: api
+        - path: /
+          pathType: Prefix
+          service: web
   tls: []
+  # - secretName: echostats-tls
+  #   hosts:
+  #     - echostats.local
+
+# Traefik IngressRoute (alternative to nginx Ingress)
+ingressRoute:
+  enabled: false
+  entryPoints:
+    - websecure
+  # certResolver: letsencrypt
+  routes:
+    - match: "Host(`echostats.local`) && PathPrefix(`/api`)"
+      service: api
+    - match: "Host(`echostats.local`)"
+      service: web
+  tls: {}
+  # certResolver: letsencrypt
 
 # Service
 service:

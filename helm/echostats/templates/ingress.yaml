@@ -1,4 +1,73 @@
 {{- if .Values.ingress.enabled }}
+{{- if .Values.ingress.api }}
+{{/* Host-based routing: separate hosts for API and Web */}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "echostats.fullname" . }}-api
+  labels:
+    {{- include "echostats.labels" . | nindent 4 }}
+    app.kubernetes.io/component: api
+  {{- with .Values.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.ingress.className }}
+  ingressClassName: {{ .Values.ingress.className }}
+  {{- end }}
+  {{- if .Values.ingress.api.tls }}
+  tls:
+    - hosts:
+        - {{ .Values.ingress.api.host | quote }}
+      secretName: {{ .Values.ingress.api.secretName | default (printf "%s-api-tls" (include "echostats.fullname" .)) }}
+  {{- end }}
+  rules:
+    - host: {{ .Values.ingress.api.host | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "echostats.fullname" . }}-api
+                port:
+                  number: {{ .Values.service.api.port }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "echostats.fullname" . }}-web
+  labels:
+    {{- include "echostats.labels" . | nindent 4 }}
+    app.kubernetes.io/component: web
+  {{- with .Values.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.ingress.className }}
+  ingressClassName: {{ .Values.ingress.className }}
+  {{- end }}
+  {{- if .Values.ingress.web.tls }}
+  tls:
+    - hosts:
+        - {{ .Values.ingress.web.host | quote }}
+      secretName: {{ .Values.ingress.web.secretName | default (printf "%s-web-tls" (include "echostats.fullname" .)) }}
+  {{- end }}
+  rules:
+    - host: {{ .Values.ingress.web.host | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "echostats.fullname" . }}-web
+                port:
+                  number: {{ .Values.service.web.port }}
+{{- else }}
+{{/* Path-based routing: single host with path prefixes */}}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -38,4 +107,5 @@ spec:
                   number: {{ if eq .service "api" }}{{ $.Values.service.api.port }}{{ else }}{{ $.Values.service.web.port }}{{ end }}
           {{- end }}
     {{- end }}
+{{- end }}
 {{- end }}

@@ -14,7 +14,7 @@ description: How to install and deploy EchoStats.
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/echostats.git
+git clone https://github.com/spotify-devs/echostats.git
 cd echostats
 
 # Copy and configure environment
@@ -33,7 +33,7 @@ EchoStats will be available at:
 ## Using Helm (Kubernetes)
 
 ```bash
-helm install echostats oci://ghcr.io/yourusername/charts/echostats \
+helm install echostats oci://ghcr.io/spotify-devs/charts/echostats \
   --set spotify.clientId=YOUR_CLIENT_ID \
   --set spotify.clientSecret=YOUR_CLIENT_SECRET \
   --set security.jwtSecret=YOUR_JWT_SECRET \

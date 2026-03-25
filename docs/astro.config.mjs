@@ -6,7 +6,7 @@ export default defineConfig({
     starlight({
       title: "EchoStats",
       description: "Self-hosted Spotify analytics dashboard documentation",
-      social: [{ icon: "github", label: "GitHub", href: "https://github.com/yourusername/echostats" }],
+      social: [{ icon: "github", label: "GitHub", href: "https://github.com/spotify-devs/echostats" }],
       sidebar: [
         {
           label: "Getting Started",
