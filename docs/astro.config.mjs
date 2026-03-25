@@ -11,6 +11,9 @@ export default defineConfig({
       social: {
         github: "https://github.com/spotify-devs/echostats",
       },
+      head: [
+        { tag: "script", attrs: { src: "/echostats/particles.js", defer: true } },
+      ],
       sidebar: [
         { label: "Getting Started", autogenerate: { directory: "getting-started" } },
         { label: "User Guide", autogenerate: { directory: "user-guide" } },
