@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from urllib.parse import urlencode
 
 import structlog
-from fastapi import APIRouter, HTTPException, Request, Response
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Request, Response
 from fastapi.responses import RedirectResponse
 from jose import jwt
 
@@ -69,6 +69,7 @@ async def login(request: Request) -> dict[str, str]:
 
 @router.get("/callback")
 async def callback(
+    background_tasks: BackgroundTasks,
     response: Response,
     code: str | None = None,
     state: str | None = None,
@@ -111,6 +112,7 @@ async def callback(
 
     # Create or update user
     user = await User.find_one(User.spotify_id == spotify_id)
+    is_new_user = user is None
     if user:
         user.display_name = profile.get("display_name", "")
         user.email = profile.get("email", "")
@@ -139,6 +141,9 @@ async def callback(
 
     # Store encrypted tokens
     await store_tokens(user, access_token, refresh_token, expires_in, scope)
+
+    # Trigger initial data sync in background
+    background_tasks.add_task(_run_post_auth_sync, str(user.id), is_new_user)
 
     # Create session JWT
     session_token = _create_jwt(str(user.id), spotify_id)
@@ -196,9 +201,29 @@ async def refresh_token(request: Request) -> dict[str, str]:
 
 
 @router.get("/status")
-async def auth_status(request: Request) -> dict:
-    """Check authentication status."""
+async def auth_status(request: Request, response: Response) -> dict:
+    """Check authentication status. Auto-authenticates if single user exists."""
     user = await _get_current_user(request)
+
+    # Single-user auto-login: if no session but exactly one user exists,
+    # automatically create a session for them (self-hosted single-user app)
+    if not user:
+        user_count = await User.count()
+        if user_count == 1:
+            user = await User.find_one()
+            if user:
+                session_token = _create_jwt(str(user.id), user.spotify_id)
+                response.set_cookie(
+                    key="session",
+                    value=session_token,
+                    httponly=True,
+                    secure=False,
+                    samesite="lax",
+                    max_age=30 * 24 * 3600,
+                    path="/",
+                )
+                logger.info("Single-user auto-login", spotify_id=user.spotify_id)
+
     if not user:
         return {"authenticated": False}
 
@@ -253,6 +278,42 @@ async def dev_login(response: Response) -> dict:
         },
         "token": session_token,
     }
+
+
+async def _run_post_auth_sync(user_id: str, is_new_user: bool) -> None:
+    """Run data sync after OAuth authentication (background task)."""
+    from app.services.sync_service import (
+        enrich_audio_features,
+        run_initial_sync,
+        sync_recently_played,
+    )
+
+    try:
+        from beanie import PydanticObjectId
+
+        user = await User.get(PydanticObjectId(user_id))
+        if not user:
+            return
+
+        token = await get_valid_access_token(user)
+        if not token:
+            logger.warning("No valid token for post-auth sync", user_id=user_id)
+            return
+
+        client = SpotifyClient(token, user_id=user_id)
+        try:
+            if is_new_user:
+                job = await run_initial_sync(client, user_id)
+                logger.info("Initial sync completed", user_id=user_id, status=job.status)
+            else:
+                count = await sync_recently_played(client, user_id)
+                if count > 0:
+                    await enrich_audio_features(client, batch_size=50)
+                logger.info("Post-auth sync completed", user_id=user_id, new_tracks=count)
+        finally:
+            await client.close()
+    except Exception as e:
+        logger.error("Post-auth sync failed", user_id=user_id, error=str(e))
 
 
 async def _get_current_user(request: Request) -> User | None:
