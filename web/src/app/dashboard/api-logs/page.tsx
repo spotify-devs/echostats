@@ -90,7 +90,7 @@ export default function ApiLogsPage() {
         <button
           onClick={() => refetch()}
           disabled={isFetching}
-          className="flex items-center gap-2 px-3 py-2 text-sm glass-card hover:bg-white/5 transition-all"
+          className="flex items-center gap-2 px-3 py-2 text-sm glass-card hover:bg-current/[0.05] transition-all"
         >
           <RefreshCw className={`w-4 h-4 ${isFetching ? "animate-spin" : ""}`} />
           Refresh
@@ -214,7 +214,7 @@ export default function ApiLogsPage() {
         <div className="flex items-center gap-1.5 text-sm text-theme-tertiary">
           <Filter className="w-4 h-4" /> Filter:
         </div>
-        <div className="flex gap-1 p-1 bg-theme-surface-2 rounded-xl border border-white/5">
+        <div className="flex gap-1 p-1 bg-theme-surface-2 rounded-xl border border-current/[0.08]">
           {["all", "success", "errors", "rate-limited"].map((f) => (
             <button
               key={f}
@@ -232,7 +232,7 @@ export default function ApiLogsPage() {
             </button>
           ))}
         </div>
-        <div className="flex gap-1 p-1 bg-theme-surface-2 rounded-xl border border-white/5">
+        <div className="flex gap-1 p-1 bg-theme-surface-2 rounded-xl border border-current/[0.08]">
           {["all", "GET", "POST", "PUT", "DELETE"].map((m) => (
             <button
               key={m}
@@ -263,7 +263,7 @@ export default function ApiLogsPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-white/5">
+                  <tr className="border-b border-current/[0.08]">
                     <th className="px-4 py-3 text-left text-xs text-theme-tertiary uppercase">
                       Time
                     </th>
@@ -289,7 +289,7 @@ export default function ApiLogsPage() {
                     items.map((log: any, i: number) => (
                       <tr
                         key={log.id || i}
-                        className="border-b border-white/5 hover:bg-white/[0.02] transition-colors"
+                        className="border-b border-current/[0.08] hover:bg-current/[0.03] transition-colors"
                       >
                         <td className="px-4 py-2.5 font-mono text-xs text-theme-tertiary whitespace-nowrap">
                           {new Date(log.timestamp).toLocaleTimeString()}
@@ -345,7 +345,7 @@ export default function ApiLogsPage() {
             </div>
 
             {/* Pagination */}
-            <div className="flex items-center justify-between px-4 py-3 border-t border-white/5">
+            <div className="flex items-center justify-between px-4 py-3 border-t border-current/[0.08]">
               <span className="text-xs text-theme-tertiary">
                 Showing {items.length > 0 ? (page - 1) * 50 + 1 : 0}–
                 {Math.min(page * 50, logs?.total || 0)} of {(logs?.total || 0).toLocaleString()} logs
@@ -354,14 +354,14 @@ export default function ApiLogsPage() {
                 <button
                   onClick={() => setPage(1)}
                   disabled={page <= 1}
-                  className="px-2 py-1 text-xs rounded-lg hover:bg-white/5 text-theme-tertiary disabled:opacity-30 transition-all"
+                  className="px-2 py-1 text-xs rounded-lg hover:bg-current/[0.05] text-theme-tertiary disabled:opacity-30 transition-all"
                 >
                   First
                 </button>
                 <button
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page <= 1}
-                  className="p-1.5 rounded-lg hover:bg-white/5 text-theme-tertiary disabled:opacity-30 transition-all"
+                  className="p-1.5 rounded-lg hover:bg-current/[0.05] text-theme-tertiary disabled:opacity-30 transition-all"
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
@@ -384,7 +384,7 @@ export default function ApiLogsPage() {
                       className={`w-8 h-8 text-xs rounded-lg transition-all ${
                         page === pageNum
                           ? "bg-accent-dynamic/20 text-accent-dynamic font-bold"
-                          : "hover:bg-white/5 text-theme-tertiary"
+                          : "hover:bg-current/[0.05] text-theme-tertiary"
                       }`}
                     >
                       {pageNum}
@@ -394,14 +394,14 @@ export default function ApiLogsPage() {
                 <button
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                   disabled={page >= totalPages}
-                  className="p-1.5 rounded-lg hover:bg-white/5 text-theme-tertiary disabled:opacity-30 transition-all"
+                  className="p-1.5 rounded-lg hover:bg-current/[0.05] text-theme-tertiary disabled:opacity-30 transition-all"
                 >
                   <ChevronRight className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => setPage(totalPages)}
                   disabled={page >= totalPages}
-                  className="px-2 py-1 text-xs rounded-lg hover:bg-white/5 text-theme-tertiary disabled:opacity-30 transition-all"
+                  className="px-2 py-1 text-xs rounded-lg hover:bg-current/[0.05] text-theme-tertiary disabled:opacity-30 transition-all"
                 >
                   Last
                 </button>

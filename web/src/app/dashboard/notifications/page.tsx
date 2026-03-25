@@ -149,7 +149,7 @@ export default function NotificationsPage() {
           <p className="text-theme-secondary mt-1">Sync updates, milestones & achievements</p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex gap-1 p-1 bg-theme-surface-2 rounded-xl border border-white/5">
+          <div className="flex gap-1 p-1 bg-theme-surface-2 rounded-xl border border-current/[0.08]">
             <button
               onClick={() => setFilter("all")}
               className={`px-3 py-1 text-xs rounded-lg ${filter === "all" ? "bg-accent-dynamic/20 text-accent-dynamic" : "text-theme-tertiary"}`}
@@ -205,7 +205,7 @@ export default function NotificationsPage() {
                     e.stopPropagation();
                     dismiss(notif.id);
                   }}
-                  className="p-1 rounded hover:bg-white/5 text-theme-tertiary hover:text-theme flex-shrink-0"
+                  className="p-1 rounded hover:bg-current/[0.05] text-theme-tertiary hover:text-theme flex-shrink-0"
                 >
                   <X className="w-4 h-4" />
                 </button>

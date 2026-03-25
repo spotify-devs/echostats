@@ -45,7 +45,7 @@ export function Header() {
         <div className="flex items-center gap-3">
           {isAuthed ? (
             <>
-              <button className="p-2 rounded-lg hover:bg-white/5 text-theme-tertiary hover:text-theme transition-colors">
+              <button className="p-2 rounded-lg hover:bg-current/[0.05] text-theme-tertiary hover:text-theme transition-colors">
                 <Bell className="w-5 h-5" />
               </button>
               {/* User avatar */}

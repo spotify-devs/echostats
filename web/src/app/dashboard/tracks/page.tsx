@@ -30,10 +30,10 @@ export default function TopTracksPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2">
+          <h1 className="text-xl sm:text-2xl font-bold text-theme flex items-center gap-2">
             <Music className="w-6 h-6 text-accent-purple" /> Top Tracks
           </h1>
-          <p className="text-white/50 mt-1">Your most played tracks</p>
+          <p className="text-theme-secondary mt-1">Your most played tracks</p>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
           <TimeRangeSelector value={period} onChange={setPeriod} />
@@ -50,20 +50,20 @@ export default function TopTracksPage() {
           <button
             onClick={() => data?.items && exportTopItems(data.items, "tracks")}
             disabled={!data?.items?.length}
-            className="flex items-center gap-2 px-3 py-2 text-sm text-theme-secondary bg-theme-surface-2 rounded-xl border border-white/10 hover:border-white/20 transition-all disabled:opacity-30"
+            className="flex items-center gap-2 px-3 py-2 text-sm text-theme-secondary bg-theme-surface-2 rounded-xl border border-current/[0.1] hover:border-current/[0.2] transition-all disabled:opacity-30"
           >
             <Download className="w-4 h-4" />
           </button>
-          <div className="flex gap-1 p-1 bg-surface-2 rounded-lg border border-white/5">
+          <div className="flex gap-1 p-1 bg-surface-2 rounded-lg border border-current/[0.08]">
             <button
               onClick={() => setView("cards")}
-              className={`p-1.5 rounded-md ${view === "cards" ? "bg-accent-dynamic/20 text-accent-dynamic" : "text-white/40"}`}
+              className={`p-1.5 rounded-md ${view === "cards" ? "bg-accent-dynamic/20 text-accent-dynamic" : "text-theme-tertiary"}`}
             >
               <LayoutGrid className="w-4 h-4" />
             </button>
             <button
               onClick={() => setView("table")}
-              className={`p-1.5 rounded-md ${view === "table" ? "bg-accent-dynamic/20 text-accent-dynamic" : "text-white/40"}`}
+              className={`p-1.5 rounded-md ${view === "table" ? "bg-accent-dynamic/20 text-accent-dynamic" : "text-theme-tertiary"}`}
             >
               <Table2 className="w-4 h-4" />
             </button>
@@ -74,7 +74,7 @@ export default function TopTracksPage() {
       {isLoading ? (
         <ListSkeleton rows={10} />
       ) : (
-        <div className="glass-card divide-y divide-white/5">
+        <div className="glass-card divide-y divide-current/[0.08]">
           {(data?.items || []).map((item: any, idx: number) => (
             <TrackCard
               key={item.spotify_id || idx}
@@ -86,7 +86,7 @@ export default function TopTracksPage() {
             />
           ))}
           {(!data?.items || data.items.length === 0) && (
-            <p className="p-8 text-center text-white/40">No track data yet. Start listening!</p>
+            <p className="p-8 text-center text-theme-tertiary">No track data yet. Start listening!</p>
           )}
         </div>
       )}

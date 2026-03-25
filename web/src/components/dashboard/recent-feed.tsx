@@ -32,21 +32,21 @@ export function RecentFeed() {
 
   return (
     <div className="glass-card">
-      <div className="flex items-center justify-between p-4 border-b border-white/5">
+      <div className="flex items-center justify-between p-4 border-b border-current/[0.08]">
         <h2 className="text-lg font-semibold text-theme flex items-center gap-2">
           <Clock className="w-5 h-5 text-accent-dynamic" /> Recently Played
         </h2>
         <button
           onClick={() => refetch()}
           disabled={isFetching}
-          className="p-1.5 rounded-lg hover:bg-white/5 text-theme-tertiary hover:text-theme transition-all"
+          className="p-1.5 rounded-lg hover:bg-current/[0.05] text-theme-tertiary hover:text-theme transition-all"
         >
           <RefreshCw className={`w-4 h-4 ${isFetching ? "animate-spin" : ""}`} />
         </button>
       </div>
 
       {isLoading ? (
-        <div className="divide-y divide-white/5">
+        <div className="divide-y divide-current/[0.08]">
           {[...Array(5)].map((_, i) => (
             <div key={i} className="flex items-center gap-3 p-3">
               <div className="skeleton w-10 h-10 rounded-lg" />
@@ -58,12 +58,12 @@ export function RecentFeed() {
           ))}
         </div>
       ) : (
-        <div className="divide-y divide-white/5 max-h-[400px] overflow-y-auto">
+        <div className="divide-y divide-current/[0.08] max-h-[400px] overflow-y-auto">
           {items.map((item: any, i: number) => (
             <Link
               key={i}
               href={item.track?.spotify_id ? `/dashboard/tracks/${item.track.spotify_id}` : "#"}
-              className="flex items-center gap-3 px-4 py-3 hover:bg-white/[0.02] transition-colors group"
+              className="flex items-center gap-3 px-4 py-3 hover:bg-current/[0.03] transition-colors group"
             >
               <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-theme-surface-3 flex-shrink-0">
                 {item.track?.album_image_url ? (

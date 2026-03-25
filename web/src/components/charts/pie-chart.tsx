@@ -39,8 +39,8 @@ const CustomTooltip = ({ active, payload }: any) => {
   const entry = payload[0];
   return (
     <div className="glass-card p-3 text-sm">
-      <p className="text-white font-medium">{entry.name}</p>
-      <p className="text-white/70">{entry.value.toLocaleString()} plays</p>
+      <p className="text-theme font-medium">{entry.name}</p>
+      <p className="text-theme-secondary">{entry.value.toLocaleString()} plays</p>
     </div>
   );
 };
@@ -72,7 +72,7 @@ export function PieChart({
           <Legend
             wrapperStyle={{ fontSize: "11px", lineHeight: "20px", paddingTop: "8px" }}
             formatter={(value: string) => (
-              <span className="text-white/70 text-[10px] sm:text-xs">{value}</span>
+              <span className="text-theme-secondary text-[10px] sm:text-xs">{value}</span>
             )}
           />
         )}

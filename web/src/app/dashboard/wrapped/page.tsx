@@ -37,7 +37,7 @@ export default function WrappedPage() {
       {/* The Card */}
       <div
         id="wrapped-card"
-        className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-surface-1 via-surface to-surface-2 border border-white/10 shadow-2xl"
+        className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-surface-1 via-surface to-surface-2 border border-current/[0.1] shadow-2xl"
       >
         {/* Header */}
         <div className="p-5 sm:p-8 pb-4 text-center bg-gradient-to-b from-accent-dynamic/10 to-transparent">
@@ -56,24 +56,24 @@ export default function WrappedPage() {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-2 gap-4 px-4 sm:px-8 pb-6">
-          <div className="p-4 rounded-2xl bg-white/[0.03] text-center">
+          <div className="p-4 rounded-2xl bg-current/[0.04] text-center">
             <Music className="w-5 h-5 text-spotify-green mx-auto mb-1" />
             <p className="text-xl font-bold text-theme">
               {(data?.total_tracks_played || 0).toLocaleString()}
             </p>
             <p className="text-[10px] text-theme-tertiary">Tracks</p>
           </div>
-          <div className="p-4 rounded-2xl bg-white/[0.03] text-center">
+          <div className="p-4 rounded-2xl bg-current/[0.04] text-center">
             <Users className="w-5 h-5 text-accent-cyan mx-auto mb-1" />
             <p className="text-xl font-bold text-theme">{data?.unique_artists || 0}</p>
             <p className="text-[10px] text-theme-tertiary">Artists</p>
           </div>
-          <div className="p-4 rounded-2xl bg-white/[0.03] text-center">
+          <div className="p-4 rounded-2xl bg-current/[0.04] text-center">
             <Disc3 className="w-5 h-5 text-accent-pink mx-auto mb-1" />
             <p className="text-xl font-bold text-theme">{data?.unique_genres || 0}</p>
             <p className="text-[10px] text-theme-tertiary">Genres</p>
           </div>
-          <div className="p-4 rounded-2xl bg-white/[0.03] text-center">
+          <div className="p-4 rounded-2xl bg-current/[0.04] text-center">
             <Flame className="w-5 h-5 text-accent-amber mx-auto mb-1" />
             <p className="text-xl font-bold text-theme">{data?.listening_streak_days || 0}</p>
             <p className="text-[10px] text-theme-tertiary">Day Streak</p>
@@ -83,7 +83,7 @@ export default function WrappedPage() {
         {/* Top Items */}
         <div className="px-4 sm:px-8 pb-8 space-y-3">
           {topArtist && (
-            <div className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.03]">
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-current/[0.04]">
               <div className="relative w-12 h-12 rounded-full overflow-hidden bg-theme-surface-3 flex-shrink-0">
                 {topArtist.image_url ? (
                   <Image
@@ -107,7 +107,7 @@ export default function WrappedPage() {
             </div>
           )}
           {topTrack && (
-            <div className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.03]">
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-current/[0.04]">
               {topTrack.image_url && (
                 <div className="relative w-12 h-12 rounded-xl overflow-hidden flex-shrink-0">
                   <Image
@@ -129,7 +129,7 @@ export default function WrappedPage() {
             </div>
           )}
           {topGenre && (
-            <div className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.03]">
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-current/[0.04]">
               <div className="w-12 h-12 rounded-xl bg-accent-dynamic/15 flex items-center justify-center flex-shrink-0">
                 <span className="text-xl">🎵</span>
               </div>
@@ -155,7 +155,7 @@ export default function WrappedPage() {
         <button className="btn-primary text-sm flex items-center gap-2">
           <Share2 className="w-4 h-4" /> Share
         </button>
-        <button className="px-4 py-2 text-sm text-theme-secondary border border-white/10 rounded-xl hover:bg-white/5 transition-all flex items-center gap-2">
+        <button className="px-4 py-2 text-sm text-theme-secondary border border-current/[0.1] rounded-xl hover:bg-current/[0.05] transition-all flex items-center gap-2">
           <Download className="w-4 h-4" /> Save Image
         </button>
       </div>

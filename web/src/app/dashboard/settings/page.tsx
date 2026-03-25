@@ -55,7 +55,7 @@ export default function SettingsPage() {
                 className={`relative flex items-center gap-3 p-3 rounded-xl border transition-all duration-200 ${
                   isActive
                     ? "border-accent-dynamic/50 bg-accent-dynamic/15 shadow-accent-glow/10"
-                    : "border-white/10 hover:border-white/20 hover:bg-white/5"
+                    : "border-current/[0.1] hover:border-current/[0.2] hover:bg-current/[0.05]"
                 }`}
               >
                 <span className="text-lg">{theme.emoji}</span>
@@ -86,7 +86,7 @@ export default function SettingsPage() {
                 key={accent.id}
                 onClick={() => setAccent(accent.id)}
                 className={`relative group flex flex-col items-center gap-1.5 p-2 rounded-xl transition-all duration-200 ${
-                  isActive ? "bg-white/10 scale-105" : "hover:bg-white/5"
+                  isActive ? "bg-white/10 scale-105" : "hover:bg-current/[0.05]"
                 }`}
                 title={accent.name}
               >
@@ -105,14 +105,14 @@ export default function SettingsPage() {
         </div>
 
         {/* Custom Color Picker */}
-        <div className="pt-2 border-t border-white/5">
+        <div className="pt-2 border-t border-current/[0.08]">
           <label className="flex items-center gap-3 cursor-pointer">
             <div className="relative">
               <input
                 type="color"
                 value={customAccentColor}
                 onChange={(e) => setCustomAccentColor(e.target.value)}
-                className="w-10 h-10 rounded-lg cursor-pointer border-2 border-white/10 bg-transparent"
+                className="w-10 h-10 rounded-lg cursor-pointer border-2 border-current/[0.1] bg-transparent"
               />
             </div>
             <div className="flex-1">
@@ -155,7 +155,7 @@ export default function SettingsPage() {
             </div>
 
             {/* Token Status */}
-            <div className="mt-4 p-4 rounded-xl bg-theme-surface-2 border border-white/5 space-y-3">
+            <div className="mt-4 p-4 rounded-xl bg-theme-surface-2 border border-current/[0.08] space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-theme flex items-center gap-2">
                   <Shield className="w-4 h-4 text-accent-dynamic" /> Token Status
@@ -187,7 +187,7 @@ export default function SettingsPage() {
                   <RefreshCw className="w-3 h-3" /> Enabled
                 </span>
               </div>
-              <p className="text-[10px] text-theme-tertiary border-t border-white/5 pt-2">
+              <p className="text-[10px] text-theme-tertiary border-t border-current/[0.08] pt-2">
                 Tokens are automatically refreshed 5 minutes before expiry. Your tokens are
                 encrypted at rest with AES-256-GCM.
               </p>

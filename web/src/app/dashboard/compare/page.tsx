@@ -27,7 +27,7 @@ function CompareRow({
   const diff = left - right;
   const pct = right > 0 ? Math.round((diff / right) * 100) : 0;
   return (
-    <div className="flex items-center py-3 border-b border-white/5 last:border-0">
+    <div className="flex items-center py-3 border-b border-current/[0.08] last:border-0">
       <span className="flex-1 text-sm text-theme-secondary">{label}</span>
       <span className="w-24 text-right text-sm font-semibold text-theme tabular-nums">
         {left.toLocaleString()}
@@ -90,7 +90,7 @@ export default function ComparePage() {
           <select
             value={periodA}
             onChange={(e) => setPeriodA(e.target.value)}
-            className="w-full px-4 py-2.5 bg-theme-surface-2 border border-white/10 rounded-xl text-sm text-theme focus:outline-none focus:border-accent-dynamic/50"
+            className="w-full px-4 py-2.5 bg-theme-surface-2 border border-current/[0.1] rounded-xl text-sm text-theme focus:outline-none focus:border-accent-dynamic/50"
           >
             {PERIODS.map((p) => (
               <option key={p.value} value={p.value}>
@@ -107,7 +107,7 @@ export default function ComparePage() {
           <select
             value={periodB}
             onChange={(e) => setPeriodB(e.target.value)}
-            className="w-full px-4 py-2.5 bg-theme-surface-2 border border-white/10 rounded-xl text-sm text-theme focus:outline-none focus:border-accent-dynamic/50"
+            className="w-full px-4 py-2.5 bg-theme-surface-2 border border-current/[0.1] rounded-xl text-sm text-theme focus:outline-none focus:border-accent-dynamic/50"
           >
             {PERIODS.map((p) => (
               <option key={p.value} value={p.value}>

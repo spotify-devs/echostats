@@ -59,7 +59,7 @@ export function ShortcutsModal() {
           </h2>
           <button
             onClick={() => setIsOpen(false)}
-            className="p-1 rounded-lg hover:bg-white/5 text-theme-tertiary"
+            className="p-1 rounded-lg hover:bg-current/[0.05] text-theme-tertiary"
           >
             <X className="w-5 h-5" />
           </button>
@@ -78,7 +78,7 @@ export function ShortcutsModal() {
                     {s.keys.map((k) => (
                       <kbd
                         key={k}
-                        className="px-2 py-0.5 text-xs font-mono bg-theme-surface-3 text-theme-secondary rounded border border-white/10"
+                        className="px-2 py-0.5 text-xs font-mono bg-theme-surface-3 text-theme-secondary rounded border border-current/[0.1]"
                       >
                         {k}
                       </kbd>

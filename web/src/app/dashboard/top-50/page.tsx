@@ -64,7 +64,7 @@ export default function Top50Page() {
                   className={`glass-card overflow-hidden transition-all duration-300 ${isTop3 ? "ring-1 ring-accent-dynamic/20" : ""}`}
                 >
                   <div
-                    className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 cursor-pointer hover:bg-white/[0.02] transition-colors"
+                    className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 cursor-pointer hover:bg-current/[0.03] transition-colors"
                     onClick={() => setExpanded(isExpanded ? null : rank)}
                   >
                     {/* Rank */}
@@ -124,7 +124,7 @@ export default function Top50Page() {
 
                   {/* Expanded details */}
                   {isExpanded && (
-                    <div className="px-4 pb-4 pt-1 border-t border-white/5 animate-fade-in">
+                    <div className="px-4 pb-4 pt-1 border-t border-current/[0.08] animate-fade-in">
                       <div className="flex flex-wrap gap-4 text-xs text-theme-tertiary">
                         <span>
                           Spotify ID:{" "}

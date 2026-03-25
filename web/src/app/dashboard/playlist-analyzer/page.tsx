@@ -73,7 +73,7 @@ export default function PlaylistAnalyzerPage() {
                 className={`flex items-center gap-3 p-3 rounded-xl border text-left transition-all ${
                   selectedPlaylist === pl.spotify_id
                     ? "border-accent-dynamic/50 bg-accent-dynamic/10"
-                    : "border-white/5 hover:border-white/15 hover:bg-white/[0.03]"
+                    : "border-current/[0.08] hover:border-current/[0.15] hover:bg-current/[0.04]"
                 }`}
               >
                 {pl.images?.[0]?.url ? (

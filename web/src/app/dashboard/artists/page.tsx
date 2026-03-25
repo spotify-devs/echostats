@@ -28,10 +28,10 @@ export default function TopArtistsPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2">
+          <h1 className="text-xl sm:text-2xl font-bold text-theme flex items-center gap-2">
             <Users className="w-6 h-6 text-spotify-green" /> Top Artists
           </h1>
-          <p className="text-white/50 mt-1">Artists you listen to the most</p>
+          <p className="text-theme-secondary mt-1">Artists you listen to the most</p>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
           <TimeRangeSelector value={period} onChange={setPeriod} />
@@ -51,7 +51,7 @@ export default function TopArtistsPage() {
       {isLoading ? (
         <ListSkeleton rows={10} />
       ) : (
-        <div className="glass-card divide-y divide-white/5">
+        <div className="glass-card divide-y divide-current/[0.08]">
           {(data?.items || []).map((item: any, idx: number) => (
             <ArtistCard
               key={item.spotify_id || idx}
@@ -62,7 +62,7 @@ export default function TopArtistsPage() {
             />
           ))}
           {(!data?.items || data.items.length === 0) && (
-            <p className="p-8 text-center text-white/40">No artist data yet. Start listening!</p>
+            <p className="p-8 text-center text-theme-tertiary">No artist data yet. Start listening!</p>
           )}
         </div>
       )}

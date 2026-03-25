@@ -36,11 +36,11 @@ export default function RecentlyAddedPage() {
             <p>Connect Spotify to see recently added tracks</p>
           </div>
         ) : (
-          <div className="glass-card divide-y divide-white/5">
+          <div className="glass-card divide-y divide-current/[0.08]">
             {tracksData.items.map((track: any, i: number) => (
               <div
                 key={i}
-                className="flex items-center gap-4 px-4 py-3 hover:bg-white/[0.02] transition-colors"
+                className="flex items-center gap-4 px-4 py-3 hover:bg-current/[0.03] transition-colors"
               >
                 <span className="w-6 text-center text-sm text-theme-tertiary font-mono">
                   {i + 1}

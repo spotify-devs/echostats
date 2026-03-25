@@ -31,7 +31,7 @@ function StatRow({
   color: string;
 }) {
   return (
-    <div className="flex items-center justify-between py-3 border-b border-white/5 last:border-0">
+    <div className="flex items-center justify-between py-3 border-b border-current/[0.08] last:border-0">
       <div className="flex items-center gap-3">
         <div className={`p-1.5 rounded-lg ${color}`}>
           <Icon className="w-4 h-4 text-white" />

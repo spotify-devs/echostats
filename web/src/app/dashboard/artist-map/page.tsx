@@ -99,7 +99,7 @@ export default function ArtistMapPage() {
                     <StaggerItem key={artist.spotify_id || i}>
                       <Link
                         href={artist.spotify_id ? `/dashboard/artists/${artist.spotify_id}` : "#"}
-                        className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-white/5 transition-colors group"
+                        className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-current/[0.05] transition-colors group"
                       >
                         <div className="relative w-16 h-16 rounded-full overflow-hidden bg-theme-surface-3 ring-2 ring-transparent group-hover:ring-accent-dynamic/30 transition-all">
                           {artist.image_url ? (

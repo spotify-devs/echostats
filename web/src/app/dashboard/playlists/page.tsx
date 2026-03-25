@@ -21,10 +21,10 @@ export default function PlaylistsPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2">
+          <h1 className="text-xl sm:text-2xl font-bold text-theme flex items-center gap-2">
             <ListMusic className="w-6 h-6 text-spotify-green" /> Playlists
           </h1>
-          <p className="text-white/50 mt-1">{data?.total || 0} playlists</p>
+          <p className="text-theme-secondary mt-1">{data?.total || 0} playlists</p>
         </div>
         <DateRangeFilter
           startDate={startDate}
@@ -60,13 +60,13 @@ export default function PlaylistsPage() {
                 )}
               </div>
               <div>
-                <p className="text-sm font-medium text-white truncate">{playlist.name}</p>
-                <p className="text-xs text-white/40">{playlist.total_tracks} tracks</p>
+                <p className="text-sm font-medium text-theme truncate">{playlist.name}</p>
+                <p className="text-xs text-theme-tertiary">{playlist.total_tracks} tracks</p>
               </div>
             </div>
           ))}
           {(!data?.items || data.items.length === 0) && (
-            <p className="col-span-full p-8 text-center text-white/40">No playlists found.</p>
+            <p className="col-span-full p-8 text-center text-theme-tertiary">No playlists found.</p>
           )}
         </div>
       )}

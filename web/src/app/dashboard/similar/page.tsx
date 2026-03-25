@@ -51,7 +51,7 @@ export default function SimilarTracksPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Filter tracks..."
-              className="w-full pl-10 pr-4 py-2 bg-theme-surface-2 border border-white/10 rounded-xl text-sm text-theme placeholder:text-theme-tertiary focus:outline-none focus:border-accent-dynamic/50 transition-all"
+              className="w-full pl-10 pr-4 py-2 bg-theme-surface-2 border border-current/[0.1] rounded-xl text-sm text-theme placeholder:text-theme-tertiary focus:outline-none focus:border-accent-dynamic/50 transition-all"
             />
           </div>
 
@@ -69,7 +69,7 @@ export default function SimilarTracksPage() {
                     className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all ${
                       isSelected
                         ? "bg-accent-dynamic/15 border border-accent-dynamic/30"
-                        : "hover:bg-white/[0.03]"
+                        : "hover:bg-current/[0.04]"
                     }`}
                   >
                     {track.image_url && (
@@ -137,7 +137,7 @@ export default function SimilarTracksPage() {
                     return (
                       <div
                         key={i}
-                        className="flex items-center gap-3 p-2 rounded-xl hover:bg-white/[0.03] transition-colors"
+                        className="flex items-center gap-3 p-2 rounded-xl hover:bg-current/[0.04] transition-colors"
                       >
                         <span className="w-5 text-center text-xs text-theme-tertiary">{i + 1}</span>
                         {track.image_url && (

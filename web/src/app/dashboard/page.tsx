@@ -56,8 +56,8 @@ export default function DashboardPage() {
       <FadeIn direction="none" duration={0.3}>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-white">Dashboard</h1>
-            <p className="text-white/50 mt-1">Your music at a glance</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-theme">Dashboard</h1>
+            <p className="text-theme-secondary mt-1">Your music at a glance</p>
           </div>
           <div className="flex items-center gap-3 flex-wrap">
             <TimeRangeSelector value={period} onChange={setPeriod} />
@@ -133,7 +133,7 @@ export default function DashboardPage() {
         <StaggerContainer className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <StaggerItem>
             <AnimatedCard className="p-4 sm:p-6">
-              <h2 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4 flex items-center gap-2">
+              <h2 className="text-base sm:text-lg font-semibold text-theme mb-3 sm:mb-4 flex items-center gap-2">
                 <TrendingUp className="w-5 h-5 text-accent-purple" /> Hourly Activity
               </h2>
               {hourlyData.length > 0 ? (
@@ -144,13 +144,13 @@ export default function DashboardPage() {
                   height={isMobile ? 200 : 250}
                 />
               ) : (
-                <p className="text-white/40 text-center py-12">No data yet</p>
+                <p className="text-theme-tertiary text-center py-12">No data yet</p>
               )}
             </AnimatedCard>
           </StaggerItem>
           <StaggerItem>
             <AnimatedCard className="p-4 sm:p-6">
-              <h2 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4 flex items-center gap-2">
+              <h2 className="text-base sm:text-lg font-semibold text-theme mb-3 sm:mb-4 flex items-center gap-2">
                 <Disc3 className="w-5 h-5 text-accent-cyan" /> Top Genres
               </h2>
               {genrePieData.length > 0 ? (
@@ -160,7 +160,7 @@ export default function DashboardPage() {
                   innerRadius={isMobile ? 45 : 60}
                 />
               ) : (
-                <p className="text-white/40 text-center py-12">No data yet</p>
+                <p className="text-theme-tertiary text-center py-12">No data yet</p>
               )}
             </AnimatedCard>
           </StaggerItem>
@@ -198,10 +198,10 @@ export default function DashboardPage() {
         <StaggerContainer className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <StaggerItem>
             <AnimatedCard>
-              <div className="p-4 border-b border-white/5">
-                <h2 className="text-lg font-semibold text-white">Top Tracks</h2>
+              <div className="p-4 border-b border-current/[0.08]">
+                <h2 className="text-lg font-semibold text-theme">Top Tracks</h2>
               </div>
-              <div className="divide-y divide-white/5">
+              <div className="divide-y divide-current/[0.08]">
                 {(data?.top_tracks || []).slice(0, 5).map((track: any, i: number) => (
                   <TrackCard
                     key={i}
@@ -213,17 +213,17 @@ export default function DashboardPage() {
                   />
                 ))}
                 {(!data?.top_tracks || data.top_tracks.length === 0) && (
-                  <p className="p-6 text-center text-white/40">No tracks yet</p>
+                  <p className="p-6 text-center text-theme-tertiary">No tracks yet</p>
                 )}
               </div>
             </AnimatedCard>
           </StaggerItem>
           <StaggerItem>
             <AnimatedCard>
-              <div className="p-4 border-b border-white/5">
-                <h2 className="text-lg font-semibold text-white">Top Artists</h2>
+              <div className="p-4 border-b border-current/[0.08]">
+                <h2 className="text-lg font-semibold text-theme">Top Artists</h2>
               </div>
-              <div className="divide-y divide-white/5">
+              <div className="divide-y divide-current/[0.08]">
                 {(data?.top_artists || []).slice(0, 5).map((artist: any, i: number) => (
                   <ArtistCard
                     key={i}
@@ -234,7 +234,7 @@ export default function DashboardPage() {
                   />
                 ))}
                 {(!data?.top_artists || data.top_artists.length === 0) && (
-                  <p className="p-6 text-center text-white/40">No artists yet</p>
+                  <p className="p-6 text-center text-theme-tertiary">No artists yet</p>
                 )}
               </div>
             </AnimatedCard>

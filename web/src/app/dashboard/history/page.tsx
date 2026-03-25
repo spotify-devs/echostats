@@ -41,10 +41,10 @@ export default function HistoryPage() {
       <FadeIn direction="none">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2">
+            <h1 className="text-xl sm:text-2xl font-bold text-theme flex items-center gap-2">
               <Clock className="w-6 h-6 text-accent-amber" /> Listening History
             </h1>
-            <p className="text-white/50 mt-1">{data?.total?.toLocaleString() || 0} total plays</p>
+            <p className="text-theme-secondary mt-1">{data?.total?.toLocaleString() || 0} total plays</p>
           </div>
           <div className="flex items-center gap-3 flex-wrap">
             <DateRangeFilter
@@ -60,7 +60,7 @@ export default function HistoryPage() {
             <button
               onClick={() => data?.items && exportListeningHistory(data.items)}
               disabled={!data?.items?.length}
-              className="flex items-center gap-2 px-3 py-2 text-sm text-theme-secondary bg-theme-surface-2 rounded-xl border border-white/10 hover:border-white/20 transition-all disabled:opacity-30"
+              className="flex items-center gap-2 px-3 py-2 text-sm text-theme-secondary bg-theme-surface-2 rounded-xl border border-current/[0.1] hover:border-current/[0.2] transition-all disabled:opacity-30"
             >
               <Download className="w-4 h-4" /> Export CSV
             </button>
@@ -85,7 +85,7 @@ export default function HistoryPage() {
         <ListSkeleton rows={10} />
       ) : (
         <>
-          <StaggerContainer className="glass-card divide-y divide-white/5">
+          <StaggerContainer className="glass-card divide-y divide-current/[0.08]">
             {items.map((item: any, idx: number) => (
               <StaggerItem key={idx}>
                 <div className="flex items-center justify-between">
@@ -99,7 +99,7 @@ export default function HistoryPage() {
                         : undefined
                     }
                   />
-                  <span className="text-xs text-white/30 pr-4 whitespace-nowrap">
+                  <span className="text-xs text-theme-tertiary pr-4 whitespace-nowrap">
                     {new Date(item.played_at).toLocaleDateString()}{" "}
                     {new Date(item.played_at).toLocaleTimeString([], {
                       hour: "2-digit",
@@ -110,7 +110,7 @@ export default function HistoryPage() {
               </StaggerItem>
             ))}
             {items.length === 0 && (
-              <p className="p-8 text-center text-white/40">No listening history yet.</p>
+              <p className="p-8 text-center text-theme-tertiary">No listening history yet.</p>
             )}
           </StaggerContainer>
 
@@ -120,17 +120,17 @@ export default function HistoryPage() {
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page <= 1}
-                className="px-4 py-2 text-sm glass-card hover:bg-white/5 disabled:opacity-30 transition-all"
+                className="px-4 py-2 text-sm glass-card hover:bg-current/[0.05] disabled:opacity-30 transition-all"
               >
                 Previous
               </button>
-              <span className="text-sm text-white/40">
+              <span className="text-sm text-theme-tertiary">
                 Page {page} of {totalPages}
               </span>
               <button
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page >= totalPages}
-                className="px-4 py-2 text-sm glass-card hover:bg-white/5 disabled:opacity-30 transition-all"
+                className="px-4 py-2 text-sm glass-card hover:bg-current/[0.05] disabled:opacity-30 transition-all"
               >
                 Next
               </button>

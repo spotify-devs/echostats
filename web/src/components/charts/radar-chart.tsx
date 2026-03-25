@@ -27,7 +27,7 @@ export function RadarChart({ data, height = 300, color = "#a855f7" }: RadarChart
             if (!active || !payload?.length) return null;
             return (
               <div className="glass-card p-2 text-sm">
-                <p className="text-white">
+                <p className="text-theme">
                   {payload[0].payload.feature}: {(payload[0].value as number).toFixed(2)}
                 </p>
               </div>

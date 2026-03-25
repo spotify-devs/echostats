@@ -63,10 +63,10 @@ export default function PatternsPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2">
+          <h1 className="text-xl sm:text-2xl font-bold text-theme flex items-center gap-2">
             <BarChart3 className="w-6 h-6 text-accent-pink" /> Listening Patterns
           </h1>
-          <p className="text-white/50 mt-1">When do you listen to music?</p>
+          <p className="text-theme-secondary mt-1">When do you listen to music?</p>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
           <TimeRangeSelector value={period} onChange={setPeriod} />
@@ -93,18 +93,18 @@ export default function PatternsPage() {
           {/* Listening Clock + Heatmap */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="glass-card p-6 flex flex-col items-center">
-              <h2 className="text-lg font-semibold text-white mb-4 self-start">Listening Clock</h2>
+              <h2 className="text-lg font-semibold text-theme mb-4 self-start">Listening Clock</h2>
               <ListeningClock
                 hourlyData={data?.hourly_distribution || []}
                 size={isMobile ? 220 : 280}
               />
             </div>
             <div className="glass-card p-6 lg:col-span-2">
-              <h2 className="text-lg font-semibold text-white mb-4">Activity Heatmap</h2>
+              <h2 className="text-lg font-semibold text-theme mb-4">Activity Heatmap</h2>
               {heatmapData.length > 0 ? (
                 <Heatmap data={heatmapData} />
               ) : (
-                <p className="text-white/40 text-center py-8">Not enough data for heatmap</p>
+                <p className="text-theme-tertiary text-center py-8">Not enough data for heatmap</p>
               )}
             </div>
           </div>
@@ -112,7 +112,7 @@ export default function PatternsPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Hourly distribution */}
             <div className="glass-card p-6">
-              <h2 className="text-lg font-semibold text-white mb-4">By Hour of Day</h2>
+              <h2 className="text-lg font-semibold text-theme mb-4">By Hour of Day</h2>
               <BarChart
                 data={hourlyData}
                 xKey="hour"
@@ -123,7 +123,7 @@ export default function PatternsPage() {
 
             {/* Daily distribution */}
             <div className="glass-card p-6">
-              <h2 className="text-lg font-semibold text-white mb-4">By Day of Week</h2>
+              <h2 className="text-lg font-semibold text-theme mb-4">By Day of Week</h2>
               <BarChart
                 data={dailyData}
                 xKey="day"

@@ -226,7 +226,7 @@ export default function PlayerPage() {
                 return (
                   <div
                     key={device.id}
-                    className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${device.is_active ? "bg-accent-dynamic/10 border border-accent-dynamic/20" : "hover:bg-white/5"}`}
+                    className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${device.is_active ? "bg-accent-dynamic/10 border border-accent-dynamic/20" : "hover:bg-current/[0.05]"}`}
                   >
                     <DevIcon
                       className={`w-5 h-5 ${device.is_active ? "text-accent-dynamic" : "text-theme-tertiary"}`}
@@ -263,7 +263,7 @@ export default function PlayerPage() {
               {queue.queue.map((track: any, i: number) => (
                 <div
                   key={`${track.id}-${i}`}
-                  className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/[0.03]"
+                  className="flex items-center gap-3 p-2 rounded-lg hover:bg-current/[0.04]"
                 >
                   <span className="w-5 text-center text-xs text-theme-tertiary">{i + 1}</span>
                   <div className="relative w-8 h-8 rounded overflow-hidden bg-theme-surface-3 flex-shrink-0">

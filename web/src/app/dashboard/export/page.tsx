@@ -172,7 +172,7 @@ export default function ExportPage() {
             className={`flex-1 flex items-center justify-center gap-2 p-4 rounded-xl border transition-all ${
               format === "csv"
                 ? "border-accent-dynamic/50 bg-accent-dynamic/10"
-                : "border-white/10 hover:border-white/20"
+                : "border-current/[0.1] hover:border-current/[0.2]"
             }`}
           >
             <FileSpreadsheet className="w-5 h-5" />
@@ -183,7 +183,7 @@ export default function ExportPage() {
             className={`flex-1 flex items-center justify-center gap-2 p-4 rounded-xl border transition-all ${
               format === "json"
                 ? "border-accent-dynamic/50 bg-accent-dynamic/10"
-                : "border-white/10 hover:border-white/20"
+                : "border-current/[0.1] hover:border-current/[0.2]"
             }`}
           >
             <FileJson className="w-5 h-5" />
@@ -206,7 +206,7 @@ export default function ExportPage() {
                 className={`w-full flex items-center gap-4 p-4 rounded-xl border text-left transition-all ${
                   isSelected
                     ? "border-accent-dynamic/50 bg-accent-dynamic/10"
-                    : "border-white/5 hover:border-white/15"
+                    : "border-current/[0.08] hover:border-current/[0.15]"
                 }`}
               >
                 <span className="text-2xl">{type.icon}</span>
@@ -221,7 +221,7 @@ export default function ExportPage() {
                     <CheckCircle className="w-3 h-3 text-accent-dynamic" />
                   </div>
                 ) : (
-                  <div className="w-5 h-5 rounded border-2 border-white/20" />
+                  <div className="w-5 h-5 rounded border-2 border-current/[0.2]" />
                 )}
               </button>
             );

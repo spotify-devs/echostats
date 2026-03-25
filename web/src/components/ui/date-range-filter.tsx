@@ -78,7 +78,7 @@ export function DateRangeFilter({
         className={`flex items-center gap-2 px-3 py-2 text-sm rounded-xl border transition-all ${
           hasFilter
             ? "border-accent-dynamic/50 bg-accent-dynamic/15 text-accent-dynamic"
-            : "border-white/10 bg-theme-surface-2 text-theme-secondary hover:border-white/20"
+            : "border-current/[0.1] bg-theme-surface-2 text-theme-secondary hover:border-current/[0.2]"
         }`}
       >
         <Calendar className="w-4 h-4" />
@@ -108,7 +108,7 @@ export function DateRangeFilter({
                 <button
                   key={preset.label}
                   onClick={() => applyPreset(preset.days)}
-                  className="px-3 py-1.5 text-xs text-left rounded-lg text-theme-secondary hover:bg-white/5 hover:text-theme transition-colors"
+                  className="px-3 py-1.5 text-xs text-left rounded-lg text-theme-secondary hover:bg-current/[0.05] hover:text-theme transition-colors"
                 >
                   {preset.label}
                 </button>
@@ -117,7 +117,7 @@ export function DateRangeFilter({
           </div>
 
           {/* Custom range */}
-          <div className="border-t border-white/5 pt-3 space-y-3">
+          <div className="border-t border-current/[0.08] pt-3 space-y-3">
             <p className="text-xs text-theme-tertiary font-medium uppercase tracking-wider">
               Custom Range
             </p>
@@ -128,7 +128,7 @@ export function DateRangeFilter({
                   type="date"
                   value={startDate}
                   onChange={(e) => onStartDateChange(e.target.value)}
-                  className="w-full mt-1 px-2 py-1.5 text-xs rounded-lg bg-theme-surface-2 border border-white/10 text-theme focus:border-accent-dynamic/50 focus:outline-none transition-colors"
+                  className="w-full mt-1 px-2 py-1.5 text-xs rounded-lg bg-theme-surface-2 border border-current/[0.1] text-theme focus:border-accent-dynamic/50 focus:outline-none transition-colors"
                 />
               </div>
               <div>
@@ -137,7 +137,7 @@ export function DateRangeFilter({
                   type="date"
                   value={endDate}
                   onChange={(e) => onEndDateChange(e.target.value)}
-                  className="w-full mt-1 px-2 py-1.5 text-xs rounded-lg bg-theme-surface-2 border border-white/10 text-theme focus:border-accent-dynamic/50 focus:outline-none transition-colors"
+                  className="w-full mt-1 px-2 py-1.5 text-xs rounded-lg bg-theme-surface-2 border border-current/[0.1] text-theme focus:border-accent-dynamic/50 focus:outline-none transition-colors"
                 />
               </div>
             </div>
@@ -158,7 +158,7 @@ export function DateRangeFilter({
                   onEndDateChange("");
                   setOpen(false);
                 }}
-                className="px-3 py-1.5 text-xs rounded-lg border border-white/10 text-theme-secondary hover:bg-white/5 transition-colors"
+                className="px-3 py-1.5 text-xs rounded-lg border border-current/[0.1] text-theme-secondary hover:bg-current/[0.05] transition-colors"
               >
                 Clear
               </button>

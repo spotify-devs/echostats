@@ -24,7 +24,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
   return (
     <div className="glass-card p-3 text-sm">
-      <p className="text-white/70 mb-1">{label}</p>
+      <p className="text-theme-secondary mb-1">{label}</p>
       {payload.map((entry: any, i: number) => (
         <p key={i} style={{ color: entry.color }} className="font-medium">
           {entry.name}:{" "}

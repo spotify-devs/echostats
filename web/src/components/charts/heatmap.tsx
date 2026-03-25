@@ -27,7 +27,7 @@ export function Heatmap({ data, maxValue }: HeatmapProps) {
         {/* Hour labels */}
         <div className="flex ml-12 mb-1">
           {HOURS.filter((h) => h % 3 === 0).map((h) => (
-            <div key={h} className="text-xs text-white/30" style={{ width: `${100 / 8}%` }}>
+            <div key={h} className="text-xs text-theme-tertiary" style={{ width: `${100 / 8}%` }}>
               {h.toString().padStart(2, "0")}:00
             </div>
           ))}
@@ -36,7 +36,7 @@ export function Heatmap({ data, maxValue }: HeatmapProps) {
         {/* Grid */}
         {DAYS.map((day, dayIdx) => (
           <div key={day} className="flex items-center gap-1 mb-1">
-            <span className="w-10 text-xs text-white/40 text-right">{day}</span>
+            <span className="w-10 text-xs text-theme-tertiary text-right">{day}</span>
             <div className="flex-1 flex gap-[2px]">
               {HOURS.map((hour) => {
                 const value = dataMap.get(`${dayIdx}-${hour}`) || 0;

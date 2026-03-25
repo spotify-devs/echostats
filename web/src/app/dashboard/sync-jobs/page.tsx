@@ -233,7 +233,7 @@ export default function SyncJobsPage() {
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {/* Last Sync */}
-            <div className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/5">
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-current/[0.03] border border-current/[0.08]">
               <CheckCircle
                 className={`w-5 h-5 flex-shrink-0 ${stats.last_sync_at ? "text-emerald-400" : "text-theme-tertiary"}`}
               />
@@ -255,7 +255,7 @@ export default function SyncJobsPage() {
               </div>
             </div>
             {/* Next Sync */}
-            <div className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/5">
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-current/[0.03] border border-current/[0.08]">
               <RefreshCw
                 className={`w-5 h-5 flex-shrink-0 ${isRunning ? "text-accent-dynamic animate-spin" : "text-accent-dynamic"}`}
               />
@@ -272,7 +272,7 @@ export default function SyncJobsPage() {
               </div>
             </div>
             {/* Frequency */}
-            <div className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/5">
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-current/[0.03] border border-current/[0.08]">
               <Activity className="w-5 h-5 flex-shrink-0 text-accent-cyan" />
               <div className="min-w-0">
                 <p className="text-[10px] text-theme-tertiary uppercase tracking-wider">
@@ -289,7 +289,7 @@ export default function SyncJobsPage() {
       {/* Filters */}
       <div className="flex items-center gap-3">
         <span className="text-sm text-theme-tertiary">Filter:</span>
-        <div className="flex gap-1 p-1 bg-theme-surface-2 rounded-xl border border-white/5">
+        <div className="flex gap-1 p-1 bg-theme-surface-2 rounded-xl border border-current/[0.08]">
           {["all", "running", "completed", "failed"].map((f) => (
             <button
               key={f}
@@ -324,7 +324,7 @@ export default function SyncJobsPage() {
             return (
               <StaggerItem key={job.id}>
                 <div
-                  className="glass-card p-4 cursor-pointer hover:bg-white/[0.02] transition-colors"
+                  className="glass-card p-4 cursor-pointer hover:bg-current/[0.03] transition-colors"
                   onClick={() => setExpandedJob(expandedJob === job.id ? null : job.id)}
                 >
                   <div className="flex items-start gap-3">
@@ -391,14 +391,14 @@ export default function SyncJobsPage() {
 
                       {/* Expanded: Step details */}
                       {expandedJob === job.id && (
-                        <div className="mt-3 pt-3 border-t border-white/5 space-y-2">
+                        <div className="mt-3 pt-3 border-t border-current/[0.08] space-y-2">
                           {job.steps && job.steps.length > 0 ? (
                             job.steps.map((step: any, idx: number) => {
                               const stepOk = step.status === "completed";
                               return (
                                 <div
                                   key={idx}
-                                  className="flex items-start gap-2 text-xs p-2 rounded-lg bg-white/[0.02]"
+                                  className="flex items-start gap-2 text-xs p-2 rounded-lg bg-current/[0.03]"
                                 >
                                   {stepOk ? (
                                     <CheckCircle className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0 mt-0.5" />
@@ -464,14 +464,14 @@ export default function SyncJobsPage() {
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page <= 1}
-              className="p-1.5 rounded-lg hover:bg-white/5 text-theme-tertiary disabled:opacity-30 transition-all"
+              className="p-1.5 rounded-lg hover:bg-current/[0.05] text-theme-tertiary disabled:opacity-30 transition-all"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
             <button
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page >= totalPages}
-              className="p-1.5 rounded-lg hover:bg-white/5 text-theme-tertiary disabled:opacity-30 transition-all"
+              className="p-1.5 rounded-lg hover:bg-current/[0.05] text-theme-tertiary disabled:opacity-30 transition-all"
             >
               <ChevronRight className="w-4 h-4" />
             </button>

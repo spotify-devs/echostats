@@ -47,7 +47,7 @@ export default function RecommendationsPage() {
         </div>
         <div className="flex items-center gap-2">
           {/* Seed selector */}
-          <div className="flex rounded-xl overflow-hidden border border-white/10">
+          <div className="flex rounded-xl overflow-hidden border border-current/[0.1]">
             {(["mixed", "artists", "tracks", "genres"] as SeedType[]).map((t) => (
               <button
                 key={t}
@@ -55,7 +55,7 @@ export default function RecommendationsPage() {
                 className={`px-3 py-1.5 text-xs font-medium capitalize transition-colors ${
                   seedType === t
                     ? "bg-accent-dynamic/20 text-accent-dynamic"
-                    : "text-theme-tertiary hover:text-theme-secondary hover:bg-white/5"
+                    : "text-theme-tertiary hover:text-theme-secondary hover:bg-current/[0.05]"
                 }`}
               >
                 {t}
@@ -65,7 +65,7 @@ export default function RecommendationsPage() {
           <button
             onClick={() => refetch()}
             disabled={isFetching}
-            className="p-2 rounded-xl border border-white/10 text-theme-secondary hover:text-theme hover:bg-white/5 transition-colors disabled:opacity-50"
+            className="p-2 rounded-xl border border-current/[0.1] text-theme-secondary hover:text-theme hover:bg-current/[0.05] transition-colors disabled:opacity-50"
           >
             <RefreshCw className={`w-4 h-4 ${isFetching ? "animate-spin" : ""}`} />
           </button>

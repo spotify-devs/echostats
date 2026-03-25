@@ -407,7 +407,7 @@ export function CommandPalette() {
       />
       <div className="relative w-full max-w-lg glass-card overflow-hidden animate-scale-in shadow-2xl">
         {/* Search Input */}
-        <div className="flex items-center gap-3 px-4 py-3 border-b border-white/5">
+        <div className="flex items-center gap-3 px-4 py-3 border-b border-current/[0.08]">
           <Search className="w-5 h-5 text-theme-tertiary flex-shrink-0" />
           <input
             ref={inputRef}
@@ -417,7 +417,7 @@ export function CommandPalette() {
             placeholder="Search pages, tools, settings..."
             className="flex-1 bg-transparent text-sm text-theme placeholder:text-theme-tertiary focus:outline-none"
           />
-          <kbd className="hidden sm:flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] text-theme-tertiary bg-theme-surface-3 rounded border border-white/10">
+          <kbd className="hidden sm:flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] text-theme-tertiary bg-theme-surface-3 rounded border border-current/[0.1]">
             ESC
           </kbd>
         </div>
@@ -446,7 +446,7 @@ export function CommandPalette() {
                       className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${
                         isSelected
                           ? "bg-accent-dynamic/10 text-accent-dynamic"
-                          : "text-theme-secondary hover:bg-white/[0.03]"
+                          : "text-theme-secondary hover:bg-current/[0.04]"
                       }`}
                     >
                       <Icon className="w-4 h-4 flex-shrink-0" />
@@ -461,7 +461,7 @@ export function CommandPalette() {
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between px-4 py-2 border-t border-white/5 text-[10px] text-theme-tertiary">
+        <div className="flex items-center justify-between px-4 py-2 border-t border-current/[0.08] text-[10px] text-theme-tertiary">
           <div className="flex items-center gap-3">
             <span className="flex items-center gap-1">
               <kbd className="px-1 py-0.5 bg-theme-surface-3 rounded">↑↓</kbd> Navigate

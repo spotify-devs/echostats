@@ -15,7 +15,7 @@ interface TimeRangeSelectorProps {
 
 export function TimeRangeSelector({ value, onChange }: TimeRangeSelectorProps) {
   return (
-    <div className="flex gap-1 p-1 bg-surface-2 rounded-xl border border-white/5">
+    <div className="flex gap-1 p-1 bg-surface-2 rounded-xl border border-current/[0.08]">
       {TIME_RANGES.map((range) => (
         <button
           key={range.value}
@@ -23,7 +23,7 @@ export function TimeRangeSelector({ value, onChange }: TimeRangeSelectorProps) {
           className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${
             value === range.value
               ? "bg-accent-purple/20 text-accent-purple"
-              : "text-white/40 hover:text-white/60 hover:bg-white/5"
+              : "text-theme-tertiary hover:text-theme-secondary hover:bg-current/[0.05]"
           }`}
         >
           {range.label}

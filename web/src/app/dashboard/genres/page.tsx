@@ -34,10 +34,10 @@ export default function GenresPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2">
+          <h1 className="text-xl sm:text-2xl font-bold text-theme flex items-center gap-2">
             <Disc3 className="w-6 h-6 text-accent-cyan" /> Genres
           </h1>
-          <p className="text-white/50 mt-1">Your genre distribution</p>
+          <p className="text-theme-secondary mt-1">Your genre distribution</p>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
           <TimeRangeSelector value={period} onChange={setPeriod} />
@@ -64,17 +64,17 @@ export default function GenresPage() {
           <StaggerContainer className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <StaggerItem>
               <div className="glass-card p-6">
-                <h2 className="text-lg font-semibold text-white mb-4">Genre Distribution</h2>
+                <h2 className="text-lg font-semibold text-theme mb-4">Genre Distribution</h2>
                 {pieData.length > 0 ? (
                   <PieChart data={pieData} height={350} />
                 ) : (
-                  <p className="text-white/40 text-center py-12">No genre data available</p>
+                  <p className="text-theme-tertiary text-center py-12">No genre data available</p>
                 )}
               </div>
             </StaggerItem>
             <StaggerItem>
               <div className="glass-card p-6">
-                <h2 className="text-lg font-semibold text-white mb-4">Top Genres by Plays</h2>
+                <h2 className="text-lg font-semibold text-theme mb-4">Top Genres by Plays</h2>
                 {barData.length > 0 ? (
                   <BarChart
                     data={barData}
@@ -84,7 +84,7 @@ export default function GenresPage() {
                     layout="vertical"
                   />
                 ) : (
-                  <p className="text-white/40 text-center py-12">No genre data available</p>
+                  <p className="text-theme-tertiary text-center py-12">No genre data available</p>
                 )}
               </div>
             </StaggerItem>
@@ -93,8 +93,8 @@ export default function GenresPage() {
           {/* Genre list */}
           <FadeIn delay={0.2}>
             <div className="glass-card">
-              <div className="p-4 border-b border-white/5">
-                <h2 className="text-lg font-semibold text-white">
+              <div className="p-4 border-b border-current/[0.08]">
+                <h2 className="text-lg font-semibold text-theme">
                   All Genres ({data?.total_genres || 0})
                 </h2>
               </div>
@@ -102,8 +102,8 @@ export default function GenresPage() {
                 <StaggerContainer className="flex flex-wrap gap-2">
                   {genres.map((genre: any, i: number) => (
                     <StaggerItem key={i}>
-                      <span className="px-3 py-1.5 text-xs rounded-full bg-surface-3 text-white/60 border border-white/5">
-                        {genre.name} <span className="text-white/30 ml-1">{genre.play_count}</span>
+                      <span className="px-3 py-1.5 text-xs rounded-full bg-surface-3 text-theme-secondary border border-current/[0.08]">
+                        {genre.name} <span className="text-theme-tertiary ml-1">{genre.play_count}</span>
                       </span>
                     </StaggerItem>
                   ))}

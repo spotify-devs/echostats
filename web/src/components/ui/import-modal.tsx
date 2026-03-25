@@ -113,7 +113,7 @@ export function ImportHistoryModal({ isOpen, onClose, onComplete }: ImportModalP
           <h2 className="text-lg font-semibold text-theme flex items-center gap-2">
             <Upload className="w-5 h-5 text-accent-dynamic" /> Import Listening History
           </h2>
-          <button onClick={onClose} className="p-1 rounded-lg hover:bg-white/5 text-theme-tertiary">
+          <button onClick={onClose} className="p-1 rounded-lg hover:bg-current/[0.05] text-theme-tertiary">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -164,7 +164,7 @@ export function ImportHistoryModal({ isOpen, onClose, onComplete }: ImportModalP
             onDragOver={(e) => e.preventDefault()}
             onDrop={handleDrop}
             onClick={() => fileInputRef.current?.click()}
-            className="border-2 border-dashed border-white/10 hover:border-accent-dynamic/30 rounded-xl p-4 sm:p-8 text-center cursor-pointer transition-colors"
+            className="border-2 border-dashed border-current/[0.1] hover:border-accent-dynamic/30 rounded-xl p-4 sm:p-8 text-center cursor-pointer transition-colors"
           >
             <FileJson className="w-10 h-10 text-theme-tertiary mx-auto mb-3" />
             <p className="text-sm text-theme-secondary">
@@ -193,7 +193,7 @@ export function ImportHistoryModal({ isOpen, onClose, onComplete }: ImportModalP
               return (
                 <div
                   key={i}
-                  className="flex items-center gap-3 p-3 rounded-xl bg-theme-surface-2 border border-white/5"
+                  className="flex items-center gap-3 p-3 rounded-xl bg-theme-surface-2 border border-current/[0.08]"
                 >
                   <FileJson
                     className={`w-5 h-5 flex-shrink-0 ${result ? "text-emerald-400" : isCurrent ? "text-accent-dynamic" : "text-theme-tertiary"}`}
@@ -252,7 +252,7 @@ export function ImportHistoryModal({ isOpen, onClose, onComplete }: ImportModalP
             <>
               <button
                 onClick={reset}
-                className="px-4 py-2 text-sm text-theme-secondary border border-white/10 rounded-xl hover:bg-white/5 transition-all"
+                className="px-4 py-2 text-sm text-theme-secondary border border-current/[0.1] rounded-xl hover:bg-current/[0.05] transition-all"
               >
                 Import More
               </button>
@@ -264,7 +264,7 @@ export function ImportHistoryModal({ isOpen, onClose, onComplete }: ImportModalP
             <>
               <button
                 onClick={onClose}
-                className="px-4 py-2 text-sm text-theme-secondary border border-white/10 rounded-xl hover:bg-white/5 transition-all"
+                className="px-4 py-2 text-sm text-theme-secondary border border-current/[0.1] rounded-xl hover:bg-current/[0.05] transition-all"
               >
                 Cancel
               </button>

@@ -97,23 +97,23 @@ function CallbackContent() {
         {status === "loading" && (
           <>
             <Loader2 className="w-8 h-8 text-accent-purple animate-spin mx-auto" />
-            <p className="text-white/60">Connecting to Spotify...</p>
+            <p className="text-theme-secondary">Connecting to Spotify...</p>
           </>
         )}
 
         {status === "success" && (
           <>
             <CheckCircle className="w-10 h-10 text-spotify-green mx-auto" />
-            <p className="text-white font-medium">Connected successfully!</p>
-            <p className="text-sm text-white/40">Redirecting to dashboard...</p>
+            <p className="text-theme font-medium">Connected successfully!</p>
+            <p className="text-sm text-theme-tertiary">Redirecting to dashboard...</p>
           </>
         )}
 
         {status === "error" && (
           <>
             <XCircle className="w-10 h-10 text-red-400 mx-auto" />
-            <p className="text-white font-medium">Authentication Failed</p>
-            <p className="text-sm text-white/40">{error}</p>
+            <p className="text-theme font-medium">Authentication Failed</p>
+            <p className="text-sm text-theme-tertiary">{error}</p>
             <a href="/" className="btn-primary inline-block text-sm">
               Try Again
             </a>

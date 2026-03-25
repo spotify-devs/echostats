@@ -167,7 +167,7 @@ export default function MusicDnaPage() {
                     totalPlays > 0 ? Math.round((genre.play_count / totalPlays) * 100) : 0;
                   return (
                     <StaggerItem key={i}>
-                      <div className="flex items-center gap-3 p-3 rounded-xl bg-theme-surface-2 hover:bg-white/5 transition-colors">
+                      <div className="flex items-center gap-3 p-3 rounded-xl bg-theme-surface-2 hover:bg-current/[0.05] transition-colors">
                         <span className="text-xl">{getEmoji(genre.name)}</span>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between mb-1">

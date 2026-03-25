@@ -61,10 +61,10 @@ export function ToastContainer() {
             className={`flex items-center gap-3 px-4 py-3 rounded-xl border backdrop-blur-lg shadow-glass animate-slide-up ${colors[toast.type]}`}
           >
             <Icon className={`w-5 h-5 flex-shrink-0 ${iconColors[toast.type]}`} />
-            <p className="text-sm text-white flex-1">{toast.message}</p>
+            <p className="text-sm text-theme flex-1">{toast.message}</p>
             <button
               onClick={() => setToasts((prev) => prev.filter((t) => t.id !== toast.id))}
-              className="text-white/30 hover:text-white/60"
+              className="text-theme-tertiary hover:text-theme-secondary"
             >
               <X className="w-4 h-4" />
             </button>

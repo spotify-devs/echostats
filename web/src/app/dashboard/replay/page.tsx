@@ -81,7 +81,7 @@ export default function ReplayPage() {
                   return (
                     <div
                       key={i}
-                      className="flex items-center gap-3 p-2 rounded-xl hover:bg-white/[0.03] transition-colors"
+                      className="flex items-center gap-3 p-2 rounded-xl hover:bg-current/[0.04] transition-colors"
                     >
                       <span className="w-6 text-center text-sm font-bold text-accent-dynamic">
                         {i + 1}
@@ -124,7 +124,7 @@ export default function ReplayPage() {
                   <Link
                     key={i}
                     href={artist.spotify_id ? `/dashboard/artists/${artist.spotify_id}` : "#"}
-                    className="flex items-center gap-3 p-2 rounded-xl hover:bg-white/[0.03] transition-colors"
+                    className="flex items-center gap-3 p-2 rounded-xl hover:bg-current/[0.04] transition-colors"
                   >
                     <span className="w-6 text-center text-sm font-bold text-spotify-green">
                       {i + 1}

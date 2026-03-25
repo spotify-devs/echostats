@@ -138,7 +138,7 @@ export function GlobalSearch() {
         onChange={(e) => handleInputChange(e.target.value)}
         onFocus={() => query.length >= 2 && setIsOpen(true)}
         placeholder="Search tracks, artists... (⌘K)"
-        className="w-full pl-10 pr-10 py-2 bg-theme-surface-2 border border-white/10 rounded-xl text-sm text-theme placeholder:text-theme-tertiary focus:outline-none focus:border-accent-dynamic/50 focus:ring-1 ring-accent-dynamic/25 transition-all"
+        className="w-full pl-10 pr-10 py-2 bg-theme-surface-2 border border-current/[0.1] rounded-xl text-sm text-theme placeholder:text-theme-tertiary focus:outline-none focus:border-accent-dynamic/50 focus:ring-1 ring-accent-dynamic/25 transition-all"
       />
       {query && (
         <button
@@ -161,12 +161,12 @@ export function GlobalSearch() {
               <Loader2 className="w-5 h-5 text-accent-dynamic animate-spin" />
             </div>
           ) : results.length > 0 ? (
-            <div className="max-h-80 overflow-y-auto divide-y divide-white/5">
+            <div className="max-h-80 overflow-y-auto divide-y divide-current/[0.08]">
               {results.map((result, i) => (
                 <button
                   key={`${result.type}-${result.id}-${i}`}
                   onClick={() => handleSelect(result)}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/5 transition-colors"
+                  className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-current/[0.05] transition-colors"
                 >
                   <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-theme-surface-3 flex-shrink-0">
                     {result.imageUrl ? (

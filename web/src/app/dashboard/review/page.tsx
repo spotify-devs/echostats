@@ -165,10 +165,10 @@ export default function YearInReviewPage() {
 
       {/* Top 5 Tracks List */}
       <div className="glass-card">
-        <div className="p-4 border-b border-white/5">
+        <div className="p-4 border-b border-current/[0.08]">
           <h2 className="text-lg font-semibold text-theme">Your Top 5 Tracks</h2>
         </div>
-        <div className="divide-y divide-white/5">
+        <div className="divide-y divide-current/[0.08]">
           {(data?.top_tracks || []).slice(0, 5).map((track: any, i: number) => (
             <div key={i} className="flex items-center gap-4 px-4 py-3">
               <span className="w-8 text-center text-2xl font-bold text-accent-dynamic/40">

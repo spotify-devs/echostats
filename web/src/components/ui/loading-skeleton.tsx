@@ -10,7 +10,7 @@ export function CardSkeleton() {
 
 export function ListSkeleton({ rows = 5 }: { rows?: number }) {
   return (
-    <div className="glass-card divide-y divide-white/5">
+    <div className="glass-card divide-y divide-current/[0.08]">
       {Array.from({ length: rows }).map((_, i) => (
         <div key={i} className="flex items-center gap-4 p-4">
           <div className="skeleton w-12 h-12 rounded-lg" />

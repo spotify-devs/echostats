@@ -96,7 +96,7 @@ export default function CalendarPage() {
         <div className="flex items-center justify-between mb-6">
           <button
             onClick={prevMonth}
-            className="p-2 rounded-lg hover:bg-white/5 text-theme-tertiary hover:text-theme transition-colors"
+            className="p-2 rounded-lg hover:bg-current/[0.05] text-theme-tertiary hover:text-theme transition-colors"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
@@ -106,7 +106,7 @@ export default function CalendarPage() {
           <button
             onClick={nextMonth}
             disabled={isCurrentMonth}
-            className="p-2 rounded-lg hover:bg-white/5 text-theme-tertiary hover:text-theme disabled:opacity-30 transition-colors"
+            className="p-2 rounded-lg hover:bg-current/[0.05] text-theme-tertiary hover:text-theme disabled:opacity-30 transition-colors"
           >
             <ChevronRight className="w-5 h-5" />
           </button>

@@ -63,7 +63,7 @@ export default function ChangelogPage() {
       {CHANGELOG.map((entry) => (
         <div key={entry.version} className="glass-card overflow-hidden">
           {/* Version Header */}
-          <div className="p-5 border-b border-white/5 flex items-center gap-4 bg-gradient-to-r from-accent-dynamic/5 to-transparent">
+          <div className="p-5 border-b border-current/[0.08] flex items-center gap-4 bg-gradient-to-r from-accent-dynamic/5 to-transparent">
             <div className="p-2.5 rounded-xl" style={{ backgroundColor: `${entry.color}20` }}>
               <entry.icon className="w-6 h-6" style={{ color: entry.color }} />
             </div>

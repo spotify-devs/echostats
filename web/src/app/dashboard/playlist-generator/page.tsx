@@ -112,7 +112,7 @@ export default function PlaylistGeneratorPage() {
                   className={`p-4 rounded-xl border text-center transition-all ${
                     selectedMood === mood.id
                       ? "border-accent-dynamic/50 bg-accent-dynamic/15 scale-105"
-                      : "border-white/10 hover:border-white/20 hover:bg-white/5"
+                      : "border-current/[0.1] hover:border-current/[0.2] hover:bg-current/[0.05]"
                   }`}
                 >
                   <span className="text-3xl block mb-2">{mood.emoji}</span>
@@ -138,7 +138,7 @@ export default function PlaylistGeneratorPage() {
                     className={`px-3 py-1.5 text-sm rounded-full border transition-all capitalize ${
                       isSelected
                         ? "border-accent-dynamic/50 bg-accent-dynamic/15 text-accent-dynamic"
-                        : "border-white/10 text-theme-secondary hover:border-white/20"
+                        : "border-current/[0.1] text-theme-secondary hover:border-current/[0.2]"
                     }`}
                   >
                     {isSelected && <Check className="w-3 h-3 inline mr-1" />}
@@ -162,7 +162,7 @@ export default function PlaylistGeneratorPage() {
                   value={playlistName}
                   onChange={(e) => setPlaylistName(e.target.value)}
                   placeholder="Auto-generated if empty"
-                  className="w-full px-4 py-2.5 bg-theme-surface-2 border border-white/10 rounded-xl text-sm text-theme placeholder:text-theme-tertiary focus:outline-none focus:border-accent-dynamic/50 transition-all"
+                  className="w-full px-4 py-2.5 bg-theme-surface-2 border border-current/[0.1] rounded-xl text-sm text-theme placeholder:text-theme-tertiary focus:outline-none focus:border-accent-dynamic/50 transition-all"
                 />
               </div>
               <div>
@@ -224,7 +224,7 @@ export default function PlaylistGeneratorPage() {
               </button>
             </div>
 
-            <div className="divide-y divide-white/5">
+            <div className="divide-y divide-current/[0.08]">
               {generatedTracks.map((track: any, i: number) => {
                 const [name, artist] = (track.name || "").split(" — ");
                 return (
@@ -261,7 +261,7 @@ export default function PlaylistGeneratorPage() {
             <button
               onClick={() => generateMutation.mutate()}
               disabled={generateMutation.isPending}
-              className="px-6 py-3 glass-card hover:bg-white/5 transition-all flex items-center gap-2 text-sm text-theme-secondary"
+              className="px-6 py-3 glass-card hover:bg-current/[0.05] transition-all flex items-center gap-2 text-sm text-theme-secondary"
             >
               <Wand2 className="w-4 h-4" /> Regenerate
             </button>

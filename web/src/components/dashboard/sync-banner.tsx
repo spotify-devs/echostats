@@ -70,7 +70,7 @@ export function SyncBanner() {
   // Token is healthy — show compact status bar
   if (tokenExpires) {
     return (
-      <div className="mx-4 sm:mx-6 mt-3 flex items-center gap-3 px-3 py-2 rounded-xl border border-white/5 bg-white/[0.02]">
+      <div className="mx-4 sm:mx-6 mt-3 flex items-center gap-3 px-3 py-2 rounded-xl border border-current/[0.08] bg-current/[0.03]">
         <div className="flex items-center gap-2 flex-1">
           <div className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />

@@ -198,7 +198,7 @@ export function Sidebar() {
                       className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
                         isActive
                           ? "bg-accent-dynamic/15 text-accent-dynamic"
-                          : "text-theme-secondary hover:text-theme hover:bg-white/5 hover:translate-x-1"
+                          : "text-theme-secondary hover:text-theme hover:bg-current/[0.05] hover:translate-x-1"
                       }`}
                     >
                       <Icon className="w-[16px] h-[16px]" />
@@ -222,7 +222,7 @@ export function Sidebar() {
             className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-all duration-200 ${
               pathname === "/dashboard/settings"
                 ? "bg-accent-dynamic/15 text-accent-dynamic"
-                : "text-theme-secondary hover:text-theme hover:bg-white/5 hover:translate-x-1"
+                : "text-theme-secondary hover:text-theme hover:bg-current/[0.05] hover:translate-x-1"
             }`}
           >
             <Settings className="w-[16px] h-[16px]" />

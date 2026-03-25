@@ -32,7 +32,7 @@ export default function LandingPage() {
       <main className="min-h-screen flex items-center justify-center bg-surface">
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="w-8 h-8 text-accent-dynamic animate-spin" />
-          <p className="text-sm text-white/40">Checking authentication…</p>
+          <p className="text-sm text-theme-tertiary">Checking authentication…</p>
         </div>
       </main>
     );
@@ -50,7 +50,7 @@ export default function LandingPage() {
         </div>
 
         {/* Tagline */}
-        <p className="text-xl text-white/60 max-w-md mx-auto">
+        <p className="text-xl text-theme-secondary max-w-md mx-auto">
           Discover deep insights about your Spotify listening habits with beautiful analytics.
         </p>
 
@@ -58,23 +58,23 @@ export default function LandingPage() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-8">
           <div className="glass-card p-4 space-y-2">
             <BarChart3 className="w-6 h-6 text-accent-purple mx-auto" />
-            <p className="text-sm font-medium text-white/90">Listening Analytics</p>
-            <p className="text-xs text-white/40">Charts, patterns, and trends</p>
+            <p className="text-sm font-medium text-theme">Listening Analytics</p>
+            <p className="text-xs text-theme-tertiary">Charts, patterns, and trends</p>
           </div>
           <div className="glass-card p-4 space-y-2">
             <Disc3 className="w-6 h-6 text-spotify-green mx-auto" />
-            <p className="text-sm font-medium text-white/90">Artist Insights</p>
-            <p className="text-xs text-white/40">Top artists, genres, and mood</p>
+            <p className="text-sm font-medium text-theme">Artist Insights</p>
+            <p className="text-xs text-theme-tertiary">Top artists, genres, and mood</p>
           </div>
           <div className="glass-card p-4 space-y-2">
             <TrendingUp className="w-6 h-6 text-accent-cyan mx-auto" />
-            <p className="text-sm font-medium text-white/90">Trend Tracking</p>
-            <p className="text-xs text-white/40">See how your taste evolves</p>
+            <p className="text-sm font-medium text-theme">Trend Tracking</p>
+            <p className="text-xs text-theme-tertiary">See how your taste evolves</p>
           </div>
         </div>
 
         {/* More highlights */}
-        <div className="flex flex-wrap justify-center gap-4 text-xs text-white/40">
+        <div className="flex flex-wrap justify-center gap-4 text-xs text-theme-tertiary">
           <span className="flex items-center gap-1">
             <Shield className="w-3.5 h-3.5" /> Self-hosted & private
           </span>
@@ -97,7 +97,7 @@ export default function LandingPage() {
             </svg>
             Connect with Spotify
           </button>
-          <p className="text-[11px] text-white/25">
+          <p className="text-[11px] text-theme-tertiary">
             Free · No credit card · Your data stays on your server
           </p>
         </div>
