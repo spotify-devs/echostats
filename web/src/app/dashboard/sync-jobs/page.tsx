@@ -15,7 +15,7 @@ import {
   RefreshCw,
   XCircle,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { StaggerContainer, StaggerItem } from "@/components/ui/animations";
 import { CardSkeleton } from "@/components/ui/loading-skeleton";
 import { api } from "@/lib/api";
@@ -64,13 +64,14 @@ const STEP_LABELS: Record<string, string> = {
   refresh_analytics: "Refresh Analytics",
 };
 
-function timeAgo(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "just now";
+function timeAgo(dateStr: string, now: number): string {
+  const diff = now - new Date(dateStr).getTime();
+  const secs = Math.floor(diff / 1000);
+  if (secs < 60) return `${secs}s ago`;
+  const mins = Math.floor(secs / 60);
   if (mins < 60) return `${mins}m ago`;
   const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
+  if (hrs < 24) return `${hrs}h ${mins % 60}m ago`;
   const days = Math.floor(hrs / 24);
   if (days < 7) return `${days}d ago`;
   return new Date(dateStr).toLocaleDateString([], { month: "short", day: "numeric" });
@@ -102,7 +103,14 @@ export default function SyncJobsPage() {
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [expandedJob, setExpandedJob] = useState<string | null>(null);
+  const [now, setNow] = useState(Date.now());
   const queryClient = useQueryClient();
+
+  // Tick every second for live timers
+  useEffect(() => {
+    const interval = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const { data: stats, isLoading: loadingStats } = useQuery({
     queryKey: ["sync-stats"],
@@ -134,10 +142,10 @@ export default function SyncJobsPage() {
 
   // Compute next scheduled sync (worker runs at :00, :15, :30, :45)
   function getNextSyncTime(): Date {
-    const now = new Date();
-    const mins = now.getMinutes();
+    const d = new Date(now);
+    const mins = d.getMinutes();
     const nextSlot = Math.ceil((mins + 1) / 15) * 15;
-    const next = new Date(now);
+    const next = new Date(d);
     if (nextSlot >= 60) {
       next.setHours(next.getHours() + 1);
       next.setMinutes(nextSlot - 60);
@@ -149,7 +157,7 @@ export default function SyncJobsPage() {
   }
 
   function formatCountdown(target: Date): string {
-    const diffMs = target.getTime() - Date.now();
+    const diffMs = target.getTime() - now;
     if (diffMs <= 0) return "any moment";
     const mins = Math.floor(diffMs / 60000);
     const secs = Math.floor((diffMs % 60000) / 1000);
@@ -242,7 +250,7 @@ export default function SyncJobsPage() {
                   Last Sync
                 </p>
                 <p className="text-sm font-medium text-theme truncate">
-                  {stats.last_sync_at ? timeAgo(stats.last_sync_at) : "Never"}
+                  {stats.last_sync_at ? timeAgo(stats.last_sync_at, now) : "Never"}
                 </p>
                 {stats.last_sync_at && (
                   <p className="text-[10px] text-theme-tertiary">
