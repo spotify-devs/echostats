@@ -11,6 +11,21 @@ function CallbackContent() {
   const [error, setError] = useState("");
 
   useEffect(() => {
+    // Check if redirected back with success (from API redirect)
+    const statusParam = searchParams.get("status");
+    if (statusParam === "success") {
+      setStatus("success");
+      // Notify opener if popup
+      if (window.opener) {
+        window.opener.postMessage({ type: "spotify-auth-success" }, "*");
+        setTimeout(() => window.close(), 1000);
+      } else {
+        setTimeout(() => router.push("/dashboard"), 1500);
+      }
+      return;
+    }
+
+    // Legacy flow: exchange code directly (if code is present)
     const code = searchParams.get("code");
     const state = searchParams.get("state");
     const errorParam = searchParams.get("error");
@@ -18,6 +33,21 @@ function CallbackContent() {
     if (errorParam) {
       setStatus("error");
       setError(errorParam);
+      if (window.opener) {
+        window.opener.postMessage({ type: "spotify-auth-error", error: errorParam }, "*");
+      }
+      return;
+    }
+
+    if (!code && !state) {
+      // No code or status — just show success (likely redirected from API)
+      setStatus("success");
+      if (window.opener) {
+        window.opener.postMessage({ type: "spotify-auth-success" }, "*");
+        setTimeout(() => window.close(), 1000);
+      } else {
+        setTimeout(() => router.push("/dashboard"), 1500);
+      }
       return;
     }
 
@@ -40,11 +70,20 @@ function CallbackContent() {
       })
       .then(() => {
         setStatus("success");
-        setTimeout(() => router.push("/dashboard"), 1500);
+        // If opened as popup, notify parent window
+        if (window.opener) {
+          window.opener.postMessage({ type: "spotify-auth-success" }, "*");
+          setTimeout(() => window.close(), 1000);
+        } else {
+          setTimeout(() => router.push("/dashboard"), 1500);
+        }
       })
       .catch((err) => {
         setStatus("error");
         setError(err.message);
+        if (window.opener) {
+          window.opener.postMessage({ type: "spotify-auth-error", error: err.message }, "*");
+        }
       });
   }, [searchParams, router]);
 

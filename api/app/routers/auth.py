@@ -6,6 +6,7 @@ from urllib.parse import urlencode
 
 import structlog
 from fastapi import APIRouter, HTTPException, Request, Response
+from fastapi.responses import RedirectResponse
 from jose import jwt
 
 from app.config import settings
@@ -153,16 +154,23 @@ async def callback(
         display_name=user.display_name,
     )
 
-    return {
-        "status": "authenticated",
-        "user": {
-            "id": str(user.id),
-            "spotify_id": spotify_id,
-            "display_name": user.display_name,
-            "image_url": user.image_url,
-        },
-        "token": session_token,
-    }
+    # Redirect to frontend — the browser was redirected here by Spotify,
+    # so we redirect back to the frontend with success
+    cors_origins = settings.cors_origin_list
+    frontend_url = cors_origins[0] if cors_origins else "http://localhost:3000"
+    redirect_url = f"{frontend_url}/auth/callback?status=success"
+
+    redirect = RedirectResponse(url=redirect_url, status_code=302)
+    redirect.set_cookie(
+        key="session",
+        value=session_token,
+        httponly=True,
+        secure=False,
+        samesite="lax",
+        max_age=30 * 24 * 3600,
+        path="/",
+    )
+    return redirect
 
 
 @router.post("/refresh")
