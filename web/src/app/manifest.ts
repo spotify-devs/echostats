@@ -1,0 +1,24 @@
+import type { MetadataRoute } from "next";
+
+export default function manifest(): MetadataRoute.Manifest {
+  return {
+    id: "/dashboard",
+    name: "EchoStats — Spotify Analytics",
+    short_name: "EchoStats",
+    description: "Spotify analytics dashboard — discover insights about your listening habits",
+    start_url: "/dashboard",
+    scope: "/",
+    display: "standalone",
+    background_color: "#0a0a0f",
+    theme_color: "#7519ff",
+    orientation: "any",
+    prefer_related_applications: false,
+    categories: ["music", "entertainment", "utilities"],
+    icons: [
+      { src: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { src: "/icons/icon-192x192.png", sizes: "192x192", type: "image/png" },
+      { src: "/icons/icon-512x512.png", sizes: "512x512", type: "image/png" },
+      { src: "/icons/icon-512x512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+    ],
+  };
+}

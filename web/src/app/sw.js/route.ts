@@ -1,11 +1,9 @@
-const CACHE_NAME = "echostats-v2";
+import { NextResponse } from "next/server";
 
-// Install — skip precaching dynamic pages (they require auth)
-self.addEventListener("install", () => {
-  self.skipWaiting();
-});
+const SW_CONTENT = `const CACHE_NAME = "echostats-v2";
 
-// Activate — clean old caches
+self.addEventListener("install", () => { self.skipWaiting(); });
+
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
@@ -15,16 +13,12 @@ self.addEventListener("activate", (event) => {
   self.clients.claim();
 });
 
-// Fetch — network-first for API, stale-while-revalidate for assets
 self.addEventListener("fetch", (event) => {
   const { request } = event;
   const url = new URL(request.url);
-
-  // Skip non-GET and cross-origin requests
   if (request.method !== "GET") return;
   if (url.origin !== self.location.origin) return;
 
-  // API requests: network-first with cache fallback
   if (url.pathname.startsWith("/api/")) {
     event.respondWith(
       fetch(request)
@@ -40,7 +34,6 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Static assets (_next/static): cache-first
   if (url.pathname.startsWith("/_next/static/")) {
     event.respondWith(
       caches.match(request).then((cached) => {
@@ -55,8 +48,15 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Everything else: network-first (pages are dynamic/auth-gated)
-  event.respondWith(
-    fetch(request).catch(() => caches.match(request))
-  );
-});
+  event.respondWith(fetch(request).catch(() => caches.match(request)));
+});`;
+
+export async function GET() {
+  return new NextResponse(SW_CONTENT, {
+    headers: {
+      "Content-Type": "application/javascript",
+      "Cache-Control": "public, max-age=0, must-revalidate",
+      "Service-Worker-Allowed": "/",
+    },
+  });
+}

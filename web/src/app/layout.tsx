@@ -6,7 +6,6 @@ export const metadata: Metadata = {
   title: "EchoStats — Spotify Analytics",
   description:
     "Discover insights about your Spotify listening habits with beautiful visualizations.",
-  manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
@@ -31,9 +30,6 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className="dark">
-      <head>
-        <link rel="manifest" href="/manifest.json" />
-      </head>
       <body>
         <Providers>{children}</Providers>
         <script
