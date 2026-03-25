@@ -7,7 +7,8 @@ import {
   LayoutDashboard, Music, Users, Disc3, Clock, BarChart3,
   ListMusic, Sparkles, Heart, Star, Library, Play, Settings,
   Menu, X, Activity, Headphones, Zap, GitCompare, Terminal,
-  Radio, Podcast, Trophy, Mic2, Globe,
+  Radio, Podcast, Trophy, Mic2, Globe, Repeat, Dna, Gift,
+  Calendar, Fingerprint, Crown, Network, FileText,
 } from "lucide-react";
 
 interface NavSection {
@@ -34,6 +35,12 @@ const navSections: NavSection[] = [
       { href: "/dashboard/patterns", icon: BarChart3, label: "Patterns" },
       { href: "/dashboard/mood", icon: Heart, label: "Mood & Vibe" },
       { href: "/dashboard/stats", icon: Activity, label: "Deep Stats" },
+      { href: "/dashboard/replay", icon: Repeat, label: "On Repeat" },
+      { href: "/dashboard/listening-habits", icon: Activity, label: "Habits" },
+      { href: "/dashboard/music-dna", icon: Dna, label: "Music DNA" },
+      { href: "/dashboard/timeline", icon: Calendar, label: "Timeline" },
+      { href: "/dashboard/taste-profile", icon: Fingerprint, label: "Taste Profile" },
+      { href: "/dashboard/top-50", icon: Crown, label: "Top 50" },
     ],
   },
   {
@@ -59,6 +66,9 @@ const navSections: NavSection[] = [
       { href: "/dashboard/review", icon: Star, label: "Year in Review" },
       { href: "/dashboard/compare", icon: GitCompare, label: "Compare" },
       { href: "/dashboard/achievements", icon: Trophy, label: "Achievements" },
+      { href: "/dashboard/wrapped", icon: Gift, label: "Wrapped" },
+      { href: "/dashboard/artist-map", icon: Network, label: "Artist Map" },
+      { href: "/dashboard/listening-report", icon: FileText, label: "Monthly Report" },
     ],
   },
   {
