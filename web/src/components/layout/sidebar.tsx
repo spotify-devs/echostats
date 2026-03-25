@@ -10,7 +10,7 @@ import {
   Radio, Podcast, Trophy, Mic2, Globe, Repeat, Dna, Gift,
   Calendar, Fingerprint, Crown, Network, FileText, Bell,
   Wand2, Microscope, Target, Download, CalendarDays, Shuffle,
-  Newspaper,
+  Newspaper, Info,
 } from "lucide-react";
 
 interface NavSection {
@@ -85,6 +85,8 @@ const navSections: NavSection[] = [
       { href: "/dashboard/api-logs", icon: Terminal, label: "API Logs" },
       { href: "/dashboard/notifications", icon: Bell, label: "Notifications" },
       { href: "/dashboard/export", icon: Download, label: "Export" },
+      { href: "/dashboard/changelog", icon: Zap, label: "What's New" },
+      { href: "/dashboard/about", icon: Info, label: "About" },
     ],
   },
 ];
