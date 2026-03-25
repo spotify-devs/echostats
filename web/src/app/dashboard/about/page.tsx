@@ -92,7 +92,7 @@ export default function AboutPage() {
 
       {/* Links */}
       <div className="flex justify-center gap-4">
-        <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="glass-card px-5 py-3 flex items-center gap-2 text-sm text-theme-secondary hover:text-theme transition-colors">
+        <a href="https://github.com/spotify-devs/echostats" target="_blank" rel="noopener noreferrer" className="glass-card px-5 py-3 flex items-center gap-2 text-sm text-theme-secondary hover:text-theme transition-colors">
           <Github className="w-5 h-5" /> GitHub
         </a>
         <Link href="/dashboard/settings" className="glass-card px-5 py-3 flex items-center gap-2 text-sm text-theme-secondary hover:text-theme transition-colors">
