@@ -15,11 +15,11 @@ interface TrackCardProps {
 
 export function TrackCard({ rank, name, artist, albumImageUrl, playCount, duration, spotifyUrl, spotifyId }: TrackCardProps) {
   const content = (
-    <div className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/[0.03] transition-all group">
+    <div className="flex items-center gap-3 sm:gap-4 p-3 rounded-xl hover:bg-white/[0.03] transition-all group min-h-[44px]">
       {rank !== undefined && (
         <span className="w-6 text-center text-sm text-white/30 font-mono">{rank}</span>
       )}
-      <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-surface-3 flex-shrink-0">
+      <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-lg overflow-hidden bg-surface-3 flex-shrink-0">
         {albumImageUrl ? (
           <Image src={albumImageUrl} alt={name} fill className="object-cover" sizes="48px" />
         ) : (

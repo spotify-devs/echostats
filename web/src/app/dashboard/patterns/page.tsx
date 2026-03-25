@@ -10,6 +10,7 @@ import { ListeningClock } from "@/components/charts/listening-clock";
 import { TimeRangeSelector } from "@/components/ui/time-range-selector";
 import { DateRangeFilter } from "@/components/ui/date-range-filter";
 import { ChartSkeleton } from "@/components/ui/loading-skeleton";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 const DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
@@ -17,6 +18,7 @@ export default function PatternsPage() {
   const [period, setPeriod] = useState("all_time");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const isMobile = useIsMobile();
 
   const { data, isLoading } = useQuery({
     queryKey: ["analytics-overview", period, startDate, endDate],
@@ -86,7 +88,7 @@ export default function PatternsPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="glass-card p-6 flex flex-col items-center">
               <h2 className="text-lg font-semibold text-white mb-4 self-start">Listening Clock</h2>
-              <ListeningClock hourlyData={data?.hourly_distribution || []} />
+              <ListeningClock hourlyData={data?.hourly_distribution || []} size={isMobile ? 220 : 280} />
             </div>
             <div className="glass-card p-6 lg:col-span-2">
               <h2 className="text-lg font-semibold text-white mb-4">Activity Heatmap</h2>
@@ -106,7 +108,7 @@ export default function PatternsPage() {
                 data={hourlyData}
                 xKey="hour"
                 bars={[{ key: "plays", color: "#a855f7", name: "Plays" }]}
-                height={250}
+                height={isMobile ? 200 : 250}
               />
             </div>
 
@@ -117,7 +119,7 @@ export default function PatternsPage() {
                 data={dailyData}
                 xKey="day"
                 bars={[{ key: "plays", color: "#ec4899", name: "Plays" }]}
-                height={250}
+                height={isMobile ? 200 : 250}
               />
             </div>
           </div>

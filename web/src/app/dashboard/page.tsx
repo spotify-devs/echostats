@@ -16,6 +16,7 @@ import { RecentFeed } from "@/components/dashboard/recent-feed";
 import { DiscoveryScore } from "@/components/dashboard/discovery-score";
 import { StreakCalendar } from "@/components/charts/streak-calendar";
 import { CardSkeleton, ChartSkeleton, ListSkeleton } from "@/components/ui/loading-skeleton";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 function formatDuration(ms: number): string {
   const hours = Math.floor(ms / 3600000);
@@ -27,6 +28,7 @@ export default function DashboardPage() {
   const [period, setPeriod] = useState("all_time");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const isMobile = useIsMobile();
 
   const { data, isLoading } = useQuery({
     queryKey: ["analytics-overview", period, startDate, endDate],
@@ -69,11 +71,11 @@ export default function DashboardPage() {
 
       {/* Metric Cards */}
       {isLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[...Array(4)].map((_, i) => <CardSkeleton key={i} />)}
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <MetricCard icon={Clock} label="Listening Time" value={formatDuration(data?.total_ms_played || 0)} subtitle={`${data?.total_hours || 0} hours total`} color="bg-accent-purple/20" />
           <MetricCard icon={Music} label="Tracks Played" value={(data?.total_tracks_played || 0).toLocaleString()} subtitle={`${data?.unique_tracks || 0} unique`} color="bg-spotify-green/20" />
           <MetricCard icon={Users} label="Artists" value={(data?.unique_artists || 0).toLocaleString()} subtitle={`${data?.unique_genres || 0} genres`} color="bg-accent-cyan/20" />
@@ -94,7 +96,7 @@ export default function DashboardPage() {
               <TrendingUp className="w-5 h-5 text-accent-purple" /> Hourly Activity
             </h2>
             {hourlyData.length > 0 ? (
-              <BarChart data={hourlyData} xKey="hour" bars={[{ key: "plays", color: "#a855f7" }]} height={250} />
+              <BarChart data={hourlyData} xKey="hour" bars={[{ key: "plays", color: "#a855f7" }]} height={isMobile ? 200 : 250} />
             ) : (
               <p className="text-white/40 text-center py-12">No data yet</p>
             )}
@@ -104,7 +106,7 @@ export default function DashboardPage() {
               <Disc3 className="w-5 h-5 text-accent-cyan" /> Top Genres
             </h2>
             {genrePieData.length > 0 ? (
-              <PieChart data={genrePieData} height={250} />
+              <PieChart data={genrePieData} height={isMobile ? 200 : 250} />
             ) : (
               <p className="text-white/40 text-center py-12">No data yet</p>
             )}
@@ -114,7 +116,7 @@ export default function DashboardPage() {
 
       {/* Audio Profile + Streak + Discovery */}
       {!isLoading && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           <AudioProfile features={data?.avg_audio_features || null} />
           <div className="glass-card p-6">
             <h2 className="text-lg font-semibold text-theme mb-4">Listening Activity</h2>

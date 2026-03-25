@@ -162,6 +162,31 @@
   .bg-theme-surface-3 {
     background-color: rgb(var(--surface-3));
   }
+
+  /* Mobile-friendly scrollbar */
+  @media (max-width: 640px) {
+    .glass-card {
+      border-radius: 0.75rem;
+    }
+    
+    .metric-card {
+      padding: 1rem;
+    }
+  }
+
+  /* Hide scrollbar on mobile for horizontal scroll containers */
+  .scroll-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scroll-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  /* Safe area padding for notched phones */
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
 }
 
 /* Custom scrollbar */

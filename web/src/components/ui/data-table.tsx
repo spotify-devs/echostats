@@ -51,9 +51,9 @@ export function DataTable<T>({
   return (
     <div className="space-y-4">
       {/* Toolbar */}
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
         {searchable && (
-          <div className="relative max-w-sm flex-1">
+          <div className="relative max-w-sm flex-1 min-w-0">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
             <input
               type="text"
@@ -118,11 +118,11 @@ export function DataTable<T>({
         </div>
 
         {/* Pagination */}
-        <div className="flex items-center justify-between px-4 py-3 border-t border-white/5">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between px-4 py-3 border-t border-white/5 gap-2">
           <span className="text-xs text-white/40">
             Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()} ({table.getFilteredRowModel().rows.length} rows)
           </span>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 self-end">
             <button
               onClick={() => table.previousPage()}
               disabled={!table.getCanPreviousPage()}

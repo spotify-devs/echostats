@@ -22,8 +22,8 @@ export function Heatmap({ data, maxValue }: HeatmapProps) {
   const max = maxValue || Math.max(...data.map((d) => d.value), 1);
 
   return (
-    <div className="overflow-x-auto">
-      <div className="min-w-[600px]">
+    <div className="overflow-x-auto scroll-hide">
+      <div className="min-w-[400px] sm:min-w-[600px]">
         {/* Hour labels */}
         <div className="flex ml-12 mb-1">
           {HOURS.filter((h) => h % 3 === 0).map((h) => (
@@ -43,7 +43,7 @@ export function Heatmap({ data, maxValue }: HeatmapProps) {
                 return (
                   <div
                     key={hour}
-                    className="flex-1 h-6 rounded-sm transition-colors cursor-pointer hover:ring-1 hover:ring-white/30"
+                    className="flex-1 h-4 sm:h-6 rounded-sm transition-colors cursor-pointer hover:ring-1 hover:ring-white/30"
                     style={{ backgroundColor: getColor(value, max) }}
                     title={`${day} ${hour}:00 — ${value} plays`}
                   />

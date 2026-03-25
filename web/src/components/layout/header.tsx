@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Bell, Search, LogIn } from "lucide-react";
+import { Bell, LogIn } from "lucide-react";
 import Image from "next/image";
 import { GlobalSearch } from "@/components/layout/search";
 import { SpotifyConnectModal } from "@/components/ui/spotify-connect-modal";
@@ -27,17 +27,13 @@ export function Header() {
         {/* Spacer for mobile hamburger */}
         <div className="w-10 lg:hidden" />
 
-        {/* Search — hidden on mobile */}
-        <div className="hidden sm:block flex-1">
+        {/* Search — always visible, compact on mobile */}
+        <div className="flex-1">
           <GlobalSearch />
         </div>
 
         {/* Right side */}
         <div className="flex items-center gap-3">
-          {/* Mobile search button */}
-          <button className="sm:hidden p-2 rounded-lg hover:bg-white/5 text-theme-tertiary hover:text-theme transition-colors">
-            <Search className="w-5 h-5" />
-          </button>
 
           {isAuthed ? (
             <>
