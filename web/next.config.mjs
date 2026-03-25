@@ -17,13 +17,19 @@ const nextConfig = {
       },
     ],
   },
+  serverExternalPackages: [],
   async rewrites() {
+    const apiUrl = process.env.INTERNAL_API_URL || "http://localhost:8000";
     return [
       {
         source: "/api/:path*",
-        destination: `${process.env.INTERNAL_API_URL || "http://localhost:8000"}/api/:path*`,
+        destination: `${apiUrl}/api/:path*`,
       },
     ];
+  },
+  // Ensure env vars are available at runtime for standalone mode
+  env: {
+    INTERNAL_API_URL: process.env.INTERNAL_API_URL || "http://localhost:8000",
   },
 };
 

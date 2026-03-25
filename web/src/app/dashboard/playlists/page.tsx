@@ -9,7 +9,7 @@ import { ListSkeleton } from "@/components/ui/loading-skeleton";
 export default function PlaylistsPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["playlists"],
-    queryFn: () => api.get<any>("/api/v1/playlists/"),
+    queryFn: () => api.get<any>("/api/v1/playlists"),
   });
 
   return (

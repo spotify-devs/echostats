@@ -12,7 +12,7 @@ export default function HistoryPage() {
 
   const { data, isLoading } = useQuery({
     queryKey: ["history", page],
-    queryFn: () => api.get<any>(`/api/v1/history/?page=${page}&limit=50`),
+    queryFn: () => api.get<any>(`/api/v1/history?page=${page}&limit=50`),
   });
 
   const items = data?.items || [];

@@ -23,6 +23,7 @@ COPY web/src ./src
 COPY web/public ./public
 
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV INTERNAL_API_URL=http://api:8000
 
 RUN pnpm build
 
