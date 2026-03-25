@@ -7,6 +7,10 @@ export default defineConfig({
   integrations: [
     starlight({
       title: "EchoStats",
+      logo: {
+        src: "./src/assets/logo.svg",
+      },
+      favicon: "/favicon.svg",
       description: "Self-hosted Spotify analytics dashboard documentation",
       social: {
         github: "https://github.com/spotify-devs/echostats",
