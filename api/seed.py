@@ -80,7 +80,8 @@ async def seed():
 
     # Clear existing seed data
     for coll in ["users", "spotify_tokens", "artists", "tracks", "listening_history",
-                 "playlists", "analytics_snapshots", "genre_distributions", "sync_jobs"]:
+                 "playlists", "analytics_snapshots", "genre_distributions", "sync_jobs",
+                 "api_logs"]:
         await db[coll].delete_many({})
 
     print("🗑️  Cleared existing data")
@@ -334,19 +335,90 @@ async def seed():
 
     print("📊 Computed analytics snapshots for 4 periods")
 
-    # ── Sync Job Record ─────────────────────────────────────────────────────
+    # ── Sync Job Records (multiple) ────────────────────────────────────────
+    sync_types = [
+        {"job_type": "initial", "days_ago": 30, "items": history_count},
+        {"job_type": "periodic", "days_ago": 7, "items": 45},
+        {"job_type": "periodic", "days_ago": 3, "items": 38},
+        {"job_type": "periodic", "days_ago": 1, "items": 22},
+        {"job_type": "periodic", "days_ago": 0, "items": 15},
+    ]
+    for sj in sync_types:
+        started = now - timedelta(days=sj["days_ago"], minutes=5)
+        await db["sync_jobs"].insert_one({
+            "user_id": user_id,
+            "job_type": sj["job_type"],
+            "status": "completed",
+            "started_at": started,
+            "completed_at": started + timedelta(seconds=random.randint(10, 120)),
+            "items_processed": sj["items"],
+            "items_total": sj["items"],
+            "error_message": "",
+            "created_at": started,
+        })
+    # Add a failed job for realism
+    failed_at = now - timedelta(days=5, hours=6)
     await db["sync_jobs"].insert_one({
         "user_id": user_id,
-        "job_type": "initial",
-        "status": "completed",
-        "started_at": now - timedelta(minutes=5),
-        "completed_at": now,
-        "items_processed": history_count + len(TRACKS) + len(ARTISTS) + len(PLAYLISTS),
-        "items_total": history_count + len(TRACKS) + len(ARTISTS) + len(PLAYLISTS),
-        "error_message": "",
-        "created_at": now - timedelta(minutes=5),
+        "job_type": "periodic",
+        "status": "failed",
+        "started_at": failed_at,
+        "completed_at": failed_at + timedelta(seconds=3),
+        "items_processed": 0,
+        "items_total": 0,
+        "error_message": "Spotify API rate limited (429)",
+        "created_at": failed_at,
     })
-    print("✅ Created sync job record")
+    print(f"✅ Created {len(sync_types) + 1} sync job records")
+
+    # ── API Log Entries ────────────────────────────────────────────────────
+    api_endpoints = [
+        ("/v1/me/player/recently-played", "GET", 200, 150),
+        ("/v1/me/top/artists", "GET", 200, 200),
+        ("/v1/me/top/tracks", "GET", 200, 180),
+        ("/v1/audio-features", "GET", 200, 120),
+        ("/v1/me/player", "GET", 200, 90),
+        ("/v1/recommendations", "GET", 200, 250),
+        ("/v1/me/playlists", "GET", 200, 170),
+        ("/v1/me/following", "GET", 200, 140),
+    ]
+    api_log_count = 0
+    for day_offset in range(30, 0, -1):
+        num_calls = random.randint(5, 20)
+        for _ in range(num_calls):
+            ep = random.choice(api_endpoints)
+            is_error = random.random() < 0.05  # 5% error rate
+            status = random.choice([429, 500, 503]) if is_error else ep[2]
+            latency = ep[3] + random.uniform(-50, 100) if not is_error else random.uniform(500, 3000)
+            ts = now - timedelta(days=day_offset, hours=random.randint(0, 23), minutes=random.randint(0, 59))
+            await db["api_logs"].insert_one({
+                "user_id": user_id,
+                "service": "spotify",
+                "method": ep[1],
+                "endpoint": ep[0],
+                "status_code": status,
+                "latency_ms": round(latency, 1),
+                "error": f"HTTP {status}" if is_error else "",
+                "request_id": f"req_{random.randint(100000,999999)}",
+                "timestamp": ts,
+            })
+            api_log_count += 1
+    print(f"📡 Inserted {api_log_count} API log entries")
+
+    # ── Genre Distribution (daily snapshots) ───────────────────────────────
+    for day_offset in range(30, 0, -1):
+        day_dt = now - timedelta(days=day_offset)
+        # Vary genres per day
+        daily_genres = {}
+        for g, c in genre_counts.items():
+            daily_genres[g] = max(0, c // 90 + random.randint(-2, 5))
+        await db["genre_distributions"].insert_one({
+            "user_id": user_id,
+            "date": day_dt.replace(hour=0, minute=0, second=0),
+            "genres": daily_genres,
+            "total_plays": sum(daily_genres.values()),
+        })
+    print("📊 Inserted 30 daily genre distribution snapshots")
 
     # Summary
     print(f"\n{'='*50}")
@@ -357,6 +429,8 @@ async def seed():
     print(f"  Tracks:    {len(TRACKS)} (with audio features)")
     print(f"  History:   {history_count} plays (90 days)")
     print(f"  Playlists: {len(PLAYLISTS)}")
+    print(f"  API Logs:  {api_log_count} entries")
+    print(f"  Sync Jobs: {len(sync_types) + 1}")
     print(f"  Genres:    {len(genre_counts)} unique")
     print(f"  Streak:    {streak} days")
     print(f"  Total:     {round(total_ms / 3600000, 1)} hours listened")

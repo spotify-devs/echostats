@@ -12,7 +12,7 @@ from app.models.user import User
 router = APIRouter()
 
 
-@router.get("/")
+@router.get("")
 async def get_history(
     user: Annotated[User, Depends(get_current_user)],
     page: int = Query(1, ge=1),

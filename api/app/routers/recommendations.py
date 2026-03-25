@@ -12,11 +12,11 @@ from app.models.user import User
 router = APIRouter()
 
 
-@router.get("/")
+@router.get("")
 async def get_recommendations(
     user: Annotated[User, Depends(get_current_user)],
     limit: int = Query(20, ge=1, le=50),
-    seed_type: str = Query("mixed", regex="^(artists|tracks|genres|mixed)$"),
+    seed_type: str = Query("mixed", pattern="^(artists|tracks|genres|mixed)$"),
 ) -> dict:
     """Get personalized recommendations based on user's listening."""
     # Get user's top items as seeds
