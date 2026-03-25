@@ -66,14 +66,17 @@ const STEP_LABELS: Record<string, string> = {
 
 function timeAgo(dateStr: string, now: number): string {
   const diff = now - new Date(dateStr).getTime();
-  const secs = Math.floor(diff / 1000);
-  if (secs < 60) return `${secs}s ago`;
-  const mins = Math.floor(secs / 60);
-  if (mins < 60) return `${mins}m ago`;
+  if (diff < 0) return "just now";
+  const totalSecs = Math.floor(diff / 1000);
+  if (totalSecs < 60) return `${totalSecs}s ago`;
+  const mins = Math.floor(totalSecs / 60);
+  const secs = totalSecs % 60;
+  if (mins < 60) return `${mins}m ${secs}s ago`;
   const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ${mins % 60}m ago`;
+  const remMins = mins % 60;
+  if (hrs < 24) return `${hrs}h ${remMins}m ago`;
   const days = Math.floor(hrs / 24);
-  if (days < 7) return `${days}d ago`;
+  if (days < 7) return `${days}d ${hrs % 24}h ago`;
   return new Date(dateStr).toLocaleDateString([], { month: "short", day: "numeric" });
 }
 
