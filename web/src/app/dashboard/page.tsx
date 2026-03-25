@@ -12,6 +12,8 @@ import { ArtistCard } from "@/components/music/artist-card";
 import { BarChart } from "@/components/charts/bar-chart";
 import { PieChart } from "@/components/charts/pie-chart";
 import { AudioProfile } from "@/components/dashboard/audio-profile";
+import { RecentFeed } from "@/components/dashboard/recent-feed";
+import { DiscoveryScore } from "@/components/dashboard/discovery-score";
 import { StreakCalendar } from "@/components/charts/streak-calendar";
 import { CardSkeleton, ChartSkeleton, ListSkeleton } from "@/components/ui/loading-skeleton";
 
@@ -110,9 +112,9 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Audio Profile + Streak */}
+      {/* Audio Profile + Streak + Discovery */}
       {!isLoading && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <AudioProfile features={data?.avg_audio_features || null} />
           <div className="glass-card p-6">
             <h2 className="text-lg font-semibold text-theme mb-4">Listening Activity</h2>
@@ -121,12 +123,18 @@ export default function DashboardPage() {
               Streak data populates as you listen
             </p>
           </div>
+          <DiscoveryScore
+            uniqueTracks={data?.unique_tracks || 0}
+            totalPlays={data?.total_tracks_played || 0}
+            uniqueArtists={data?.unique_artists || 0}
+            uniqueGenres={data?.unique_genres || 0}
+          />
         </div>
       )}
 
       {/* Top Lists */}
       {!isLoading && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="glass-card">
             <div className="p-4 border-b border-white/5">
               <h2 className="text-lg font-semibold text-white">Top Tracks</h2>
@@ -153,6 +161,7 @@ export default function DashboardPage() {
               )}
             </div>
           </div>
+          <RecentFeed />
         </div>
       )}
     </div>

@@ -12,6 +12,7 @@ import {
   BarChart3,
   ListMusic,
   Sparkles,
+  Heart,
   Settings,
   Menu,
   X,
@@ -24,6 +25,7 @@ const navItems = [
   { href: "/dashboard/genres", icon: Disc3, label: "Genres" },
   { href: "/dashboard/history", icon: Clock, label: "History" },
   { href: "/dashboard/patterns", icon: BarChart3, label: "Patterns" },
+  { href: "/dashboard/mood", icon: Heart, label: "Mood & Vibe" },
   { href: "/dashboard/playlists", icon: ListMusic, label: "Playlists" },
   { href: "/dashboard/recommendations", icon: Sparkles, label: "Discover" },
 ];
