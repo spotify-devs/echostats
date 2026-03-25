@@ -12,7 +12,7 @@ from app.config import settings
 from app.database import close_db, init_db
 from app.middleware.rate_limit import RateLimitMiddleware
 from app.middleware.security import RequestLoggingMiddleware, SecurityHeadersMiddleware
-from app.routers import analytics, api_logs, artists, auth, browse, genres, health, history, library, playlists, player, recommendations, tracks
+from app.routers import analytics, api_logs, artists, auth, browse, genres, health, history, library, playlists, player, recommendations, sync_jobs, tracks
 
 logger = structlog.get_logger()
 
@@ -69,3 +69,4 @@ app.include_router(browse.router, prefix="/api/v1/browse", tags=["Browse"])
 app.include_router(library.router, prefix="/api/v1/library", tags=["Library"])
 app.include_router(recommendations.router, prefix="/api/v1/recommendations", tags=["Recommendations"])
 app.include_router(api_logs.router, prefix="/api/v1/api-logs", tags=["API Logs"])
+app.include_router(sync_jobs.router, prefix="/api/v1/sync-jobs", tags=["Sync Jobs"])
