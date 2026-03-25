@@ -1,0 +1,52 @@
+---
+title: Spotify App Setup
+description: How to create a Spotify Developer application for EchoStats.
+---
+
+# Creating a Spotify Application
+
+EchoStats requires a Spotify Developer application to access the Spotify Web API.
+
+## Steps
+
+1. Go to the [Spotify Developer Dashboard](https://developer.spotify.com/dashboard)
+2. Log in with your Spotify account
+3. Click **Create App**
+4. Fill in the details:
+   - **App name**: EchoStats
+   - **App description**: Self-hosted Spotify analytics
+   - **Website**: Your EchoStats URL (e.g., `http://localhost:3000`)
+   - **Redirect URI**: `http://localhost:8000/api/v1/auth/callback`
+   - Check **Web API**
+5. Click **Save**
+6. Go to **Settings** and copy your **Client ID** and **Client Secret**
+7. Add them to your `.env` file:
+
+```env
+SPOTIFY_CLIENT_ID=your_client_id_here
+SPOTIFY_CLIENT_SECRET=your_client_secret_here
+SPOTIFY_REDIRECT_URI=http://localhost:8000/api/v1/auth/callback
+```
+
+## Important Notes
+
+- The **Redirect URI** must match exactly what's in your `.env` file
+- For production, update the redirect URI to use your domain
+- You may need to add users under **User Management** if your app is in development mode
+- Spotify Premium is required for some API features
+
+## API Scopes Used
+
+EchoStats requests the following Spotify API scopes:
+
+| Scope | Purpose |
+|-------|---------|
+| `user-read-private` | Read user profile |
+| `user-read-email` | Read user email |
+| `user-top-read` | Read top artists and tracks |
+| `user-read-recently-played` | Read recently played tracks |
+| `user-library-read` | Read saved tracks |
+| `user-read-currently-playing` | Read currently playing track |
+| `playlist-read-private` | Read private playlists |
+| `playlist-modify-public` | Create/edit public playlists |
+| `playlist-modify-private` | Create/edit private playlists |

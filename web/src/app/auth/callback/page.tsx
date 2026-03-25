@@ -1,0 +1,86 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Music, Loader2, CheckCircle, XCircle } from "lucide-react";
+
+export default function AuthCallbackPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const code = searchParams.get("code");
+    const state = searchParams.get("state");
+    const errorParam = searchParams.get("error");
+
+    if (errorParam) {
+      setStatus("error");
+      setError(errorParam);
+      return;
+    }
+
+    if (!code || !state) {
+      setStatus("error");
+      setError("Missing authorization code");
+      return;
+    }
+
+    // Exchange code via our API
+    fetch(`/api/v1/auth/callback?code=${code}&state=${state}`, {
+      credentials: "include",
+    })
+      .then(async (res) => {
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          throw new Error(body.detail || "Authentication failed");
+        }
+        return res.json();
+      })
+      .then(() => {
+        setStatus("success");
+        setTimeout(() => router.push("/dashboard"), 1500);
+      })
+      .catch((err) => {
+        setStatus("error");
+        setError(err.message);
+      });
+  }, [searchParams, router]);
+
+  return (
+    <main className="min-h-screen flex items-center justify-center bg-surface px-4">
+      <div className="glass-card p-12 max-w-sm w-full text-center space-y-6 animate-fade-in">
+        <div className="p-4 rounded-2xl bg-brand-gradient inline-block shadow-glow">
+          <Music className="w-8 h-8 text-white" />
+        </div>
+
+        {status === "loading" && (
+          <>
+            <Loader2 className="w-8 h-8 text-accent-purple animate-spin mx-auto" />
+            <p className="text-white/60">Connecting to Spotify...</p>
+          </>
+        )}
+
+        {status === "success" && (
+          <>
+            <CheckCircle className="w-10 h-10 text-spotify-green mx-auto" />
+            <p className="text-white font-medium">Connected successfully!</p>
+            <p className="text-sm text-white/40">Redirecting to dashboard...</p>
+          </>
+        )}
+
+        {status === "error" && (
+          <>
+            <XCircle className="w-10 h-10 text-red-400 mx-auto" />
+            <p className="text-white font-medium">Authentication Failed</p>
+            <p className="text-sm text-white/40">{error}</p>
+            <a href="/" className="btn-primary inline-block text-sm">
+              Try Again
+            </a>
+          </>
+        )}
+      </div>
+    </main>
+  );
+}

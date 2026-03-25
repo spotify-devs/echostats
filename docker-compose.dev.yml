@@ -1,0 +1,38 @@
+# Development overrides — use with: docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+name: echostats
+
+services:
+  mongodb:
+    ports:
+      - "${MONGO_PORT:-27017}:27017"
+
+  redis:
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+
+  api:
+    build:
+      target: builder
+    command: ["uv", "run", "uvicorn", "app.main:app", "--reload", "--host", "0.0.0.0", "--port", "8000"]
+    volumes:
+      - ./api:/app
+    environment:
+      LOG_LEVEL: debug
+
+  worker:
+    build:
+      target: builder
+    volumes:
+      - ./api:/app
+    environment:
+      LOG_LEVEL: debug
+
+  web:
+    build:
+      target: deps
+    command: ["sh", "-c", "corepack enable pnpm && pnpm dev"]
+    volumes:
+      - ./web/src:/app/src
+      - ./web/public:/app/public
+    environment:
+      NODE_ENV: development

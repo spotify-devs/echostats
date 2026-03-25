@@ -1,0 +1,131 @@
+# EchoStats Helm Values
+
+replicaCount:
+  api: 1
+  web: 1
+  worker: 1
+
+image:
+  api:
+    repository: ghcr.io/yourusername/echostats-api
+    tag: latest
+    pullPolicy: IfNotPresent
+  web:
+    repository: ghcr.io/yourusername/echostats-web
+    tag: latest
+    pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+# Spotify API
+spotify:
+  clientId: ""
+  clientSecret: ""
+  redirectUri: "http://localhost:8000/api/v1/auth/callback"
+
+# Security
+security:
+  jwtSecret: ""
+  encryptionKey: ""
+
+# MongoDB
+mongodb:
+  enabled: true
+  image:
+    repository: mongo
+    tag: "7"
+  auth:
+    rootUsername: echostats
+    rootPassword: changeme
+    database: echostats
+  persistence:
+    enabled: true
+    size: 10Gi
+    storageClass: ""
+
+# Redis
+redis:
+  enabled: true
+  image:
+    repository: redis
+    tag: 7-alpine
+  persistence:
+    enabled: true
+    size: 1Gi
+    storageClass: ""
+
+# API
+api:
+  port: 8000
+  workers: 2
+  logLevel: info
+  corsOrigins: "http://localhost:3000"
+  syncIntervalMinutes: 15
+  analyticsRefreshHours: 6
+  resources:
+    limits:
+      memory: 512Mi
+      cpu: 500m
+    requests:
+      memory: 256Mi
+      cpu: 100m
+
+# Web
+web:
+  port: 3000
+  apiUrl: "http://localhost:8000"
+  resources:
+    limits:
+      memory: 256Mi
+      cpu: 250m
+    requests:
+      memory: 128Mi
+      cpu: 50m
+
+# Worker
+worker:
+  resources:
+    limits:
+      memory: 512Mi
+      cpu: 500m
+    requests:
+      memory: 128Mi
+      cpu: 100m
+
+# Ingress
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: echostats.local
+      paths:
+        - path: /
+          pathType: Prefix
+          service: web
+        - path: /api
+          pathType: Prefix
+          service: api
+  tls: []
+
+# Service
+service:
+  api:
+    type: ClusterIP
+    port: 8000
+  web:
+    type: ClusterIP
+    port: 3000
+
+# Autoscaling
+autoscaling:
+  api:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 80
+  web:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 80

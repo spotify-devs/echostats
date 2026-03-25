@@ -1,0 +1,63 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 4%;
+    --foreground: 0 0% 95%;
+  }
+
+  body {
+    @apply bg-surface text-white antialiased;
+    font-family: "Inter", system-ui, sans-serif;
+  }
+
+  * {
+    @apply border-white/10;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-glass-gradient backdrop-blur-lg border border-white/10 rounded-2xl shadow-glass;
+  }
+
+  .glass-card-hover {
+    @apply glass-card transition-all duration-300 hover:border-white/20 hover:shadow-card-hover;
+  }
+
+  .btn-primary {
+    @apply bg-brand-gradient text-white font-medium px-6 py-2.5 rounded-xl transition-all duration-300 hover:shadow-glow hover:scale-[1.02] active:scale-[0.98];
+  }
+
+  .btn-spotify {
+    @apply bg-spotify-gradient text-white font-medium px-6 py-2.5 rounded-xl transition-all duration-300 hover:shadow-glow-green hover:scale-[1.02] active:scale-[0.98];
+  }
+
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-brand-gradient;
+  }
+
+  .metric-card {
+    @apply glass-card p-6 flex flex-col gap-2;
+  }
+
+  .skeleton {
+    @apply animate-shimmer bg-gradient-to-r from-surface-2 via-surface-3 to-surface-2 bg-[length:200%_100%] rounded-lg;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-surface;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-surface-3 rounded-full hover:bg-surface-4;
+}

@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "echostats.fullname" . }}-worker
+  labels:
+    {{- include "echostats.labels" . | nindent 4 }}
+    app.kubernetes.io/component: worker
+spec:
+  replicas: {{ .Values.replicaCount.worker }}
+  selector:
+    matchLabels:
+      {{- include "echostats.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: worker
+  template:
+    metadata:
+      labels:
+        {{- include "echostats.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: worker
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: worker
+          image: "{{ .Values.image.api.repository }}:{{ .Values.image.api.tag }}"
+          imagePullPolicy: {{ .Values.image.api.pullPolicy }}
+          command: ["uv", "run", "arq", "app.tasks.worker.WorkerSettings"]
+          envFrom:
+            - secretRef:
+                name: {{ include "echostats.fullname" . }}
+          env:
+            - name: LOG_LEVEL
+              value: {{ .Values.api.logLevel }}
+            - name: MONGO_DB
+              value: {{ .Values.mongodb.auth.database }}
+            - name: SPOTIFY_REDIRECT_URI
+              value: {{ .Values.spotify.redirectUri | quote }}
+            - name: SYNC_INTERVAL_MINUTES
+              value: {{ .Values.api.syncIntervalMinutes | quote }}
+            - name: ANALYTICS_REFRESH_HOURS
+              value: {{ .Values.api.analyticsRefreshHours | quote }}
+          resources:
+            {{- toYaml .Values.worker.resources | nindent 12 }}

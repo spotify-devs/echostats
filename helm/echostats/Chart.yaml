@@ -1,0 +1,13 @@
+apiVersion: v2
+name: echostats
+description: Self-hosted Spotify analytics dashboard
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - spotify
+  - analytics
+  - music
+  - dashboard
+maintainers:
+  - name: EchoStats

@@ -1,0 +1,56 @@
+---
+title: Installation
+description: How to install and deploy EchoStats.
+---
+
+# Installation
+
+## Prerequisites
+
+- [Docker](https://docs.docker.com/get-docker/) and Docker Compose
+- A [Spotify Developer](https://developer.spotify.com/dashboard) account
+
+## Quick Start with Docker Compose
+
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/echostats.git
+cd echostats
+
+# Copy and configure environment
+cp .env.example .env
+# Edit .env with your Spotify credentials (see Spotify App Setup)
+
+# Start the stack
+docker compose up -d
+```
+
+EchoStats will be available at:
+- **Web Dashboard**: http://localhost:3000
+- **API**: http://localhost:8000
+- **API Docs**: http://localhost:8000/api/docs
+
+## Using Helm (Kubernetes)
+
+```bash
+helm install echostats oci://ghcr.io/yourusername/charts/echostats \
+  --set spotify.clientId=YOUR_CLIENT_ID \
+  --set spotify.clientSecret=YOUR_CLIENT_SECRET \
+  --set security.jwtSecret=YOUR_JWT_SECRET \
+  --set security.encryptionKey=YOUR_ENCRYPTION_KEY
+```
+
+## Verifying Installation
+
+```bash
+# Check all services are running
+docker compose ps
+
+# Test API health
+curl http://localhost:8000/api/health
+# Expected: {"status":"healthy","service":"echostats-api"}
+
+# Test database connectivity
+curl http://localhost:8000/api/health/ready
+# Expected: {"status":"ready"}
+```

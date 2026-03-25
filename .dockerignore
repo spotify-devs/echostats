@@ -1,0 +1,38 @@
+.git
+.github
+.gitignore
+.env
+.env.*
+!.env.example
+.vscode
+.idea
+*.md
+!README.md
+LICENSE
+
+# Python
+__pycache__
+*.pyc
+.venv
+.pytest_cache
+.mypy_cache
+.ruff_cache
+htmlcov
+coverage
+
+# Node
+node_modules
+.next
+out
+.turbo
+*.tsbuildinfo
+coverage
+
+# Docker
+docker-compose.override.yml
+docker-compose.dev.yml
+
+# Misc
+.local-only
+*.log
+*.bak

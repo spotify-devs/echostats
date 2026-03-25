@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "echostats.fullname" . }}-api
+  labels:
+    {{- include "echostats.labels" . | nindent 4 }}
+    app.kubernetes.io/component: api
+spec:
+  replicas: {{ .Values.replicaCount.api }}
+  selector:
+    matchLabels:
+      {{- include "echostats.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: api
+  template:
+    metadata:
+      labels:
+        {{- include "echostats.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: api
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: api
+          image: "{{ .Values.image.api.repository }}:{{ .Values.image.api.tag }}"
+          imagePullPolicy: {{ .Values.image.api.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.api.port }}
+              protocol: TCP
+          envFrom:
+            - secretRef:
+                name: {{ include "echostats.fullname" . }}
+          env:
+            - name: API_HOST
+              value: "0.0.0.0"
+            - name: API_PORT
+              value: {{ .Values.api.port | quote }}
+            - name: API_WORKERS
+              value: {{ .Values.api.workers | quote }}
+            - name: LOG_LEVEL
+              value: {{ .Values.api.logLevel }}
+            - name: CORS_ORIGINS
+              value: {{ .Values.api.corsOrigins | quote }}
+            - name: SPOTIFY_REDIRECT_URI
+              value: {{ .Values.spotify.redirectUri | quote }}
+            - name: MONGO_DB
+              value: {{ .Values.mongodb.auth.database }}
+            - name: SYNC_INTERVAL_MINUTES
+              value: {{ .Values.api.syncIntervalMinutes | quote }}
+            - name: ANALYTICS_REFRESH_HOURS
+              value: {{ .Values.api.analyticsRefreshHours | quote }}
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: {{ .Values.api.port }}
+            initialDelaySeconds: 15
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /api/health/ready
+              port: {{ .Values.api.port }}
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            {{- toYaml .Values.api.resources | nindent 12 }}

@@ -1,0 +1,37 @@
+"""Listening history document model."""
+
+from datetime import datetime
+
+from beanie import Document
+from pydantic import BaseModel, Field
+
+
+class HistoryTrackRef(BaseModel):
+    """Track reference in listening history."""
+    spotify_id: str
+    name: str
+    artist_name: str
+    album_name: str = ""
+    album_image_url: str = ""
+    duration_ms: int = 0
+
+
+class ListeningHistory(Document):
+    """A single listening event — one track played at a specific time."""
+    user_id: str = Field(index=True)
+    track: HistoryTrackRef
+    played_at: datetime = Field(index=True)
+    ms_played: int | None = None  # Available from privacy exports
+    source: str = "api"  # "api" or "import"
+    context_type: str = ""  # "playlist", "album", "artist", etc.
+    context_uri: str = ""
+
+    class Settings:
+        name = "listening_history"
+        indexes = [
+            "user_id",
+            "played_at",
+            "track.spotify_id",
+            [("user_id", 1), ("played_at", -1)],
+            [("user_id", 1), ("track.spotify_id", 1), ("played_at", 1)],
+        ]

@@ -1,0 +1,31 @@
+---
+title: Configuration
+description: EchoStats environment variables reference.
+---
+
+# Configuration
+
+All configuration is done via environment variables. Copy `.env.example` to `.env` and customize.
+
+## Required Variables
+
+| Variable | Description |
+|----------|-------------|
+| `SPOTIFY_CLIENT_ID` | Spotify OAuth client ID |
+| `SPOTIFY_CLIENT_SECRET` | Spotify OAuth client secret |
+| `JWT_SECRET` | Secret for signing JWT tokens (min 32 chars) |
+| `ENCRYPTION_KEY` | AES-256 key for token encryption (64 hex chars) |
+
+## Generating Secrets
+
+```bash
+# Generate JWT secret
+python -c "import secrets; print(secrets.token_hex(32))"
+
+# Generate encryption key
+python -c "import secrets; print(secrets.token_hex(32))"
+```
+
+## All Variables
+
+See the [.env.example](https://github.com/yourusername/echostats/blob/main/.env.example) file for the complete list with descriptions.
