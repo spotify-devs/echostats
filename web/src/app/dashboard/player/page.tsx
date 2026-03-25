@@ -19,22 +19,25 @@ const DEVICE_ICONS: Record<string, any> = {
 export default function PlayerPage() {
   const queryClient = useQueryClient();
 
-  const { data: playback, isLoading } = useQuery({
+  const { data: playback, isLoading, isError } = useQuery({
     queryKey: ["player-current"],
     queryFn: () => api.get<any>("/api/v1/player/current"),
-    refetchInterval: 5000,
+    refetchInterval: 10000,
+    retry: false,
   });
 
   const { data: devices } = useQuery({
     queryKey: ["player-devices"],
     queryFn: () => api.get<any>("/api/v1/player/devices"),
     refetchInterval: 30000,
+    retry: false,
   });
 
   const { data: queue } = useQuery({
     queryKey: ["player-queue"],
     queryFn: () => api.get<any>("/api/v1/player/queue"),
     refetchInterval: 10000,
+    retry: false,
   });
 
   const playMutation = useMutation({
@@ -70,7 +73,7 @@ export default function PlayerPage() {
     return `${min}:${sec.toString().padStart(2, "0")}`;
   }
 
-  if (isLoading) {
+  if (isLoading && !isError) {
     return (
       <div className="space-y-6">
         <h1 className="text-2xl font-bold text-theme">Player</h1>
@@ -79,6 +82,8 @@ export default function PlayerPage() {
     );
   }
 
+  const noPlayback = isError || !playback || (!playback.is_playing && !playback.track_name);
+
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-theme flex items-center gap-2">
@@ -86,8 +91,8 @@ export default function PlayerPage() {
       </h1>
 
       {/* Now Playing Card */}
-      <div className="glass-card p-8">
-        {playback?.is_playing || playback?.track_name ? (
+      <div className="glass-card p-6 sm:p-8">
+        {!noPlayback ? (
           <div className="flex flex-col lg:flex-row items-center gap-8">
             {/* Album Art */}
             <div className="relative w-48 h-48 lg:w-64 lg:h-64 rounded-2xl overflow-hidden bg-theme-surface-3 shadow-2xl flex-shrink-0">
@@ -159,10 +164,19 @@ export default function PlayerPage() {
             </div>
           </div>
         ) : (
-          <div className="text-center py-12 space-y-3">
-            <Music className="w-16 h-16 text-theme-tertiary mx-auto" />
-            <p className="text-theme-secondary text-lg">Nothing playing right now</p>
-            <p className="text-sm text-theme-tertiary">Start playing something on Spotify to see it here</p>
+          <div className="text-center py-16 space-y-4">
+            <div className="w-20 h-20 rounded-full bg-accent-dynamic/10 flex items-center justify-center mx-auto">
+              <Music className="w-10 h-10 text-accent-dynamic" />
+            </div>
+            <p className="text-theme text-lg font-semibold">Nothing playing right now</p>
+            <p className="text-sm text-theme-secondary max-w-sm mx-auto">
+              Start playing something on Spotify and it will appear here with full playback controls.
+            </p>
+            {isError && (
+              <p className="text-xs text-theme-tertiary">
+                💡 Connect a real Spotify account to enable player controls
+              </p>
+            )}
           </div>
         )}
       </div>
