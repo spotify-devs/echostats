@@ -7,6 +7,11 @@ export const metadata: Metadata = {
   description:
     "Discover insights about your Spotify listening habits with beautiful visualizations.",
   manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "EchoStats",
+  },
   icons: {
     icon: [
       { url: "/favicon.svg", type: "image/svg+xml" },
