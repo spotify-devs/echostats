@@ -9,7 +9,8 @@ import {
   Menu, X, Activity, Headphones, Zap, GitCompare, Terminal,
   Radio, Podcast, Trophy, Mic2, Globe, Repeat, Dna, Gift,
   Calendar, Fingerprint, Crown, Network, FileText, Bell,
-  Wand2, Microscope, Target, Download,
+  Wand2, Microscope, Target, Download, CalendarDays, Shuffle,
+  Newspaper,
 } from "lucide-react";
 
 interface NavSection {
@@ -24,6 +25,7 @@ const navSections: NavSection[] = [
       { href: "/dashboard", icon: LayoutDashboard, label: "Overview" },
       { href: "/dashboard/player", icon: Play, label: "Player" },
       { href: "/dashboard/history", icon: Clock, label: "History" },
+      { href: "/dashboard/calendar", icon: CalendarDays, label: "Calendar" },
     ],
   },
   {
@@ -61,6 +63,7 @@ const navSections: NavSection[] = [
       { href: "/dashboard/recommendations", icon: Sparkles, label: "Discover" },
       { href: "/dashboard/decades", icon: Globe, label: "Decades" },
       { href: "/dashboard/audio-lab", icon: Mic2, label: "Audio Lab" },
+      { href: "/dashboard/similar", icon: Shuffle, label: "Similar Tracks" },
     ],
   },
   {
@@ -73,6 +76,7 @@ const navSections: NavSection[] = [
       { href: "/dashboard/artist-map", icon: Network, label: "Artist Map" },
       { href: "/dashboard/listening-report", icon: FileText, label: "Monthly Report" },
       { href: "/dashboard/goals", icon: Target, label: "Goals" },
+      { href: "/dashboard/weekly-digest", icon: Newspaper, label: "Weekly Digest" },
     ],
   },
   {
