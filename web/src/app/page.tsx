@@ -1,6 +1,15 @@
 "use client";
 
-import { BarChart3, Clock, Disc3, Loader2, Music, Shield, Smartphone, TrendingUp } from "lucide-react";
+import {
+  BarChart3,
+  Clock,
+  Disc3,
+  Loader2,
+  Music,
+  Shield,
+  Smartphone,
+  TrendingUp,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { SpotifyConnectModal } from "@/components/ui/spotify-connect-modal";

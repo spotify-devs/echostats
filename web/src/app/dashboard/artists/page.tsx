@@ -62,7 +62,9 @@ export default function TopArtistsPage() {
             />
           ))}
           {(!data?.items || data.items.length === 0) && (
-            <p className="p-8 text-center text-theme-tertiary">No artist data yet. Start listening!</p>
+            <p className="p-8 text-center text-theme-tertiary">
+              No artist data yet. Start listening!
+            </p>
           )}
         </div>
       )}

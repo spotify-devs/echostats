@@ -44,7 +44,9 @@ export default function HistoryPage() {
             <h1 className="text-xl sm:text-2xl font-bold text-theme flex items-center gap-2">
               <Clock className="w-6 h-6 text-accent-amber" /> Listening History
             </h1>
-            <p className="text-theme-secondary mt-1">{data?.total?.toLocaleString() || 0} total plays</p>
+            <p className="text-theme-secondary mt-1">
+              {data?.total?.toLocaleString() || 0} total plays
+            </p>
           </div>
           <div className="flex items-center gap-3 flex-wrap">
             <DateRangeFilter

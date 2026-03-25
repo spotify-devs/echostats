@@ -113,7 +113,10 @@ export function ImportHistoryModal({ isOpen, onClose, onComplete }: ImportModalP
           <h2 className="text-lg font-semibold text-theme flex items-center gap-2">
             <Upload className="w-5 h-5 text-accent-dynamic" /> Import Listening History
           </h2>
-          <button onClick={onClose} className="p-1 rounded-lg hover:bg-current/[0.05] text-theme-tertiary">
+          <button
+            onClick={onClose}
+            className="p-1 rounded-lg hover:bg-current/[0.05] text-theme-tertiary"
+          >
             <X className="w-5 h-5" />
           </button>
         </div>

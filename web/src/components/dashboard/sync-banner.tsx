@@ -74,9 +74,7 @@ export function SyncBanner() {
       </div>
       {updateInfo.release_notes && (
         <div className="px-4 pb-2.5 pt-0">
-          <p className="text-[10px] text-theme-tertiary line-clamp-2">
-            {updateInfo.release_notes}
-          </p>
+          <p className="text-[10px] text-theme-tertiary line-clamp-2">{updateInfo.release_notes}</p>
         </div>
       )}
     </div>

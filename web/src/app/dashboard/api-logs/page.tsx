@@ -348,7 +348,8 @@ export default function ApiLogsPage() {
             <div className="flex items-center justify-between px-4 py-3 border-t border-current/[0.08]">
               <span className="text-xs text-theme-tertiary">
                 Showing {items.length > 0 ? (page - 1) * 50 + 1 : 0}–
-                {Math.min(page * 50, logs?.total || 0)} of {(logs?.total || 0).toLocaleString()} logs
+                {Math.min(page * 50, logs?.total || 0)} of {(logs?.total || 0).toLocaleString()}{" "}
+                logs
               </span>
               <div className="flex items-center gap-1">
                 <button

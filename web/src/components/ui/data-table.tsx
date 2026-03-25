@@ -133,7 +133,9 @@ export function DataTable<T>({
 
         {/* Pagination */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between px-4 py-3 border-t border-current/[0.08] gap-2">
-          <span className="text-xs text-theme-tertiary"> {table.getState().pagination.pageIndex + 1} of {table.getPageCount()} (
+          <span className="text-xs text-theme-tertiary">
+            {" "}
+            {table.getState().pagination.pageIndex + 1} of {table.getPageCount()} (
             {table.getFilteredRowModel().rows.length} rows)
           </span>
           <div className="flex items-center gap-2 self-end">

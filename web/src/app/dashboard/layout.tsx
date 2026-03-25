@@ -34,7 +34,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   if (!authChecked) {
     return (
-      <div className="flex h-screen items-center justify-center" style={{ backgroundColor: "rgb(var(--surface))" }}>
+      <div
+        className="flex h-screen items-center justify-center"
+        style={{ backgroundColor: "rgb(var(--surface))" }}
+      >
         <Loader2 className="w-8 h-8 text-accent-dynamic animate-spin" />
       </div>
     );

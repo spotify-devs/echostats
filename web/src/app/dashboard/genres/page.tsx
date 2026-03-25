@@ -103,7 +103,8 @@ export default function GenresPage() {
                   {genres.map((genre: any, i: number) => (
                     <StaggerItem key={i}>
                       <span className="px-3 py-1.5 text-xs rounded-full bg-surface-3 text-theme-secondary border border-current/[0.08]">
-                        {genre.name} <span className="text-theme-tertiary ml-1">{genre.play_count}</span>
+                        {genre.name}{" "}
+                        <span className="text-theme-tertiary ml-1">{genre.play_count}</span>
                       </span>
                     </StaggerItem>
                   ))}

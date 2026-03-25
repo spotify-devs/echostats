@@ -3,9 +3,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { Disc3, Flame, Music, Star, Trophy, Users } from "lucide-react";
 import Image from "next/image";
-import { ArtistMonogram } from "@/components/music/artist-monogram";
 import { BarChart } from "@/components/charts/bar-chart";
 import { PieChart } from "@/components/charts/pie-chart";
+import { ArtistMonogram } from "@/components/music/artist-monogram";
 import { CardSkeleton, ChartSkeleton } from "@/components/ui/loading-skeleton";
 import { api } from "@/lib/api";
 
