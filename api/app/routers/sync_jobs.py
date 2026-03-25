@@ -56,6 +56,16 @@ async def get_sync_jobs(
                 "started_at": job.started_at.isoformat() if job.started_at else None,
                 "completed_at": job.completed_at.isoformat() if job.completed_at else None,
                 "created_at": job.created_at.isoformat(),
+                "steps": [
+                    {
+                        "action": s.action,
+                        "status": s.status,
+                        "detail": s.detail,
+                        "items": s.items,
+                        "error": s.error,
+                    }
+                    for s in (job.steps or [])
+                ],
             }
             for job in items
         ],
@@ -142,6 +152,7 @@ async def trigger_sync(
 
 async def _run_manual_sync(user_id: str, job_id: str) -> None:
     """Run a manual sync in the background."""
+    from app.models.sync_job import SyncStep
     from app.services.analytics_service import compute_analytics_snapshot
 
     job = await SyncJob.get(PydanticObjectId(job_id))
@@ -160,27 +171,54 @@ async def _run_manual_sync(user_id: str, job_id: str) -> None:
         if not token:
             job.status = "failed"
             job.error_message = "No valid Spotify token"
+            job.steps.append(SyncStep(
+                action="get_token", status="failed",
+                detail="Could not obtain valid Spotify access token",
+                completed_at=datetime.now(tz=UTC), error="Token expired",
+            ))
             await job.save()
             return
 
         client = SpotifyClient(token, user_id=user_id)
         try:
+            # Step 1: Recently played
+            step1 = SyncStep(action="sync_recently_played", detail="Fetching recently played tracks")
             count = await sync_recently_played(client, user_id)
+            step1.status = "completed"
+            step1.items = count
+            step1.detail = f"Fetched {count} new track{'s' if count != 1 else ''}"
+            step1.completed_at = datetime.now(tz=UTC)
+            job.steps.append(step1)
+
+            # Step 2: Audio features
             if count > 0:
-                count += await enrich_audio_features(client, batch_size=50)
+                step2 = SyncStep(action="enrich_audio_features", detail="Enriching audio features")
+                enriched = await enrich_audio_features(client, batch_size=50)
+                count += enriched
+                step2.status = "completed"
+                step2.items = enriched
+                step2.detail = f"Enriched {enriched} track{'s' if enriched != 1 else ''}"
+                step2.completed_at = datetime.now(tz=UTC)
+                job.steps.append(step2)
+
             job.status = "completed"
             job.items_processed = count
             job.completed_at = datetime.now(tz=UTC)
         finally:
             await client.close()
 
-        # Refresh analytics so dashboard updates immediately
+        # Step 3: Analytics refresh
+        step3 = SyncStep(action="refresh_analytics", detail="Refreshing analytics")
         for period in ["week", "month", "all_time"]:
             try:
                 await compute_analytics_snapshot(user_id, period)
             except Exception:
                 pass
-        logger.info("Manual sync + analytics refresh complete", user_id=user_id, items=count)
+        step3.status = "completed"
+        step3.detail = "Analytics refreshed for week, month, all_time"
+        step3.completed_at = datetime.now(tz=UTC)
+        job.steps.append(step3)
+        logger.info("Manual sync complete", user_id=user_id, items=count)
 
     except Exception as e:
         job.status = "failed"

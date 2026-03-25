@@ -31,7 +31,7 @@ async def sync_all_users(ctx: dict) -> None:
     """Periodic task: sync recently played for all users."""
     import structlog
 
-    from app.models.sync_job import SyncJob
+    from app.models.sync_job import SyncJob, SyncStep
     from app.models.user import User
     from app.services.analytics_service import compute_analytics_snapshot
     from app.services.spotify_client import SpotifyClient
@@ -59,14 +59,36 @@ async def sync_all_users(ctx: dict) -> None:
                 job.status = "failed"
                 job.error_message = "No valid Spotify token — re-login required"
                 job.completed_at = datetime.now(tz=UTC)
+                job.steps.append(SyncStep(
+                    action="get_token", status="failed",
+                    detail="Token expired or invalid — re-authentication required",
+                    completed_at=datetime.now(tz=UTC), error="No valid token",
+                ))
                 await job.save()
                 continue
 
             client = SpotifyClient(token, user_id=user_id)
             try:
+                # Step 1: Sync recently played
+                step1 = SyncStep(action="sync_recently_played", detail="Fetching recently played tracks from Spotify")
                 count = await sync_recently_played(client, user_id)
+                step1.status = "completed"
+                step1.items = count
+                step1.detail = f"Fetched {count} new track{'s' if count != 1 else ''} from recently played"
+                step1.completed_at = datetime.now(tz=UTC)
+                job.steps.append(step1)
+
+                # Step 2: Enrich audio features
                 if count > 0:
-                    count += await enrich_audio_features(client, batch_size=50)
+                    step2 = SyncStep(action="enrich_audio_features", detail="Fetching audio features for new tracks")
+                    enriched = await enrich_audio_features(client, batch_size=50)
+                    count += enriched
+                    step2.status = "completed"
+                    step2.items = enriched
+                    step2.detail = f"Enriched audio features for {enriched} track{'s' if enriched != 1 else ''}"
+                    step2.completed_at = datetime.now(tz=UTC)
+                    job.steps.append(step2)
+
                 job.status = "completed"
                 job.items_processed = count
                 job.completed_at = datetime.now(tz=UTC)
@@ -74,13 +96,18 @@ async def sync_all_users(ctx: dict) -> None:
             finally:
                 await client.close()
 
-            # Refresh analytics after successful sync
+            # Step 3: Refresh analytics
             if count > 0:
+                step3 = SyncStep(action="refresh_analytics", detail="Recomputing analytics snapshots")
                 for period in ["week", "month", "all_time"]:
                     try:
                         await compute_analytics_snapshot(user_id, period)
                     except Exception:
                         pass
+                step3.status = "completed"
+                step3.detail = "Analytics refreshed for week, month, all_time"
+                step3.completed_at = datetime.now(tz=UTC)
+                job.steps.append(step3)
 
         except Exception as e:
             logger.error("Periodic sync failed for user", user_id=user_id, error=str(e))

@@ -5,6 +5,7 @@ import {
   Activity,
   AlertTriangle,
   CheckCircle,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Clock,
@@ -53,6 +54,16 @@ const TYPE_LABELS: Record<string, string> = {
   enrichment: "Audio Enrichment",
 };
 
+const STEP_LABELS: Record<string, string> = {
+  get_token: "Authenticate",
+  sync_recently_played: "Recently Played",
+  sync_top_items: "Top Artists & Tracks",
+  sync_saved_tracks: "Saved Tracks",
+  sync_playlists: "Playlists",
+  enrich_audio_features: "Audio Features",
+  refresh_analytics: "Refresh Analytics",
+};
+
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
   const mins = Math.floor(diff / 60000);
@@ -61,7 +72,19 @@ function timeAgo(dateStr: string): string {
   const hrs = Math.floor(mins / 60);
   if (hrs < 24) return `${hrs}h ago`;
   const days = Math.floor(hrs / 24);
-  return `${days}d ago`;
+  if (days < 7) return `${days}d ago`;
+  return new Date(dateStr).toLocaleDateString([], { month: "short", day: "numeric" });
+}
+
+function formatTimestamp(dateStr: string | null): string {
+  if (!dateStr) return "—";
+  return new Date(dateStr).toLocaleString([], {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
 }
 
 function formatDuration(startStr: string | null, endStr: string | null): string {
@@ -78,6 +101,7 @@ function formatDuration(startStr: string | null, endStr: string | null): string 
 export default function SyncJobsPage() {
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [expandedJob, setExpandedJob] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
   const { data: stats, isLoading: loadingStats } = useQuery({
@@ -299,7 +323,10 @@ export default function SyncJobsPage() {
             const StatusIcon = cfg.icon;
             return (
               <StaggerItem key={job.id}>
-                <div className="glass-card p-4">
+                <div
+                  className="glass-card p-4 cursor-pointer hover:bg-white/[0.02] transition-colors"
+                  onClick={() => setExpandedJob(expandedJob === job.id ? null : job.id)}
+                >
                   <div className="flex items-start gap-3">
                     <div className={`p-2 rounded-xl border ${cfg.bg} flex-shrink-0`}>
                       <StatusIcon
@@ -311,16 +338,24 @@ export default function SyncJobsPage() {
                         <h3 className="text-sm font-semibold text-theme">
                           {TYPE_LABELS[job.job_type] || job.job_type}
                         </h3>
-                        <span
-                          className={`text-[10px] px-2 py-0.5 rounded-full border font-medium ${cfg.bg} ${cfg.color}`}
-                        >
-                          {cfg.label}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`text-[10px] px-2 py-0.5 rounded-full border font-medium ${cfg.bg} ${cfg.color}`}
+                          >
+                            {cfg.label}
+                          </span>
+                          <ChevronDown
+                            className={`w-4 h-4 text-theme-tertiary transition-transform ${expandedJob === job.id ? "rotate-180" : ""}`}
+                          />
+                        </div>
                       </div>
                       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1.5 text-xs text-theme-tertiary">
-                        <span className="flex items-center gap-1">
+                        <span
+                          className="flex items-center gap-1"
+                          title={formatTimestamp(job.created_at)}
+                        >
                           <Clock className="w-3 h-3" />
-                          {timeAgo(job.created_at)}
+                          {formatTimestamp(job.started_at)}
                         </span>
                         <span className="flex items-center gap-1">
                           <Activity className="w-3 h-3" />
@@ -333,6 +368,7 @@ export default function SyncJobsPage() {
                           </span>
                         )}
                       </div>
+
                       {/* Progress bar for running jobs */}
                       {job.status === "running" && job.items_total > 0 && (
                         <div className="mt-2 w-full h-1.5 rounded-full bg-theme-surface-3 overflow-hidden">
@@ -344,11 +380,61 @@ export default function SyncJobsPage() {
                           />
                         </div>
                       )}
+
                       {/* Error message */}
                       {job.error_message && (
                         <div className="mt-2 flex items-start gap-1.5 text-xs text-red-400 bg-red-400/5 rounded-lg p-2">
                           <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
                           <span className="break-all">{job.error_message}</span>
+                        </div>
+                      )}
+
+                      {/* Expanded: Step details */}
+                      {expandedJob === job.id && (
+                        <div className="mt-3 pt-3 border-t border-white/5 space-y-2">
+                          {job.steps && job.steps.length > 0 ? (
+                            job.steps.map((step: any, idx: number) => {
+                              const stepOk = step.status === "completed";
+                              return (
+                                <div
+                                  key={idx}
+                                  className="flex items-start gap-2 text-xs p-2 rounded-lg bg-white/[0.02]"
+                                >
+                                  {stepOk ? (
+                                    <CheckCircle className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0 mt-0.5" />
+                                  ) : (
+                                    <XCircle className="w-3.5 h-3.5 text-red-400 flex-shrink-0 mt-0.5" />
+                                  )}
+                                  <div className="flex-1 min-w-0">
+                                    <span className="font-medium text-theme">
+                                      {STEP_LABELS[step.action] || step.action}
+                                    </span>
+                                    <p className="text-theme-tertiary mt-0.5">{step.detail}</p>
+                                    {step.items > 0 && (
+                                      <span className="text-accent-dynamic">
+                                        {step.items} item{step.items !== 1 ? "s" : ""}
+                                      </span>
+                                    )}
+                                    {step.error && (
+                                      <p className="text-red-400 mt-0.5">{step.error}</p>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })
+                          ) : (
+                            <p className="text-xs text-theme-tertiary italic">
+                              No step details available (older sync job)
+                            </p>
+                          )}
+
+                          {/* Timestamps */}
+                          <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-theme-tertiary pt-1">
+                            <span>Started: {formatTimestamp(job.started_at)}</span>
+                            {job.completed_at && (
+                              <span>Completed: {formatTimestamp(job.completed_at)}</span>
+                            )}
+                          </div>
                         </div>
                       )}
                     </div>
