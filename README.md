@@ -6,9 +6,9 @@
 
 *Self-hosted Spotify analytics dashboard — 40+ pages of deep insights into your listening habits.*
 
-[![Release](https://img.shields.io/badge/Release-v0.14.0-7c3aed?style=for-the-badge&logo=github)](https://github.com/spotify-devs/echostats/releases)
-[![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](./LICENSE)
-[![CI](https://img.shields.io/badge/CI-passing-brightgreen?style=for-the-badge&logo=github-actions)](https://github.com/spotify-devs/echostats/actions)
+[![Release](https://img.shields.io/github/v/release/spotify-devs/echostats?style=for-the-badge&logo=github&color=7c3aed)](https://github.com/spotify-devs/echostats/releases)
+[![License](https://img.shields.io/github/license/spotify-devs/echostats?style=for-the-badge)](./LICENSE)
+[![CI](https://img.shields.io/github/actions/workflow/status/spotify-devs/echostats/ci.yml?style=for-the-badge&logo=github-actions&label=CI)](https://github.com/spotify-devs/echostats/actions)
 [![Docker](https://img.shields.io/badge/Docker-GHCR-2496ED?style=for-the-badge&logo=docker)](https://github.com/spotify-devs/echostats/pkgs/container/echostats-api)
 
 <br />
