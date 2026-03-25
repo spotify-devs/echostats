@@ -90,7 +90,7 @@ function CallbackContent() {
   return (
     <main className="min-h-screen flex items-center justify-center bg-surface px-4">
       <div className="glass-card p-12 max-w-sm w-full text-center space-y-6 animate-fade-in">
-        <div className="p-4 rounded-2xl bg-brand-gradient inline-block shadow-glow">
+        <div className="p-4 rounded-2xl bg-accent-gradient inline-block shadow-glow">
           <Music className="w-8 h-8 text-white" />
         </div>
 

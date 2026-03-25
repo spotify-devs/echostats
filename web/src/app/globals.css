@@ -99,6 +99,10 @@
     background-clip: text;
   }
 
+  .bg-accent-gradient {
+    background: linear-gradient(135deg, var(--accent-gradient-from), var(--accent-gradient-via), var(--accent-gradient-to));
+  }
+
   .metric-card {
     @apply glass-card p-6 flex flex-col gap-2;
   }

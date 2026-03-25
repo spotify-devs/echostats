@@ -122,7 +122,7 @@ export function Sidebar() {
         {/* Logo */}
         <div className="p-5 flex items-center justify-between">
           <Link href="/dashboard" className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-brand-gradient">
+            <div className="p-2 rounded-xl bg-accent-gradient">
               <Music className="w-5 h-5 text-white" />
             </div>
             <span className="text-lg font-bold text-gradient">EchoStats</span>

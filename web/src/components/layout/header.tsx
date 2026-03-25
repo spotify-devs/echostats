@@ -47,7 +47,7 @@ export function Header() {
                     <Image src={user.image_url} alt="" fill className="object-cover" sizes="32px" />
                   </div>
                 ) : (
-                  <div className="w-8 h-8 rounded-full bg-brand-gradient flex items-center justify-center text-white text-sm font-bold">
+                  <div className="w-8 h-8 rounded-full bg-accent-gradient flex items-center justify-center text-white text-sm font-bold">
                     {user?.display_name?.[0]?.toUpperCase() || "?"}
                   </div>
                 )}

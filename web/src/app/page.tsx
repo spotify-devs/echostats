@@ -13,7 +13,7 @@ export default function LandingPage() {
       <div className="max-w-2xl w-full text-center space-y-8 animate-fade-in">
         {/* Logo */}
         <div className="flex items-center justify-center gap-3">
-          <div className="p-3 rounded-2xl bg-brand-gradient shadow-glow">
+          <div className="p-3 rounded-2xl bg-accent-gradient shadow-glow">
             <Music className="w-10 h-10 text-white" />
           </div>
           <h1 className="text-5xl font-bold text-gradient">EchoStats</h1>
