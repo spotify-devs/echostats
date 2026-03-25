@@ -13,6 +13,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@ducanh2912/next-pwa": "^10.2.9",
     "@tanstack/react-query": "^5.91.0",
     "@tanstack/react-table": "^8.20.0",
     "framer-motion": "^12.38.0",

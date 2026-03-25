@@ -6,10 +6,14 @@ export const metadata: Metadata = {
   title: "EchoStats — Spotify Analytics",
   description:
     "Discover insights about your Spotify listening habits with beautiful visualizations.",
+  manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
     title: "EchoStats",
+  },
+  other: {
+    "mobile-web-app-capable": "yes",
   },
 };
 
@@ -22,25 +26,11 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className="dark">
+      <head>
+        <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+      </head>
       <body>
         <Providers>{children}</Providers>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', function() {
-          navigator.serviceWorker.register('/sw.js')
-            .then(function(reg) {
-              console.log('[EchoStats] SW registered, scope:', reg.scope);
-            })
-            .catch(function(err) {
-              console.warn('[EchoStats] SW registration failed:', err);
-            });
-        });
-      }
-    `,
-          }}
-        />
       </body>
     </html>
   );
