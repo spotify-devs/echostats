@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Disc3, Library, Users } from "lucide-react";
 import Image from "next/image";
+import { ArtistMonogram } from "@/components/music/artist-monogram";
 import { ListSkeleton } from "@/components/ui/loading-skeleton";
 import { api } from "@/lib/api";
 
@@ -54,9 +55,7 @@ export default function LibraryPage() {
                       sizes="80px"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <Users className="w-8 h-8 text-theme-tertiary" />
-                    </div>
+                    <ArtistMonogram name={artist.name} textSize="text-xl" />
                   )}
                 </div>
                 <div>

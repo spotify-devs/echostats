@@ -5,6 +5,7 @@ import { ArrowLeft, ExternalLink, Users } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { use } from "react";
+import { ArtistMonogram } from "@/components/music/artist-monogram";
 import { ChartSkeleton, ListSkeleton } from "@/components/ui/loading-skeleton";
 import { api } from "@/lib/api";
 
@@ -64,9 +65,7 @@ export default function ArtistDetailPage({ params }: { params: Promise<{ id: str
               sizes="128px"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <Users className="w-12 h-12 text-theme-tertiary" />
-            </div>
+            <ArtistMonogram name={artist.name} textSize="text-3xl" />
           )}
         </div>
         <div className="text-center sm:text-left flex-1">

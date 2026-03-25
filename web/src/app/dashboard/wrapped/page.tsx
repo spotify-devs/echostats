@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Disc3, Download, Flame, Gift, Music, Share2, Users } from "lucide-react";
 import Image from "next/image";
+import { ArtistMonogram } from "@/components/music/artist-monogram";
 import { ChartSkeleton } from "@/components/ui/loading-skeleton";
 import { api } from "@/lib/api";
 
@@ -83,8 +84,8 @@ export default function WrappedPage() {
         <div className="px-8 pb-8 space-y-3">
           {topArtist && (
             <div className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.03]">
-              {topArtist.image_url && (
-                <div className="relative w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
+              <div className="relative w-12 h-12 rounded-full overflow-hidden bg-theme-surface-3 flex-shrink-0">
+                {topArtist.image_url ? (
                   <Image
                     src={topArtist.image_url}
                     alt=""
@@ -92,8 +93,10 @@ export default function WrappedPage() {
                     className="object-cover"
                     sizes="48px"
                   />
-                </div>
-              )}
+                ) : (
+                  <ArtistMonogram name={topArtist.name} textSize="text-sm" />
+                )}
+              </div>
               <div className="flex-1 min-w-0">
                 <p className="text-[10px] text-accent-dynamic uppercase tracking-wider">
                   #1 Artist

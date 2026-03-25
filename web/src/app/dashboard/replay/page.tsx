@@ -5,6 +5,7 @@ import { Flame, Repeat, Users } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { BarChart } from "@/components/charts/bar-chart";
+import { ArtistMonogram } from "@/components/music/artist-monogram";
 import { ChartSkeleton, ListSkeleton } from "@/components/ui/loading-skeleton";
 import { api } from "@/lib/api";
 
@@ -128,8 +129,8 @@ export default function ReplayPage() {
                     <span className="w-6 text-center text-sm font-bold text-spotify-green">
                       {i + 1}
                     </span>
-                    {artist.image_url && (
-                      <div className="relative w-10 h-10 rounded-full overflow-hidden bg-theme-surface-3 flex-shrink-0">
+                    <div className="relative w-10 h-10 rounded-full overflow-hidden bg-theme-surface-3 flex-shrink-0">
+                      {artist.image_url ? (
                         <Image
                           src={artist.image_url}
                           alt=""
@@ -137,8 +138,10 @@ export default function ReplayPage() {
                           className="object-cover"
                           sizes="40px"
                         />
-                      </div>
-                    )}
+                      ) : (
+                        <ArtistMonogram name={artist.name} textSize="text-xs" />
+                      )}
+                    </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-theme truncate">{artist.name}</p>
                     </div>

@@ -1,10 +1,11 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { Network, Users } from "lucide-react";
+import { Network } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { PieChart } from "@/components/charts/pie-chart";
+import { ArtistMonogram } from "@/components/music/artist-monogram";
 import { ChartSkeleton, ListSkeleton } from "@/components/ui/loading-skeleton";
 import { api } from "@/lib/api";
 
@@ -104,9 +105,7 @@ export default function ArtistMapPage() {
                           sizes="64px"
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <Users className="w-6 h-6 text-theme-tertiary" />
-                        </div>
+                        <ArtistMonogram name={artist.name} textSize="text-base" />
                       )}
                     </div>
                     <div className="text-center">

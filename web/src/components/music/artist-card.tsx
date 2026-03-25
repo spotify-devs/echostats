@@ -1,6 +1,6 @@
-import { Users } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { ArtistMonogram } from "./artist-monogram";
 
 interface ArtistCardProps {
   rank?: number;
@@ -28,9 +28,7 @@ export function ArtistCard({
         {imageUrl ? (
           <Image src={imageUrl} alt={name} fill className="object-cover" sizes="48px" />
         ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <Users className="w-5 h-5 text-white/20" />
-          </div>
+          <ArtistMonogram name={name} textSize="text-xs" />
         )}
       </div>
       <div className="flex-1 min-w-0">

@@ -16,6 +16,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { BarChart } from "@/components/charts/bar-chart";
+import { ArtistMonogram } from "@/components/music/artist-monogram";
 import { CardSkeleton, ChartSkeleton } from "@/components/ui/loading-skeleton";
 import { api } from "@/lib/api";
 
@@ -152,8 +153,8 @@ export default function WeeklyDigestPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {topArtist && (
               <div className="glass-card p-5 flex items-center gap-4">
-                {topArtist.image_url && (
-                  <div className="relative w-16 h-16 rounded-full overflow-hidden bg-theme-surface-3 flex-shrink-0">
+                <div className="relative w-16 h-16 rounded-full overflow-hidden bg-theme-surface-3 flex-shrink-0">
+                  {topArtist.image_url ? (
                     <Image
                       src={topArtist.image_url}
                       alt=""
@@ -161,8 +162,10 @@ export default function WeeklyDigestPage() {
                       className="object-cover"
                       sizes="64px"
                     />
-                  </div>
-                )}
+                  ) : (
+                    <ArtistMonogram name={topArtist.name} textSize="text-lg" />
+                  )}
+                </div>
                 <div>
                   <p className="text-[10px] text-accent-dynamic uppercase tracking-wider">
                     Artist of the Week
