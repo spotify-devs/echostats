@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { Bell, LogIn } from "lucide-react";
+import { Bell, LogIn, Music } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import { GlobalSearch } from "@/components/layout/search";
@@ -24,22 +24,41 @@ export function Header() {
   return (
     <>
       <header
-        className="h-14 sm:h-16 border-b flex items-center justify-between px-4 sm:px-6 backdrop-blur-lg"
+        className="h-14 sm:h-16 border-b flex items-center px-4 sm:px-6 backdrop-blur-lg"
         style={{
           backgroundColor: "rgb(var(--surface-1) / 0.5)",
           borderColor: "rgb(var(--border) / var(--border-opacity))",
         }}
       >
         {/* Left: spacer for hamburger on mobile */}
-        <div className="lg:hidden w-12 flex-shrink-0" />
+        <div className="lg:hidden w-10 flex-shrink-0" />
 
-        {/* Search — hidden on mobile, visible on sm+ */}
-        <div className="flex-1 hidden sm:block">
-          <GlobalSearch />
+        {/* Center: Logo + name on mobile */}
+        <div className="flex-1 flex items-center justify-center sm:justify-start">
+          <div className="flex items-center gap-2 sm:hidden">
+            <div className="p-1.5 rounded-lg bg-accent-gradient">
+              <Music className="w-4 h-4 text-white" />
+            </div>
+            <span
+              className="text-base font-bold"
+              style={{
+                background:
+                  "linear-gradient(135deg, var(--accent-gradient-from), var(--accent-gradient-via), var(--accent-gradient-to))",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+              }}
+            >
+              EchoStats
+            </span>
+          </div>
+          {/* Search — hidden on mobile, visible on sm+ */}
+          <div className="hidden sm:block w-full">
+            <GlobalSearch />
+          </div>
         </div>
 
         {/* Right side */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
           {isAuthed ? (
             <>
               <button className="p-2 rounded-lg hover:bg-current/[0.05] text-theme-tertiary hover:text-theme transition-colors">
@@ -49,7 +68,13 @@ export function Header() {
               <div className="flex items-center gap-2">
                 {user?.image_url ? (
                   <div className="relative w-8 h-8 rounded-full overflow-hidden ring-2 ring-spotify-green/30">
-                    <Image src={user.image_url} alt="" fill className="object-cover" sizes="32px" />
+                    <Image
+                      src={user.image_url}
+                      alt=""
+                      fill
+                      className="object-cover"
+                      sizes="32px"
+                    />
                   </div>
                 ) : (
                   <div className="w-8 h-8 rounded-full bg-accent-gradient flex items-center justify-center text-white text-sm font-bold">
