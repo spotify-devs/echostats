@@ -21,6 +21,9 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- if .Values.serviceAccount.create }}
+      serviceAccountName: {{ .Values.serviceAccount.name | default (include "echostats.fullname" .) }}
+      {{- end }}
       containers:
         - name: api
           image: "{{ .Values.image.api.repository }}:{{ .Values.image.api.tag }}"
@@ -29,27 +32,10 @@ spec:
             - containerPort: {{ .Values.api.port }}
               protocol: TCP
           envFrom:
+            - configMapRef:
+                name: {{ include "echostats.fullname" . }}
             - secretRef:
                 name: {{ include "echostats.fullname" . }}
-          env:
-            - name: API_HOST
-              value: "0.0.0.0"
-            - name: API_PORT
-              value: {{ .Values.api.port | quote }}
-            - name: API_WORKERS
-              value: {{ .Values.api.workers | quote }}
-            - name: LOG_LEVEL
-              value: {{ .Values.api.logLevel }}
-            - name: CORS_ORIGINS
-              value: {{ .Values.api.corsOrigins | quote }}
-            - name: SPOTIFY_REDIRECT_URI
-              value: {{ .Values.spotify.redirectUri | quote }}
-            - name: MONGO_DB
-              value: {{ .Values.mongodb.auth.database }}
-            - name: SYNC_INTERVAL_MINUTES
-              value: {{ .Values.api.syncIntervalMinutes | quote }}
-            - name: ANALYTICS_REFRESH_HOURS
-              value: {{ .Values.api.analyticsRefreshHours | quote }}
           livenessProbe:
             httpGet:
               path: /api/health

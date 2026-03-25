@@ -21,6 +21,9 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- if .Values.serviceAccount.create }}
+      serviceAccountName: {{ .Values.serviceAccount.name | default (include "echostats.fullname" .) }}
+      {{- end }}
       containers:
         - name: web
           image: "{{ .Values.image.web.repository }}:{{ .Values.image.web.tag }}"
@@ -28,6 +31,11 @@ spec:
           ports:
             - containerPort: {{ .Values.web.port }}
               protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: {{ include "echostats.fullname" . }}
+            - secretRef:
+                name: {{ include "echostats.fullname" . }}
           env:
             - name: INTERNAL_API_URL
               value: "http://{{ include "echostats.fullname" . }}-api:{{ .Values.api.port }}"

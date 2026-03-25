@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "echostats.fullname" . }}
+  labels:
+    {{- include "echostats.labels" . | nindent 4 }}
+data:
+  API_HOST: "0.0.0.0"
+  API_PORT: {{ .Values.api.port | quote }}
+  API_WORKERS: {{ .Values.api.workers | quote }}
+  LOG_LEVEL: {{ .Values.api.logLevel | quote }}
+  CORS_ORIGINS: {{ .Values.api.corsOrigins | quote }}
+  MONGO_DB: {{ .Values.mongodb.auth.database | quote }}
+  SPOTIFY_REDIRECT_URI: {{ .Values.spotify.redirectUri | quote }}
+  SYNC_INTERVAL_MINUTES: {{ .Values.api.syncIntervalMinutes | quote }}
+  ANALYTICS_REFRESH_HOURS: {{ .Values.api.analyticsRefreshHours | quote }}
+  NODE_ENV: "production"
+  NEXT_TELEMETRY_DISABLED: "1"

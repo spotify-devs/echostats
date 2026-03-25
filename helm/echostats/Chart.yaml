@@ -4,10 +4,22 @@ description: Self-hosted Spotify analytics dashboard
 type: application
 version: 0.1.0
 appVersion: "0.1.0"
+home: https://github.com/spotify-devs/echostats
+sources:
+  - https://github.com/spotify-devs/echostats
 keywords:
   - spotify
   - analytics
   - music
   - dashboard
+  - listening
+  - self-hosted
+  - pwa
+  - fastapi
+  - nextjs
+  - mongodb
 maintainers:
-  - name: EchoStats
+  - name: spotify-devs
+    url: https://github.com/spotify-devs
+annotations:
+  category: Music

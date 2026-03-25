@@ -21,24 +21,18 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- if .Values.serviceAccount.create }}
+      serviceAccountName: {{ .Values.serviceAccount.name | default (include "echostats.fullname" .) }}
+      {{- end }}
       containers:
         - name: worker
           image: "{{ .Values.image.api.repository }}:{{ .Values.image.api.tag }}"
           imagePullPolicy: {{ .Values.image.api.pullPolicy }}
           command: ["uv", "run", "arq", "app.tasks.worker.WorkerSettings"]
           envFrom:
+            - configMapRef:
+                name: {{ include "echostats.fullname" . }}
             - secretRef:
                 name: {{ include "echostats.fullname" . }}
-          env:
-            - name: LOG_LEVEL
-              value: {{ .Values.api.logLevel }}
-            - name: MONGO_DB
-              value: {{ .Values.mongodb.auth.database }}
-            - name: SPOTIFY_REDIRECT_URI
-              value: {{ .Values.spotify.redirectUri | quote }}
-            - name: SYNC_INTERVAL_MINUTES
-              value: {{ .Values.api.syncIntervalMinutes | quote }}
-            - name: ANALYTICS_REFRESH_HOURS
-              value: {{ .Values.api.analyticsRefreshHours | quote }}
           resources:
             {{- toYaml .Values.worker.resources | nindent 12 }}
