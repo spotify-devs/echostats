@@ -1,0 +1,35 @@
+---
+title: EchoStats Documentation
+description: Self-hosted Spotify analytics dashboard — 40+ pages of music insights
+template: splash
+hero:
+  title: 🎵 EchoStats
+  tagline: Self-hosted Spotify analytics dashboard with 40+ pages of deep insights into your listening habits.
+  actions:
+    - text: Get Started
+      link: /echostats/getting-started/introduction/
+      icon: right-arrow
+      variant: primary
+    - text: View on GitHub
+      link: https://github.com/spotify-devs/echostats
+      icon: external
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+## Features
+
+<CardGrid stagger>
+  <Card title="📊 40+ Dashboard Pages" icon="bar-chart">
+    Charts, patterns, listening habits, music DNA, taste profile, mood analysis, year-in-review, and more.
+  </Card>
+  <Card title="🔄 Auto-Sync Engine" icon="refresh-cw">
+    Background worker syncs your Spotify data every 15 minutes and refreshes analytics automatically.
+  </Card>
+  <Card title="🎨 6 Themes + Custom Accents" icon="palette">
+    Dark, Light, Dim, Ocean, Midnight, Forest — plus 8 solid accents, 4 gradient accents, and a custom color picker.
+  </Card>
+  <Card title="🏠 Self-Hosted & Private" icon="shield">
+    Deploy with Docker Compose or Helm. Your data never leaves your server.
+  </Card>
+</CardGrid>
