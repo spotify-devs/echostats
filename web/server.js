@@ -1,60 +1,50 @@
+// Wrapper that serves /public files, then delegates to Next.js standalone server.
+// Next.js standalone server.js does NOT serve public/ files.
 const { createServer } = require("http");
 const { parse } = require("url");
 const path = require("path");
 const fs = require("fs");
-const next = require("next");
 
-const app = next({ dir: __dirname, dev: false });
-const handle = app.getRequestHandler();
 const publicDir = path.join(__dirname, "public");
 
-const MIME_TYPES = {
-  ".html": "text/html",
-  ".js": "application/javascript",
-  ".json": "application/json",
-  ".png": "image/png",
-  ".jpg": "image/jpeg",
-  ".jpeg": "image/jpeg",
-  ".gif": "image/gif",
-  ".svg": "image/svg+xml",
-  ".ico": "image/x-icon",
-  ".webp": "image/webp",
-  ".woff": "font/woff",
-  ".woff2": "font/woff2",
-  ".css": "text/css",
-  ".txt": "text/plain",
-  ".xml": "application/xml",
+const MIME = {
+  ".js": "application/javascript", ".json": "application/json",
+  ".png": "image/png", ".jpg": "image/jpeg", ".svg": "image/svg+xml",
+  ".ico": "image/x-icon", ".webp": "image/webp", ".css": "text/css",
+  ".woff2": "font/woff2", ".txt": "text/plain", ".xml": "application/xml",
   ".webmanifest": "application/manifest+json",
 };
 
-app.prepare().then(() => {
-  const port = parseInt(process.env.PORT || "3000", 10);
-  const hostname = process.env.HOSTNAME || "0.0.0.0";
-
-  createServer((req, res) => {
-    const parsedUrl = parse(req.url, true);
-    const pathname = parsedUrl.pathname || "/";
-
-    // Serve public/ files directly (manifest.json, sw.js, icons, etc.)
-    const publicPath = path.join(publicDir, pathname);
-    if (pathname !== "/" && !pathname.startsWith("/_next")) {
-      try {
-        const stat = fs.statSync(publicPath);
-        if (stat.isFile()) {
-          const ext = path.extname(publicPath).toLowerCase();
-          const mime = MIME_TYPES[ext] || "application/octet-stream";
-          res.setHeader("Content-Type", mime);
-          res.setHeader("Cache-Control", "public, max-age=86400");
-          fs.createReadStream(publicPath).pipe(res);
-          return;
-        }
-      } catch {
-        // Not a public file — fall through to Next.js
-      }
+function tryServePublic(req, res) {
+  const pathname = parse(req.url || "/").pathname || "/";
+  if (pathname === "/" || pathname.startsWith("/_next") || pathname.startsWith("/api")) {
+    return false;
+  }
+  const filePath = path.join(publicDir, pathname);
+  try {
+    if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+      const ext = path.extname(filePath).toLowerCase();
+      res.writeHead(200, {
+        "Content-Type": MIME[ext] || "application/octet-stream",
+        "Cache-Control": "public, max-age=86400",
+      });
+      fs.createReadStream(filePath).pipe(res);
+      return true;
     }
+  } catch { /* fall through */ }
+  return false;
+}
 
-    handle(req, res, parsedUrl);
-  }).listen(port, hostname, () => {
-    console.log(`> EchoStats ready on http://${hostname}:${port}`);
+// Monkey-patch http.createServer so the Next.js standalone server
+// goes through our public-file handler first
+const http = require("http");
+const originalCreateServer = http.createServer;
+http.createServer = function(handler) {
+  return originalCreateServer(function(req, res) {
+    if (tryServePublic(req, res)) return;
+    handler(req, res);
   });
-});
+};
+
+// Now load the Next.js standalone server (it will call http.createServer)
+require("./server.standalone.js");
