@@ -292,6 +292,8 @@ async def _run_post_auth_sync(user_id: str, is_new_user: bool) -> None:
     """Run data sync after OAuth authentication (background task)."""
     from beanie import PydanticObjectId
 
+    from app.services.analytics_service import compute_analytics_snapshot
+
     try:
         user = await User.get(PydanticObjectId(user_id))
         if not user:
@@ -314,6 +316,15 @@ async def _run_post_auth_sync(user_id: str, is_new_user: bool) -> None:
                 logger.info("Post-auth sync completed", user_id=user_id, new_tracks=count)
         finally:
             await client.close()
+
+        # Refresh analytics so dashboard shows data immediately
+        for period in ["week", "month", "year", "all_time"]:
+            try:
+                await compute_analytics_snapshot(user_id, period)
+            except Exception:
+                pass
+        logger.info("Post-auth analytics refreshed", user_id=user_id)
+
     except Exception as e:
         logger.exception("Post-auth sync failed", user_id=user_id, error=str(e))
 

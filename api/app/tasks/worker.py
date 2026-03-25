@@ -1,5 +1,7 @@
 """ARQ background worker configuration."""
 
+from datetime import UTC, datetime
+
 from arq import cron
 from arq.connections import RedisSettings
 
@@ -29,7 +31,9 @@ async def sync_all_users(ctx: dict) -> None:
     """Periodic task: sync recently played for all users."""
     import structlog
 
+    from app.models.sync_job import SyncJob
     from app.models.user import User
+    from app.services.analytics_service import compute_analytics_snapshot
     from app.services.spotify_client import SpotifyClient
     from app.services.sync_service import enrich_audio_features, sync_recently_played
     from app.services.token_service import get_valid_access_token
@@ -39,22 +43,52 @@ async def sync_all_users(ctx: dict) -> None:
     logger.info("Starting periodic sync", user_count=len(users))
 
     for user in users:
+        user_id = str(user.id)
+        job = SyncJob(
+            user_id=user_id,
+            job_type="periodic",
+            status="running",
+            started_at=datetime.now(tz=UTC),
+        )
+        await job.insert()
+
         try:
             token = await get_valid_access_token(user)
             if not token:
-                logger.warning("No valid token for user", user_id=str(user.id))
+                logger.warning("No valid token for user", user_id=user_id)
+                job.status = "failed"
+                job.error_message = "No valid Spotify token — re-login required"
+                job.completed_at = datetime.now(tz=UTC)
+                await job.save()
                 continue
 
-            client = SpotifyClient(token, user_id=str(user.id))
+            client = SpotifyClient(token, user_id=user_id)
             try:
-                count = await sync_recently_played(client, str(user.id))
+                count = await sync_recently_played(client, user_id)
                 if count > 0:
-                    await enrich_audio_features(client, batch_size=50)
-                logger.info("Periodic sync complete", user_id=str(user.id), new_tracks=count)
+                    count += await enrich_audio_features(client, batch_size=50)
+                job.status = "completed"
+                job.items_processed = count
+                job.completed_at = datetime.now(tz=UTC)
+                logger.info("Periodic sync complete", user_id=user_id, new_tracks=count)
             finally:
                 await client.close()
+
+            # Refresh analytics after successful sync
+            if count > 0:
+                for period in ["week", "month", "all_time"]:
+                    try:
+                        await compute_analytics_snapshot(user_id, period)
+                    except Exception:
+                        pass
+
         except Exception as e:
-            logger.error("Periodic sync failed for user", user_id=str(user.id), error=str(e))
+            logger.error("Periodic sync failed for user", user_id=user_id, error=str(e))
+            job.status = "failed"
+            job.error_message = str(e)[:500]
+            job.completed_at = datetime.now(tz=UTC)
+
+        await job.save()
 
 
 async def refresh_analytics(ctx: dict) -> None:

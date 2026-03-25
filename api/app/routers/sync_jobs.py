@@ -142,6 +142,8 @@ async def trigger_sync(
 
 async def _run_manual_sync(user_id: str, job_id: str) -> None:
     """Run a manual sync in the background."""
+    from app.services.analytics_service import compute_analytics_snapshot
+
     job = await SyncJob.get(PydanticObjectId(job_id))
     if not job:
         return
@@ -171,6 +173,15 @@ async def _run_manual_sync(user_id: str, job_id: str) -> None:
             job.completed_at = datetime.now(tz=UTC)
         finally:
             await client.close()
+
+        # Refresh analytics so dashboard updates immediately
+        for period in ["week", "month", "all_time"]:
+            try:
+                await compute_analytics_snapshot(user_id, period)
+            except Exception:
+                pass
+        logger.info("Manual sync + analytics refresh complete", user_id=user_id, items=count)
+
     except Exception as e:
         job.status = "failed"
         job.error_message = str(e)[:500]
