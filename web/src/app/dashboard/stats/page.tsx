@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { BarChart } from "@/components/charts/bar-chart";
+import { FadeIn, StaggerContainer, StaggerItem } from "@/components/ui/animations";
 import { DateRangeFilter } from "@/components/ui/date-range-filter";
 import { CardSkeleton, ChartSkeleton } from "@/components/ui/loading-skeleton";
 import { TimeRangeSelector } from "@/components/ui/time-range-selector";
@@ -117,124 +118,138 @@ export default function DeepStatsPage() {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <StaggerContainer className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Listening Summary */}
-            <div className="glass-card p-6">
-              <h2 className="text-lg font-semibold text-theme mb-4">Listening Summary</h2>
-              <StatRow
-                icon={Clock}
-                label="Total Listening Time"
-                value={`${hours} hours`}
-                color="bg-accent-purple/20"
-              />
-              <StatRow
-                icon={Headphones}
-                label="Average Per Day"
-                value={`${avgPerDay} hours`}
-                color="bg-accent-cyan/20"
-              />
-              <StatRow
-                icon={Music}
-                label="Total Tracks Played"
-                value={data?.total_tracks_played || 0}
-                color="bg-spotify-green/20"
-              />
-              <StatRow
-                icon={TrendingUp}
-                label="Tracks Per Day"
-                value={tracksPerDay}
-                color="bg-accent-amber/20"
-              />
-              <StatRow
-                icon={Clock}
-                label="Avg Track Length"
-                value={`${avgTrackMin}:${avgTrackSec.toString().padStart(2, "0")}`}
-                color="bg-accent-pink/20"
-              />
-            </div>
+            <StaggerItem>
+              <div className="glass-card p-6">
+                <h2 className="text-lg font-semibold text-theme mb-4">Listening Summary</h2>
+                <StatRow
+                  icon={Clock}
+                  label="Total Listening Time"
+                  value={`${hours} hours`}
+                  color="bg-accent-purple/20"
+                />
+                <StatRow
+                  icon={Headphones}
+                  label="Average Per Day"
+                  value={`${avgPerDay} hours`}
+                  color="bg-accent-cyan/20"
+                />
+                <StatRow
+                  icon={Music}
+                  label="Total Tracks Played"
+                  value={data?.total_tracks_played || 0}
+                  color="bg-spotify-green/20"
+                />
+                <StatRow
+                  icon={TrendingUp}
+                  label="Tracks Per Day"
+                  value={tracksPerDay}
+                  color="bg-accent-amber/20"
+                />
+                <StatRow
+                  icon={Clock}
+                  label="Avg Track Length"
+                  value={`${avgTrackMin}:${avgTrackSec.toString().padStart(2, "0")}`}
+                  color="bg-accent-pink/20"
+                />
+              </div>
+            </StaggerItem>
 
             {/* Diversity Stats */}
-            <div className="glass-card p-6">
-              <h2 className="text-lg font-semibold text-theme mb-4">Diversity</h2>
-              <StatRow
-                icon={Music}
-                label="Unique Tracks"
-                value={data?.unique_tracks || 0}
-                color="bg-accent-purple/20"
-              />
-              <StatRow
-                icon={Users}
-                label="Unique Artists"
-                value={data?.unique_artists || 0}
-                color="bg-spotify-green/20"
-              />
-              <StatRow
-                icon={Disc3}
-                label="Unique Albums"
-                value={data?.unique_albums || 0}
-                color="bg-accent-cyan/20"
-              />
-              <StatRow
-                icon={Disc3}
-                label="Unique Genres"
-                value={data?.unique_genres || 0}
-                color="bg-accent-pink/20"
-              />
-              <StatRow
-                icon={Calendar}
-                label="Listening Streak"
-                value={`${data?.listening_streak_days || 0} days`}
-                color="bg-accent-amber/20"
-              />
-            </div>
-          </div>
+            <StaggerItem>
+              <div className="glass-card p-6">
+                <h2 className="text-lg font-semibold text-theme mb-4">Diversity</h2>
+                <StatRow
+                  icon={Music}
+                  label="Unique Tracks"
+                  value={data?.unique_tracks || 0}
+                  color="bg-accent-purple/20"
+                />
+                <StatRow
+                  icon={Users}
+                  label="Unique Artists"
+                  value={data?.unique_artists || 0}
+                  color="bg-spotify-green/20"
+                />
+                <StatRow
+                  icon={Disc3}
+                  label="Unique Albums"
+                  value={data?.unique_albums || 0}
+                  color="bg-accent-cyan/20"
+                />
+                <StatRow
+                  icon={Disc3}
+                  label="Unique Genres"
+                  value={data?.unique_genres || 0}
+                  color="bg-accent-pink/20"
+                />
+                <StatRow
+                  icon={Calendar}
+                  label="Listening Streak"
+                  value={`${data?.listening_streak_days || 0} days`}
+                  color="bg-accent-amber/20"
+                />
+              </div>
+            </StaggerItem>
+          </StaggerContainer>
 
           {/* Weekly breakdown */}
-          <div className="glass-card p-6">
-            <h2 className="text-lg font-semibold text-theme mb-4">Listening by Day of Week</h2>
-            {dailyData.length > 0 ? (
-              <BarChart
-                data={dailyData}
-                xKey="day"
-                bars={[{ key: "hours", color: "rgb(var(--accent))", name: "Hours" }]}
-                height={250}
-              />
-            ) : (
-              <p className="text-theme-tertiary text-center py-12">No data available</p>
-            )}
-          </div>
+          <FadeIn delay={0.2}>
+            <div className="glass-card p-6">
+              <h2 className="text-lg font-semibold text-theme mb-4">Listening by Day of Week</h2>
+              {dailyData.length > 0 ? (
+                <BarChart
+                  data={dailyData}
+                  xKey="day"
+                  bars={[{ key: "hours", color: "rgb(var(--accent))", name: "Hours" }]}
+                  height={250}
+                />
+              ) : (
+                <p className="text-theme-tertiary text-center py-12">No data available</p>
+              )}
+            </div>
+          </FadeIn>
 
           {/* Fun Facts */}
-          <div className="glass-card p-6">
-            <h2 className="text-lg font-semibold text-theme mb-4">🎉 Fun Facts</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              <div className="p-4 rounded-xl bg-theme-surface-2 text-center">
-                <p className="text-3xl mb-1">🎧</p>
-                <p className="text-sm text-theme-secondary">You've listened to</p>
-                <p className="text-xl font-bold text-theme">
-                  {Math.round(hours * 60).toLocaleString()} minutes
-                </p>
-                <p className="text-xs text-theme-tertiary">of music</p>
-              </div>
-              <div className="p-4 rounded-xl bg-theme-surface-2 text-center">
-                <p className="text-3xl mb-1">🌍</p>
-                <p className="text-sm text-theme-secondary">That's equivalent to</p>
-                <p className="text-xl font-bold text-theme">{(hours / 24).toFixed(1)}</p>
-                <p className="text-xs text-theme-tertiary">full days non-stop</p>
-              </div>
-              <div className="p-4 rounded-xl bg-theme-surface-2 text-center">
-                <p className="text-3xl mb-1">🔄</p>
-                <p className="text-sm text-theme-secondary">Repeat ratio</p>
-                <p className="text-xl font-bold text-theme">
-                  {data?.total_tracks_played && data?.unique_tracks
-                    ? (data.total_tracks_played / data.unique_tracks).toFixed(1)
-                    : "0"}
-                  x
-                </p>
-                <p className="text-xs text-theme-tertiary">plays per unique track</p>
-              </div>
+          <FadeIn delay={0.35}>
+            <div className="glass-card p-6">
+              <h2 className="text-lg font-semibold text-theme mb-4">🎉 Fun Facts</h2>
+              <StaggerContainer className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <StaggerItem>
+                  <div className="p-4 rounded-xl bg-theme-surface-2 text-center">
+                    <p className="text-3xl mb-1">🎧</p>
+                    <p className="text-sm text-theme-secondary">You've listened to</p>
+                    <p className="text-xl font-bold text-theme">
+                      {Math.round(hours * 60).toLocaleString()} minutes
+                    </p>
+                    <p className="text-xs text-theme-tertiary">of music</p>
+                  </div>
+                </StaggerItem>
+                <StaggerItem>
+                  <div className="p-4 rounded-xl bg-theme-surface-2 text-center">
+                    <p className="text-3xl mb-1">🌍</p>
+                    <p className="text-sm text-theme-secondary">That's equivalent to</p>
+                    <p className="text-xl font-bold text-theme">{(hours / 24).toFixed(1)}</p>
+                    <p className="text-xs text-theme-tertiary">full days non-stop</p>
+                  </div>
+                </StaggerItem>
+                <StaggerItem>
+                  <div className="p-4 rounded-xl bg-theme-surface-2 text-center">
+                    <p className="text-3xl mb-1">🔄</p>
+                    <p className="text-sm text-theme-secondary">Repeat ratio</p>
+                    <p className="text-xl font-bold text-theme">
+                      {data?.total_tracks_played && data?.unique_tracks
+                        ? (data.total_tracks_played / data.unique_tracks).toFixed(1)
+                        : "0"}
+                      x
+                    </p>
+                    <p className="text-xs text-theme-tertiary">plays per unique track</p>
+                  </div>
+                </StaggerItem>
+              </StaggerContainer>
             </div>
-          </div>
+          </FadeIn>
         </>
       )}
     </div>

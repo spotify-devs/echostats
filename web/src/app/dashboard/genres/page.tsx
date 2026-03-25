@@ -5,6 +5,7 @@ import { Disc3 } from "lucide-react";
 import { useState } from "react";
 import { BarChart } from "@/components/charts/bar-chart";
 import { PieChart } from "@/components/charts/pie-chart";
+import { FadeIn, StaggerContainer, StaggerItem } from "@/components/ui/animations";
 import { DateRangeFilter } from "@/components/ui/date-range-filter";
 import { ChartSkeleton } from "@/components/ui/loading-skeleton";
 import { TimeRangeSelector } from "@/components/ui/time-range-selector";
@@ -60,51 +61,56 @@ export default function GenresPage() {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="glass-card p-6">
-              <h2 className="text-lg font-semibold text-white mb-4">Genre Distribution</h2>
-              {pieData.length > 0 ? (
-                <PieChart data={pieData} height={350} />
-              ) : (
-                <p className="text-white/40 text-center py-12">No genre data available</p>
-              )}
-            </div>
-            <div className="glass-card p-6">
-              <h2 className="text-lg font-semibold text-white mb-4">Top Genres by Plays</h2>
-              {barData.length > 0 ? (
-                <BarChart
-                  data={barData}
-                  xKey="name"
-                  bars={[{ key: "plays", color: "#06b6d4", name: "Plays" }]}
-                  height={350}
-                  layout="vertical"
-                />
-              ) : (
-                <p className="text-white/40 text-center py-12">No genre data available</p>
-              )}
-            </div>
-          </div>
+          <StaggerContainer className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <StaggerItem>
+              <div className="glass-card p-6">
+                <h2 className="text-lg font-semibold text-white mb-4">Genre Distribution</h2>
+                {pieData.length > 0 ? (
+                  <PieChart data={pieData} height={350} />
+                ) : (
+                  <p className="text-white/40 text-center py-12">No genre data available</p>
+                )}
+              </div>
+            </StaggerItem>
+            <StaggerItem>
+              <div className="glass-card p-6">
+                <h2 className="text-lg font-semibold text-white mb-4">Top Genres by Plays</h2>
+                {barData.length > 0 ? (
+                  <BarChart
+                    data={barData}
+                    xKey="name"
+                    bars={[{ key: "plays", color: "#06b6d4", name: "Plays" }]}
+                    height={350}
+                    layout="vertical"
+                  />
+                ) : (
+                  <p className="text-white/40 text-center py-12">No genre data available</p>
+                )}
+              </div>
+            </StaggerItem>
+          </StaggerContainer>
 
           {/* Genre list */}
-          <div className="glass-card">
-            <div className="p-4 border-b border-white/5">
-              <h2 className="text-lg font-semibold text-white">
-                All Genres ({data?.total_genres || 0})
-              </h2>
-            </div>
-            <div className="p-4">
-              <div className="flex flex-wrap gap-2">
-                {genres.map((genre: any, i: number) => (
-                  <span
-                    key={i}
-                    className="px-3 py-1.5 text-xs rounded-full bg-surface-3 text-white/60 border border-white/5"
-                  >
-                    {genre.name} <span className="text-white/30 ml-1">{genre.play_count}</span>
-                  </span>
-                ))}
+          <FadeIn delay={0.2}>
+            <div className="glass-card">
+              <div className="p-4 border-b border-white/5">
+                <h2 className="text-lg font-semibold text-white">
+                  All Genres ({data?.total_genres || 0})
+                </h2>
+              </div>
+              <div className="p-4">
+                <StaggerContainer className="flex flex-wrap gap-2">
+                  {genres.map((genre: any, i: number) => (
+                    <StaggerItem key={i}>
+                      <span className="px-3 py-1.5 text-xs rounded-full bg-surface-3 text-white/60 border border-white/5">
+                        {genre.name} <span className="text-white/30 ml-1">{genre.play_count}</span>
+                      </span>
+                    </StaggerItem>
+                  ))}
+                </StaggerContainer>
               </div>
             </div>
-          </div>
+          </FadeIn>
         </>
       )}
     </div>

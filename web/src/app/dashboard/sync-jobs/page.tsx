@@ -15,6 +15,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { useState } from "react";
+import { StaggerContainer, StaggerItem } from "@/components/ui/animations";
 import { CardSkeleton } from "@/components/ui/loading-skeleton";
 import { api } from "@/lib/api";
 
@@ -166,30 +167,38 @@ export default function SyncJobsPage() {
           ))}
         </div>
       ) : stats ? (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="glass-card p-4">
-            <Activity className="w-5 h-5 text-accent-dynamic mb-2" />
-            <p className="text-2xl font-bold text-theme tabular-nums">{stats.total_jobs}</p>
-            <p className="text-xs text-theme-tertiary">Total Jobs</p>
-          </div>
-          <div className="glass-card p-4">
-            <CheckCircle className="w-5 h-5 text-emerald-400 mb-2" />
-            <p className="text-2xl font-bold text-emerald-400 tabular-nums">{stats.completed}</p>
-            <p className="text-xs text-theme-tertiary">Completed</p>
-          </div>
-          <div className="glass-card p-4">
-            <XCircle className="w-5 h-5 text-red-400 mb-2" />
-            <p className="text-2xl font-bold text-red-400 tabular-nums">{stats.failed}</p>
-            <p className="text-xs text-theme-tertiary">Failed</p>
-          </div>
-          <div className="glass-card p-4">
-            <Database className="w-5 h-5 text-accent-cyan mb-2" />
-            <p className="text-2xl font-bold text-theme tabular-nums">
-              {(stats.total_items_synced || 0).toLocaleString()}
-            </p>
-            <p className="text-xs text-theme-tertiary">Items Synced</p>
-          </div>
-        </div>
+        <StaggerContainer className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <StaggerItem>
+            <div className="glass-card p-4">
+              <Activity className="w-5 h-5 text-accent-dynamic mb-2" />
+              <p className="text-2xl font-bold text-theme tabular-nums">{stats.total_jobs}</p>
+              <p className="text-xs text-theme-tertiary">Total Jobs</p>
+            </div>
+          </StaggerItem>
+          <StaggerItem>
+            <div className="glass-card p-4">
+              <CheckCircle className="w-5 h-5 text-emerald-400 mb-2" />
+              <p className="text-2xl font-bold text-emerald-400 tabular-nums">{stats.completed}</p>
+              <p className="text-xs text-theme-tertiary">Completed</p>
+            </div>
+          </StaggerItem>
+          <StaggerItem>
+            <div className="glass-card p-4">
+              <XCircle className="w-5 h-5 text-red-400 mb-2" />
+              <p className="text-2xl font-bold text-red-400 tabular-nums">{stats.failed}</p>
+              <p className="text-xs text-theme-tertiary">Failed</p>
+            </div>
+          </StaggerItem>
+          <StaggerItem>
+            <div className="glass-card p-4">
+              <Database className="w-5 h-5 text-accent-cyan mb-2" />
+              <p className="text-2xl font-bold text-theme tabular-nums">
+                {(stats.total_items_synced || 0).toLocaleString()}
+              </p>
+              <p className="text-xs text-theme-tertiary">Items Synced</p>
+            </div>
+          </StaggerItem>
+        </StaggerContainer>
       ) : null}
 
       {/* Sync Schedule Info */}
@@ -284,69 +293,71 @@ export default function SyncJobsPage() {
           ))}
         </div>
       ) : items.length > 0 ? (
-        <div className="space-y-3">
+        <StaggerContainer className="space-y-3">
           {items.map((job: any) => {
             const cfg = STATUS_CONFIG[job.status] || STATUS_CONFIG.pending;
             const StatusIcon = cfg.icon;
             return (
-              <div key={job.id} className="glass-card p-4">
-                <div className="flex items-start gap-3">
-                  <div className={`p-2 rounded-xl border ${cfg.bg} flex-shrink-0`}>
-                    <StatusIcon
-                      className={`w-4 h-4 ${cfg.color} ${job.status === "running" ? "animate-spin" : ""}`}
-                    />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-2">
-                      <h3 className="text-sm font-semibold text-theme">
-                        {TYPE_LABELS[job.job_type] || job.job_type}
-                      </h3>
-                      <span
-                        className={`text-[10px] px-2 py-0.5 rounded-full border font-medium ${cfg.bg} ${cfg.color}`}
-                      >
-                        {cfg.label}
-                      </span>
+              <StaggerItem key={job.id}>
+                <div className="glass-card p-4">
+                  <div className="flex items-start gap-3">
+                    <div className={`p-2 rounded-xl border ${cfg.bg} flex-shrink-0`}>
+                      <StatusIcon
+                        className={`w-4 h-4 ${cfg.color} ${job.status === "running" ? "animate-spin" : ""}`}
+                      />
                     </div>
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1.5 text-xs text-theme-tertiary">
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
-                        {timeAgo(job.created_at)}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Activity className="w-3 h-3" />
-                        {formatDuration(job.started_at, job.completed_at)}
-                      </span>
-                      {job.items_processed > 0 && (
-                        <span className="flex items-center gap-1">
-                          <Database className="w-3 h-3" />
-                          {job.items_processed.toLocaleString()} items
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2">
+                        <h3 className="text-sm font-semibold text-theme">
+                          {TYPE_LABELS[job.job_type] || job.job_type}
+                        </h3>
+                        <span
+                          className={`text-[10px] px-2 py-0.5 rounded-full border font-medium ${cfg.bg} ${cfg.color}`}
+                        >
+                          {cfg.label}
                         </span>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1.5 text-xs text-theme-tertiary">
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          {timeAgo(job.created_at)}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Activity className="w-3 h-3" />
+                          {formatDuration(job.started_at, job.completed_at)}
+                        </span>
+                        {job.items_processed > 0 && (
+                          <span className="flex items-center gap-1">
+                            <Database className="w-3 h-3" />
+                            {job.items_processed.toLocaleString()} items
+                          </span>
+                        )}
+                      </div>
+                      {/* Progress bar for running jobs */}
+                      {job.status === "running" && job.items_total > 0 && (
+                        <div className="mt-2 w-full h-1.5 rounded-full bg-theme-surface-3 overflow-hidden">
+                          <div
+                            className="h-full rounded-full bg-accent-dynamic transition-all"
+                            style={{
+                              width: `${Math.min((job.items_processed / job.items_total) * 100, 100)}%`,
+                            }}
+                          />
+                        </div>
+                      )}
+                      {/* Error message */}
+                      {job.error_message && (
+                        <div className="mt-2 flex items-start gap-1.5 text-xs text-red-400 bg-red-400/5 rounded-lg p-2">
+                          <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                          <span className="break-all">{job.error_message}</span>
+                        </div>
                       )}
                     </div>
-                    {/* Progress bar for running jobs */}
-                    {job.status === "running" && job.items_total > 0 && (
-                      <div className="mt-2 w-full h-1.5 rounded-full bg-theme-surface-3 overflow-hidden">
-                        <div
-                          className="h-full rounded-full bg-accent-dynamic transition-all"
-                          style={{
-                            width: `${Math.min((job.items_processed / job.items_total) * 100, 100)}%`,
-                          }}
-                        />
-                      </div>
-                    )}
-                    {/* Error message */}
-                    {job.error_message && (
-                      <div className="mt-2 flex items-start gap-1.5 text-xs text-red-400 bg-red-400/5 rounded-lg p-2">
-                        <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
-                        <span className="break-all">{job.error_message}</span>
-                      </div>
-                    )}
                   </div>
                 </div>
-              </div>
+              </StaggerItem>
             );
           })}
-        </div>
+        </StaggerContainer>
       ) : (
         <div className="glass-card p-12 text-center">
           <RefreshCw className="w-10 h-10 text-theme-tertiary mx-auto mb-3" />
