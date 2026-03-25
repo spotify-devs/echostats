@@ -62,3 +62,16 @@ redis_data/
 *.bak
 *.tmp
 .local-only/
+cookies.txt
+cookies2.txt
+
+# Docs build
+docs/node_modules/
+docs/dist/
+docs/.astro/
+
+# Monitoring
+monitoring/grafana/data/
+
+# Helm
+*.tgz
