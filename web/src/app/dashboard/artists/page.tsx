@@ -6,14 +6,22 @@ import { Users } from "lucide-react";
 import { api } from "@/lib/api";
 import { ArtistCard } from "@/components/music/artist-card";
 import { TimeRangeSelector } from "@/components/ui/time-range-selector";
+import { DateRangeFilter } from "@/components/ui/date-range-filter";
 import { ListSkeleton } from "@/components/ui/loading-skeleton";
 
 export default function TopArtistsPage() {
   const [period, setPeriod] = useState("all_time");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   const { data, isLoading } = useQuery({
-    queryKey: ["top-artists", period],
-    queryFn: () => api.get<any>(`/api/v1/artists/top?period=${period}&limit=50`),
+    queryKey: ["top-artists", period, startDate, endDate],
+    queryFn: () => {
+      let url = `/api/v1/artists/top?period=${period}&limit=50`;
+      if (startDate) url += `&start_date=${startDate}`;
+      if (endDate) url += `&end_date=${endDate}`;
+      return api.get<any>(url);
+    },
   });
 
   return (
@@ -25,7 +33,16 @@ export default function TopArtistsPage() {
           </h1>
           <p className="text-white/50 mt-1">Artists you listen to the most</p>
         </div>
-        <TimeRangeSelector value={period} onChange={setPeriod} />
+        <div className="flex items-center gap-3 flex-wrap">
+          <TimeRangeSelector value={period} onChange={setPeriod} />
+          <DateRangeFilter
+            startDate={startDate}
+            endDate={endDate}
+            onStartDateChange={setStartDate}
+            onEndDateChange={setEndDate}
+            onClear={() => { setStartDate(""); setEndDate(""); }}
+          />
+        </div>
       </div>
 
       {isLoading ? (

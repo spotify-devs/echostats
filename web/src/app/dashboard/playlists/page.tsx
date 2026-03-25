@@ -1,24 +1,38 @@
 "use client";
 
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ListMusic } from "lucide-react";
 import Image from "next/image";
 import { api } from "@/lib/api";
+import { DateRangeFilter } from "@/components/ui/date-range-filter";
 import { ListSkeleton } from "@/components/ui/loading-skeleton";
 
 export default function PlaylistsPage() {
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+
   const { data, isLoading } = useQuery({
-    queryKey: ["playlists"],
+    queryKey: ["playlists", startDate, endDate],
     queryFn: () => api.get<any>("/api/v1/playlists"),
   });
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-          <ListMusic className="w-6 h-6 text-spotify-green" /> Playlists
-        </h1>
-        <p className="text-white/50 mt-1">{data?.total || 0} playlists</p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+            <ListMusic className="w-6 h-6 text-spotify-green" /> Playlists
+          </h1>
+          <p className="text-white/50 mt-1">{data?.total || 0} playlists</p>
+        </div>
+        <DateRangeFilter
+          startDate={startDate}
+          endDate={endDate}
+          onStartDateChange={setStartDate}
+          onEndDateChange={setEndDate}
+          onClear={() => { setStartDate(""); setEndDate(""); }}
+        />
       </div>
 
       {isLoading ? (

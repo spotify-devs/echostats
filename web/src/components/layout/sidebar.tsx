@@ -83,7 +83,7 @@ export function Sidebar() {
                 onClick={() => setIsOpen(false)}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
                   isActive
-                    ? "bg-brand-500/15 text-accent-purple shadow-glow/10"
+                    ? "bg-accent-dynamic/15 text-accent-dynamic shadow-accent-glow/10"
                     : "text-white/50 hover:text-white/80 hover:bg-white/5"
                 }`}
               >

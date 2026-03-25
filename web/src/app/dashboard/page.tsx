@@ -6,6 +6,7 @@ import { Clock, Music, Users, Flame, Disc3, TrendingUp } from "lucide-react";
 import { api } from "@/lib/api";
 import { MetricCard } from "@/components/ui/metric-card";
 import { TimeRangeSelector } from "@/components/ui/time-range-selector";
+import { DateRangeFilter } from "@/components/ui/date-range-filter";
 import { TrackCard } from "@/components/music/track-card";
 import { ArtistCard } from "@/components/music/artist-card";
 import { BarChart } from "@/components/charts/bar-chart";
@@ -20,10 +21,17 @@ function formatDuration(ms: number): string {
 
 export default function DashboardPage() {
   const [period, setPeriod] = useState("all_time");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   const { data, isLoading } = useQuery({
-    queryKey: ["analytics-overview", period],
-    queryFn: () => api.get<any>(`/api/v1/analytics/overview?period=${period}`),
+    queryKey: ["analytics-overview", period, startDate, endDate],
+    queryFn: () => {
+      let url = `/api/v1/analytics/overview?period=${period}`;
+      if (startDate) url += `&start_date=${startDate}`;
+      if (endDate) url += `&end_date=${endDate}`;
+      return api.get<any>(url);
+    },
   });
 
   const genrePieData = (data?.top_genres || []).slice(0, 8).map((g: any) => ({
@@ -43,7 +51,16 @@ export default function DashboardPage() {
           <h1 className="text-2xl font-bold text-white">Dashboard</h1>
           <p className="text-white/50 mt-1">Your music at a glance</p>
         </div>
-        <TimeRangeSelector value={period} onChange={setPeriod} />
+        <div className="flex items-center gap-3 flex-wrap">
+          <TimeRangeSelector value={period} onChange={setPeriod} />
+          <DateRangeFilter
+            startDate={startDate}
+            endDate={endDate}
+            onStartDateChange={setStartDate}
+            onEndDateChange={setEndDate}
+            onClear={() => { setStartDate(""); setEndDate(""); }}
+          />
+        </div>
       </div>
 
       {/* Metric Cards */}

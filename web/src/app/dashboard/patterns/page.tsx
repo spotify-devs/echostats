@@ -7,16 +7,24 @@ import { api } from "@/lib/api";
 import { Heatmap } from "@/components/charts/heatmap";
 import { BarChart } from "@/components/charts/bar-chart";
 import { TimeRangeSelector } from "@/components/ui/time-range-selector";
+import { DateRangeFilter } from "@/components/ui/date-range-filter";
 import { ChartSkeleton } from "@/components/ui/loading-skeleton";
 
 const DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
 export default function PatternsPage() {
   const [period, setPeriod] = useState("all_time");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   const { data, isLoading } = useQuery({
-    queryKey: ["analytics-overview", period],
-    queryFn: () => api.get<any>(`/api/v1/analytics/overview?period=${period}`),
+    queryKey: ["analytics-overview", period, startDate, endDate],
+    queryFn: () => {
+      let url = `/api/v1/analytics/overview?period=${period}`;
+      if (startDate) url += `&start_date=${startDate}`;
+      if (endDate) url += `&end_date=${endDate}`;
+      return api.get<any>(url);
+    },
   });
 
   // Build heatmap data from hourly + daily distributions
@@ -54,7 +62,16 @@ export default function PatternsPage() {
           </h1>
           <p className="text-white/50 mt-1">When do you listen to music?</p>
         </div>
-        <TimeRangeSelector value={period} onChange={setPeriod} />
+        <div className="flex items-center gap-3 flex-wrap">
+          <TimeRangeSelector value={period} onChange={setPeriod} />
+          <DateRangeFilter
+            startDate={startDate}
+            endDate={endDate}
+            onStartDateChange={setStartDate}
+            onEndDateChange={setEndDate}
+            onClear={() => { setStartDate(""); setEndDate(""); }}
+          />
+        </div>
       </div>
 
       {isLoading ? (

@@ -14,7 +14,7 @@ export function Header() {
         <input
           type="text"
           placeholder="Search tracks, artists, albums..."
-          className="w-full pl-10 pr-4 py-2 bg-surface-2 border border-white/10 rounded-xl text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-accent-purple/50 focus:ring-1 focus:ring-accent-purple/25 transition-all"
+          className="w-full pl-10 pr-4 py-2 bg-surface-2 border border-white/10 rounded-xl text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-accent-dynamic/50 focus:ring-1 focus:ring-accent-dynamic/25 transition-all"
         />
       </div>
 

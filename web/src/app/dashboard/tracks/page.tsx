@@ -6,15 +6,23 @@ import { Music, LayoutGrid, Table2 } from "lucide-react";
 import { api } from "@/lib/api";
 import { TrackCard } from "@/components/music/track-card";
 import { TimeRangeSelector } from "@/components/ui/time-range-selector";
+import { DateRangeFilter } from "@/components/ui/date-range-filter";
 import { ListSkeleton } from "@/components/ui/loading-skeleton";
 
 export default function TopTracksPage() {
   const [period, setPeriod] = useState("all_time");
   const [view, setView] = useState<"cards" | "table">("cards");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   const { data, isLoading } = useQuery({
-    queryKey: ["top-tracks", period],
-    queryFn: () => api.get<any>(`/api/v1/tracks/top?period=${period}&limit=50`),
+    queryKey: ["top-tracks", period, startDate, endDate],
+    queryFn: () => {
+      let url = `/api/v1/tracks/top?period=${period}&limit=50`;
+      if (startDate) url += `&start_date=${startDate}`;
+      if (endDate) url += `&end_date=${endDate}`;
+      return api.get<any>(url);
+    },
   });
 
   return (
@@ -26,8 +34,15 @@ export default function TopTracksPage() {
           </h1>
           <p className="text-white/50 mt-1">Your most played tracks</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           <TimeRangeSelector value={period} onChange={setPeriod} />
+          <DateRangeFilter
+            startDate={startDate}
+            endDate={endDate}
+            onStartDateChange={setStartDate}
+            onEndDateChange={setEndDate}
+            onClear={() => { setStartDate(""); setEndDate(""); }}
+          />
           <div className="flex gap-1 p-1 bg-surface-2 rounded-lg border border-white/5">
             <button onClick={() => setView("cards")} className={`p-1.5 rounded-md ${view === "cards" ? "bg-accent-purple/20 text-accent-purple" : "text-white/40"}`}>
               <LayoutGrid className="w-4 h-4" />

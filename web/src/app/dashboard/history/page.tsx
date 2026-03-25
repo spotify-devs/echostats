@@ -1,18 +1,31 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Clock, Upload } from "lucide-react";
 import { api } from "@/lib/api";
 import { TrackCard } from "@/components/music/track-card";
+import { DateRangeFilter } from "@/components/ui/date-range-filter";
 import { ListSkeleton } from "@/components/ui/loading-skeleton";
 
 export default function HistoryPage() {
   const [page, setPage] = useState(1);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+
+  // Reset to page 1 when date range changes
+  useEffect(() => {
+    setPage(1);
+  }, [startDate, endDate]);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["history", page],
-    queryFn: () => api.get<any>(`/api/v1/history?page=${page}&limit=50`),
+    queryKey: ["history", page, startDate, endDate],
+    queryFn: () => {
+      let url = `/api/v1/history?page=${page}&limit=50`;
+      if (startDate) url += `&start_date=${startDate}`;
+      if (endDate) url += `&end_date=${endDate}`;
+      return api.get<any>(url);
+    },
   });
 
   const items = data?.items || [];
@@ -27,9 +40,18 @@ export default function HistoryPage() {
           </h1>
           <p className="text-white/50 mt-1">{data?.total?.toLocaleString() || 0} total plays</p>
         </div>
-        <button className="btn-primary flex items-center gap-2 text-sm">
-          <Upload className="w-4 h-4" /> Import History
-        </button>
+        <div className="flex items-center gap-3 flex-wrap">
+          <DateRangeFilter
+            startDate={startDate}
+            endDate={endDate}
+            onStartDateChange={setStartDate}
+            onEndDateChange={setEndDate}
+            onClear={() => { setStartDate(""); setEndDate(""); }}
+          />
+          <button className="btn-primary flex items-center gap-2 text-sm">
+            <Upload className="w-4 h-4" /> Import History
+          </button>
+        </div>
       </div>
 
       {isLoading ? (
