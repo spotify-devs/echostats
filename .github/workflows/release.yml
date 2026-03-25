@@ -12,6 +12,8 @@ concurrency:
 permissions:
   contents: write
   packages: write
+  pages: write
+  id-token: write
 
 jobs:
   version-tag:
@@ -186,3 +188,30 @@ jobs:
           name: EchoStats ${{ needs.version-tag.outputs.new_tag }}
           body_path: release-notes.md
           generate_release_notes: false
+
+  docs:
+    name: Deploy Docs
+    needs: version-tag
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install & build docs
+        working-directory: docs
+        run: |
+          npm install
+          npm run build
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/dist
+
+      - id: deployment
+        uses: actions/deploy-pages@v4

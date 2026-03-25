@@ -2,6 +2,8 @@ import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
 
 export default defineConfig({
+  site: "https://spotify-devs.github.io",
+  base: "/echostats",
   integrations: [
     starlight({
       title: "EchoStats",
