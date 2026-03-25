@@ -8,8 +8,11 @@ from app.config import settings
 
 async def startup(ctx: dict) -> None:
     """Worker startup — initialize database."""
+    import structlog
     from app.database import init_db
 
+    logger = structlog.get_logger()
+    logger.info("Worker starting", redis_host=_parse_redis_url().host, redis_has_password=bool(_parse_redis_url().password))
     await init_db()
     ctx["db_initialized"] = True
 
@@ -81,8 +84,8 @@ def _parse_redis_url() -> RedisSettings:
         host=parsed.hostname or "localhost",
         port=parsed.port or 6379,
         database=int(parsed.path.lstrip("/") or "0"),
-        password=parsed.password or None,
-        username=parsed.username or None,
+        password=parsed.password if parsed.password else None,
+        username=parsed.username if parsed.username else None,
     )
 
 
