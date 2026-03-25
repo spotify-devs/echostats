@@ -28,7 +28,7 @@ async def get_playlists(
     )
 
     return {
-        "items": [p.model_dump() for p in items],
+        "items": [p.model_dump(mode="json") for p in items],
         "total": total,
         "page": page,
         "limit": limit,

@@ -209,6 +209,38 @@ async def logout(response: Response) -> dict[str, str]:
     return {"status": "logged_out"}
 
 
+@router.get("/dev-login")
+async def dev_login(response: Response) -> dict:
+    """DEV ONLY — Log in as the demo seed user without Spotify OAuth."""
+    user = await User.find_one(User.spotify_id == "demo_user")
+    if not user:
+        raise HTTPException(status_code=404, detail="Demo user not found. Run seed.py first.")
+
+    session_token = _create_jwt(str(user.id), "demo_user")
+
+    response.set_cookie(
+        key="session",
+        value=session_token,
+        httponly=True,
+        secure=False,
+        samesite="lax",
+        max_age=30 * 24 * 3600,
+        path="/",
+    )
+
+    logger.info("Dev login", spotify_id="demo_user", display_name=user.display_name)
+
+    return {
+        "status": "authenticated",
+        "user": {
+            "id": str(user.id),
+            "spotify_id": "demo_user",
+            "display_name": user.display_name,
+        },
+        "token": session_token,
+    }
+
+
 async def _get_current_user(request: Request) -> User | None:
     """Extract the current user from the session cookie or Authorization header."""
     token = request.cookies.get("session")

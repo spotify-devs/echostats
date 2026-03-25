@@ -73,6 +73,10 @@ docker-clean: ## Remove all containers, volumes, and images
 db-shell: ## Open MongoDB shell
 	docker compose exec mongodb mongosh echostats
 
+db-seed: ## Seed database with test data
+	docker compose cp api/seed.py api:/app/seed.py
+	docker compose exec api uv run python seed.py
+
 # ── Misc ─────────────────────────────────────────────────────────────────────
 
 clean: ## Clean build artifacts
