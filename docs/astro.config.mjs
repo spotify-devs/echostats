@@ -12,46 +12,11 @@ export default defineConfig({
         github: "https://github.com/spotify-devs/echostats",
       },
       sidebar: [
-        {
-          label: "Getting Started",
-          items: [
-            { label: "Introduction", slug: "getting-started/introduction" },
-            { label: "Installation", slug: "getting-started/installation" },
-            { label: "Spotify App Setup", slug: "getting-started/spotify-setup" },
-            { label: "Configuration", slug: "getting-started/configuration" },
-          ],
-        },
-        {
-          label: "User Guide",
-          items: [
-            { label: "Dashboard", slug: "user-guide/dashboard" },
-            { label: "Analytics", slug: "user-guide/analytics" },
-            { label: "Importing History", slug: "user-guide/importing-history" },
-            { label: "Playlists", slug: "user-guide/playlists" },
-          ],
-        },
-        {
-          label: "API Reference",
-          items: [
-            { label: "Overview", slug: "api/overview" },
-            { label: "Authentication", slug: "api/authentication" },
-            { label: "Endpoints", slug: "api/endpoints" },
-          ],
-        },
-        {
-          label: "Contributing",
-          items: [
-            { label: "Development Setup", slug: "contributing/development" },
-            { label: "Guidelines", slug: "contributing/guidelines" },
-          ],
-        },
-        {
-          label: "Troubleshooting",
-          items: [
-            { label: "FAQ", slug: "troubleshooting/faq" },
-            { label: "Common Issues", slug: "troubleshooting/common-issues" },
-          ],
-        },
+        { label: "Getting Started", autogenerate: { directory: "getting-started" } },
+        { label: "User Guide", autogenerate: { directory: "user-guide" } },
+        { label: "API Reference", autogenerate: { directory: "api" } },
+        { label: "Contributing", autogenerate: { directory: "contributing" } },
+        { label: "Troubleshooting", autogenerate: { directory: "troubleshooting" } },
       ],
       customCss: [],
     }),
