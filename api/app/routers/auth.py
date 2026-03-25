@@ -38,8 +38,8 @@ def _create_jwt(user_id: str, spotify_id: str) -> str:
 
 
 @router.get("/login")
-async def login() -> dict[str, str]:
-    """Generate Spotify authorization URL."""
+async def login(request: Request) -> dict[str, str]:
+    """Generate Spotify authorization URL. Redirects browsers, returns JSON for JS clients."""
     state = secrets.token_urlsafe(32)
     _oauth_states[state] = datetime.utcnow()
 
@@ -58,6 +58,12 @@ async def login() -> dict[str, str]:
         "show_dialog": "false",
     }
     auth_url = f"{SPOTIFY_AUTH_URL}?{urlencode(params)}"
+
+    # If browser navigates here directly, redirect to Spotify
+    accept = request.headers.get("accept", "")
+    if "text/html" in accept and "application/json" not in accept:
+        return RedirectResponse(url=auth_url, status_code=302)
+
     return {"url": auth_url, "state": state}
 
 

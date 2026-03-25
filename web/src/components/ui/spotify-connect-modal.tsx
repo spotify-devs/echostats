@@ -98,7 +98,10 @@ export function SpotifyConnectModal({ isOpen, onClose, onConnected }: SpotifyCon
 
     try {
       // Get the Spotify auth URL from our API
-      const res = await fetch("/api/v1/auth/login", { credentials: "include" });
+      const res = await fetch("/api/v1/auth/login", {
+        credentials: "include",
+        headers: { "Accept": "application/json" },
+      });
       const data = await res.json();
 
       if (!data.url) {
