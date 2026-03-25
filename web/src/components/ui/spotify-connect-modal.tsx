@@ -27,14 +27,14 @@ export function SpotifyConnectModal({ isOpen, onClose, onConnected }: SpotifyCon
   const [status, setStatus] = useState<ConnectStatus>("idle");
   const [error, setError] = useState("");
   const popupRef = useRef<Window | null>(null);
-  const pollRef = useRef<NodeJS.Timeout>();
+  const pollRef = useRef<NodeJS.Timeout | null>(null);
 
   // Poll for auth completion when popup is open
   const startPolling = useCallback(() => {
     pollRef.current = setInterval(async () => {
       // Check if popup was closed
       if (popupRef.current?.closed) {
-        clearInterval(pollRef.current);
+        if (pollRef.current) clearInterval(pollRef.current);
         // Check if we're now authenticated
         try {
           const res = await fetch("/api/v1/auth/status", { credentials: "include" });
@@ -60,7 +60,7 @@ export function SpotifyConnectModal({ isOpen, onClose, onConnected }: SpotifyCon
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      clearInterval(pollRef.current);
+      if (pollRef.current) clearInterval(pollRef.current);
       if (popupRef.current && !popupRef.current.closed) {
         popupRef.current.close();
       }
@@ -72,7 +72,7 @@ export function SpotifyConnectModal({ isOpen, onClose, onConnected }: SpotifyCon
     function handleMessage(event: MessageEvent) {
       if (event.data?.type === "spotify-auth-success") {
         setStatus("success");
-        clearInterval(pollRef.current);
+        if (pollRef.current) clearInterval(pollRef.current);
         if (popupRef.current && !popupRef.current.closed) {
           popupRef.current.close();
         }
@@ -85,7 +85,7 @@ export function SpotifyConnectModal({ isOpen, onClose, onConnected }: SpotifyCon
       if (event.data?.type === "spotify-auth-error") {
         setStatus("error");
         setError(event.data.error || "Authentication failed");
-        clearInterval(pollRef.current);
+        if (pollRef.current) clearInterval(pollRef.current);
       }
     }
     window.addEventListener("message", handleMessage);
@@ -259,7 +259,7 @@ export function SpotifyConnectModal({ isOpen, onClose, onConnected }: SpotifyCon
               </p>
               <button
                 onClick={() => {
-                  clearInterval(pollRef.current);
+                  if (pollRef.current) clearInterval(pollRef.current);
                   popupRef.current?.close();
                   setStatus("idle");
                 }}

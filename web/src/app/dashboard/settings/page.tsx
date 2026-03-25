@@ -133,9 +133,40 @@ export default function SettingsPage() {
               <span className="text-sm text-theme-secondary">Plan</span>
               <span className="text-sm text-theme capitalize">{authStatus.user?.product || "—"}</span>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-theme-secondary">Token Expires</span>
-              <span className="text-sm text-theme-tertiary">{authStatus.token_expires_at ? new Date(authStatus.token_expires_at).toLocaleString() : "—"}</span>
+
+            {/* Token Status */}
+            <div className="mt-4 p-4 rounded-xl bg-theme-surface-2 border border-white/5 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-theme flex items-center gap-2">
+                  <Shield className="w-4 h-4 text-accent-dynamic" /> Token Status
+                </span>
+                {authStatus.token_expires_at && new Date(authStatus.token_expires_at) > new Date() ? (
+                  <span className="flex items-center gap-1.5 text-xs text-emerald-400">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    Active
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1.5 text-xs text-red-400">
+                    <span className="w-2 h-2 rounded-full bg-red-400" />
+                    Expired
+                  </span>
+                )}
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-xs text-theme-tertiary">Expires At</span>
+                <span className="text-xs text-theme-secondary font-mono">
+                  {authStatus.token_expires_at ? new Date(authStatus.token_expires_at).toLocaleString() : "—"}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-xs text-theme-tertiary">Auto-Refresh</span>
+                <span className="flex items-center gap-1.5 text-xs text-emerald-400">
+                  <RefreshCw className="w-3 h-3" /> Enabled
+                </span>
+              </div>
+              <p className="text-[10px] text-theme-tertiary border-t border-white/5 pt-2">
+                Tokens are automatically refreshed 5 minutes before expiry. Your tokens are encrypted at rest with AES-256-GCM.
+              </p>
             </div>
           </div>
         ) : (

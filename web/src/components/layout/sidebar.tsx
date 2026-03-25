@@ -4,37 +4,69 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  LayoutDashboard,
-  Music,
-  Users,
-  Disc3,
-  Clock,
-  BarChart3,
-  ListMusic,
-  Sparkles,
-  Heart,
-  Star,
-  Library,
-  Play,
-  Settings,
-  Menu,
-  X,
+  LayoutDashboard, Music, Users, Disc3, Clock, BarChart3,
+  ListMusic, Sparkles, Heart, Star, Library, Play, Settings,
+  Menu, X, Activity, Headphones, Zap, GitCompare, Terminal,
+  Radio, Podcast, Trophy, Mic2, Globe,
 } from "lucide-react";
 
-const navItems = [
-  { href: "/dashboard", icon: LayoutDashboard, label: "Overview" },
-  { href: "/dashboard/tracks", icon: Music, label: "Top Tracks" },
-  { href: "/dashboard/artists", icon: Users, label: "Top Artists" },
-  { href: "/dashboard/genres", icon: Disc3, label: "Genres" },
-  { href: "/dashboard/history", icon: Clock, label: "History" },
-  { href: "/dashboard/patterns", icon: BarChart3, label: "Patterns" },
-  { href: "/dashboard/mood", icon: Heart, label: "Mood & Vibe" },
-  { href: "/dashboard/review", icon: Star, label: "Year in Review" },
-  { href: "/dashboard/albums", icon: Disc3, label: "Albums" },
-  { href: "/dashboard/playlists", icon: ListMusic, label: "Playlists" },
-  { href: "/dashboard/library", icon: Library, label: "Library" },
-  { href: "/dashboard/recommendations", icon: Sparkles, label: "Discover" },
-  { href: "/dashboard/player", icon: Play, label: "Player" },
+interface NavSection {
+  title: string;
+  items: { href: string; icon: any; label: string }[];
+}
+
+const navSections: NavSection[] = [
+  {
+    title: "Main",
+    items: [
+      { href: "/dashboard", icon: LayoutDashboard, label: "Overview" },
+      { href: "/dashboard/player", icon: Play, label: "Player" },
+      { href: "/dashboard/history", icon: Clock, label: "History" },
+    ],
+  },
+  {
+    title: "Analytics",
+    items: [
+      { href: "/dashboard/tracks", icon: Music, label: "Top Tracks" },
+      { href: "/dashboard/artists", icon: Users, label: "Top Artists" },
+      { href: "/dashboard/albums", icon: Disc3, label: "Albums" },
+      { href: "/dashboard/genres", icon: Radio, label: "Genres" },
+      { href: "/dashboard/patterns", icon: BarChart3, label: "Patterns" },
+      { href: "/dashboard/mood", icon: Heart, label: "Mood & Vibe" },
+      { href: "/dashboard/stats", icon: Activity, label: "Deep Stats" },
+    ],
+  },
+  {
+    title: "Library",
+    items: [
+      { href: "/dashboard/playlists", icon: ListMusic, label: "Playlists" },
+      { href: "/dashboard/library", icon: Library, label: "Library" },
+      { href: "/dashboard/podcasts", icon: Podcast, label: "Podcasts" },
+      { href: "/dashboard/recent-adds", icon: Zap, label: "Recently Added" },
+    ],
+  },
+  {
+    title: "Discover",
+    items: [
+      { href: "/dashboard/recommendations", icon: Sparkles, label: "Discover" },
+      { href: "/dashboard/decades", icon: Globe, label: "Decades" },
+      { href: "/dashboard/audio-lab", icon: Mic2, label: "Audio Lab" },
+    ],
+  },
+  {
+    title: "Reports",
+    items: [
+      { href: "/dashboard/review", icon: Star, label: "Year in Review" },
+      { href: "/dashboard/compare", icon: GitCompare, label: "Compare" },
+      { href: "/dashboard/achievements", icon: Trophy, label: "Achievements" },
+    ],
+  },
+  {
+    title: "System",
+    items: [
+      { href: "/dashboard/api-logs", icon: Terminal, label: "API Logs" },
+    ],
+  },
 ];
 
 export function Sidebar() {
@@ -66,13 +98,13 @@ export function Sidebar() {
         }`}
       >
         {/* Logo */}
-        <div className="p-6 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        <div className="p-5 flex items-center justify-between">
+          <Link href="/dashboard" className="flex items-center gap-3">
             <div className="p-2 rounded-xl bg-brand-gradient">
               <Music className="w-5 h-5 text-white" />
             </div>
             <span className="text-lg font-bold text-gradient">EchoStats</span>
-          </div>
+          </Link>
           <button
             onClick={() => setIsOpen(false)}
             className="lg:hidden p-1 rounded-lg text-white/40 hover:text-white"
@@ -82,25 +114,34 @@ export function Sidebar() {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-3 space-y-1">
-          {navItems.map(({ href, icon: Icon, label }) => {
-            const isActive = pathname === href;
-            return (
-              <Link
-                key={href}
-                href={href}
-                onClick={() => setIsOpen(false)}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
-                  isActive
-                    ? "bg-accent-dynamic/15 text-accent-dynamic shadow-accent-glow/10"
-                    : "text-white/50 hover:text-white/80 hover:bg-white/5"
-                }`}
-              >
-                <Icon className="w-[18px] h-[18px]" />
-                {label}
-              </Link>
-            );
-          })}
+        <nav className="flex-1 overflow-y-auto px-3 pb-3 space-y-4 scrollbar-thin">
+          {navSections.map((section) => (
+            <div key={section.title}>
+              <p className="px-3 mb-1.5 text-[10px] font-semibold text-theme-tertiary uppercase tracking-widest">
+                {section.title}
+              </p>
+              <div className="space-y-0.5">
+                {section.items.map(({ href, icon: Icon, label }) => {
+                  const isActive = pathname === href || (href !== "/dashboard" && pathname.startsWith(href + "/"));
+                  return (
+                    <Link
+                      key={href}
+                      href={href}
+                      onClick={() => setIsOpen(false)}
+                      className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+                        isActive
+                          ? "bg-accent-dynamic/15 text-accent-dynamic"
+                          : "text-theme-secondary hover:text-theme hover:bg-white/5"
+                      }`}
+                    >
+                      <Icon className="w-[16px] h-[16px]" />
+                      {label}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </nav>
 
         {/* Settings */}
@@ -108,9 +149,13 @@ export function Sidebar() {
           <Link
             href="/dashboard/settings"
             onClick={() => setIsOpen(false)}
-            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-white/50 hover:text-white/80 hover:bg-white/5 transition-all duration-200"
+            className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-all duration-200 ${
+              pathname === "/dashboard/settings"
+                ? "bg-accent-dynamic/15 text-accent-dynamic"
+                : "text-theme-secondary hover:text-theme hover:bg-white/5"
+            }`}
           >
-            <Settings className="w-[18px] h-[18px]" />
+            <Settings className="w-[16px] h-[16px]" />
             Settings
           </Link>
         </div>
