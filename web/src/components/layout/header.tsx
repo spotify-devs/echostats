@@ -24,17 +24,14 @@ export function Header() {
   return (
     <>
       <header
-        className="h-16 border-b flex items-center justify-between px-4 sm:px-6 backdrop-blur-lg"
+        className="h-14 sm:h-16 border-b flex items-center justify-between px-4 sm:px-6 backdrop-blur-lg"
         style={{
           backgroundColor: "rgb(var(--surface-1) / 0.5)",
           borderColor: "rgb(var(--border) / var(--border-opacity))",
         }}
       >
-        {/* App name on mobile, spacer for hamburger */}
-        <div className="flex items-center gap-2 lg:hidden flex-shrink-0">
-          <div className="w-10" /> {/* hamburger spacer */}
-          <span className="text-sm font-bold text-gradient sm:hidden">EchoStats</span>
-        </div>
+        {/* Left: spacer for hamburger on mobile */}
+        <div className="lg:hidden w-12 flex-shrink-0" />
 
         {/* Search — hidden on mobile, visible on sm+ */}
         <div className="flex-1 hidden sm:block">

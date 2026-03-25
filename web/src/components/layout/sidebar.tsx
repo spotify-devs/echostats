@@ -136,11 +136,7 @@ export function Sidebar() {
       {/* Mobile hamburger */}
       <button
         onClick={() => setIsOpen(true)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-3 rounded-xl border text-theme-secondary hover:text-theme transition-colors"
-        style={{
-          backgroundColor: "rgb(var(--surface-2))",
-          borderColor: "rgb(var(--border) / 0.1)",
-        }}
+        className="lg:hidden fixed top-3 left-3 z-50 p-2.5 rounded-xl text-theme-secondary hover:text-theme hover:bg-current/[0.05] transition-all"
       >
         <Menu className="w-5 h-5" />
       </button>

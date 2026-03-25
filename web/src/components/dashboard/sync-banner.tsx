@@ -124,27 +124,23 @@ export function SyncBanner() {
     );
   }
 
-  // Token is healthy — show compact status bar
+  // Token is healthy — show compact inline status
   if (tokenExpires) {
     return (
       <>
         {updateBanner}
-        <div className="mx-4 sm:mx-6 mt-3 flex items-center gap-3 px-3 py-2 rounded-xl border border-current/[0.08] bg-current/[0.03]">
-          <div className="flex items-center gap-2 flex-1 flex-wrap">
-            <div className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-[11px] text-theme-tertiary">Connected</span>
-            </div>
-            <span className="text-[10px] text-theme-tertiary hidden sm:inline">·</span>
-            <div className="items-center gap-1 text-[10px] text-theme-tertiary hidden sm:flex">
-              <Clock className="w-3 h-3" />
-              Token expires in {timeUntil(tokenExpires)}
-            </div>
-            <span className="text-[10px] text-theme-tertiary hidden sm:inline">·</span>
-            <div className="items-center gap-1 text-[10px] text-emerald-400/70 hidden sm:flex">
-              <Shield className="w-3 h-3" />
-              Auto-refresh enabled
-            </div>
+        <div className="mx-4 sm:mx-6 mt-2 sm:mt-3 flex items-center gap-2 px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-xl border border-current/[0.08] bg-current/[0.02]">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse flex-shrink-0" />
+          <span className="text-[10px] sm:text-[11px] text-theme-tertiary">Connected</span>
+          <span className="text-[10px] text-theme-tertiary hidden sm:inline">·</span>
+          <div className="items-center gap-1 text-[10px] text-theme-tertiary hidden sm:flex">
+            <Clock className="w-3 h-3" />
+            Token {timeUntil(tokenExpires)}
+          </div>
+          <span className="text-[10px] text-theme-tertiary hidden sm:inline">·</span>
+          <div className="items-center gap-1 text-[10px] text-emerald-400/70 hidden sm:flex">
+            <Shield className="w-3 h-3" />
+            Auto-refresh
           </div>
         </div>
       </>
