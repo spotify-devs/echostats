@@ -21,7 +21,7 @@ export default function ApiLogsPage() {
     refetchInterval: 30000,
   });
 
-  const { data: logs, isLoading: loadingLogs, refetch, isFetching } = useQuery({
+  const { data: logs, isLoading: loadingLogs, refetch, isFetching, isError: logsError } = useQuery({
     queryKey: ["api-logs", page, statusFilter, methodFilter],
     queryFn: () => {
       let url = `/api/v1/api-logs?page=${page}&limit=50`;
@@ -242,7 +242,9 @@ export default function ApiLogsPage() {
                   )) : (
                     <tr>
                       <td colSpan={6} className="px-4 py-12 text-center text-theme-tertiary">
-                        {statusFilter !== "all" || methodFilter !== "all"
+                        {logsError
+                          ? "Failed to load logs — check authentication"
+                          : statusFilter !== "all" || methodFilter !== "all"
                           ? "No logs matching filters"
                           : "No API calls logged yet. Sync data to generate logs."}
                       </td>
