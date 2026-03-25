@@ -8,6 +8,10 @@ export type AccentId =
   | "red"
   | "blue"
   | "orange"
+  | "sunset"
+  | "ocean-breeze"
+  | "neon-nights"
+  | "aurora"
   | "custom";
 
 export interface ThemeColors {
@@ -47,6 +51,8 @@ export interface AccentDefinition {
   id: AccentId;
   name: string;
   color: string;
+  /** If set, the swatch renders as a gradient instead of solid */
+  gradient?: string;
   colors: AccentColors;
 }
 
@@ -282,6 +288,63 @@ export const accents: AccentDefinition[] = [
       gradientFrom: "#ea580c",
       gradientVia: "#f97316",
       gradientTo: "#fb923c",
+    },
+  },
+  // ── Gradient Accents ────────────────────────────────────────────
+  {
+    id: "sunset",
+    name: "Sunset",
+    color: "#f97316",
+    gradient: "linear-gradient(135deg, #f97316, #ef4444, #ec4899)",
+    colors: {
+      primary: "249 115 22",
+      primaryHover: "239 68 68",
+      glow: "236 72 153",
+      gradientFrom: "#f97316",
+      gradientVia: "#ef4444",
+      gradientTo: "#ec4899",
+    },
+  },
+  {
+    id: "ocean-breeze",
+    name: "Ocean",
+    color: "#06b6d4",
+    gradient: "linear-gradient(135deg, #06b6d4, #3b82f6, #8b5cf6)",
+    colors: {
+      primary: "59 130 246",
+      primaryHover: "6 182 212",
+      glow: "99 102 241",
+      gradientFrom: "#06b6d4",
+      gradientVia: "#3b82f6",
+      gradientTo: "#8b5cf6",
+    },
+  },
+  {
+    id: "neon-nights",
+    name: "Neon",
+    color: "#a855f7",
+    gradient: "linear-gradient(135deg, #ec4899, #a855f7, #6366f1)",
+    colors: {
+      primary: "168 85 247",
+      primaryHover: "236 72 153",
+      glow: "139 92 246",
+      gradientFrom: "#ec4899",
+      gradientVia: "#a855f7",
+      gradientTo: "#6366f1",
+    },
+  },
+  {
+    id: "aurora",
+    name: "Aurora",
+    color: "#10b981",
+    gradient: "linear-gradient(135deg, #10b981, #06b6d4, #8b5cf6)",
+    colors: {
+      primary: "16 185 129",
+      primaryHover: "6 182 212",
+      glow: "16 185 129",
+      gradientFrom: "#10b981",
+      gradientVia: "#06b6d4",
+      gradientTo: "#8b5cf6",
     },
   },
 ];

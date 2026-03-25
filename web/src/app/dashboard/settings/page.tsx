@@ -96,7 +96,11 @@ export default function SettingsPage() {
                       ? "ring-2 ring-white/50 ring-offset-2 ring-offset-transparent scale-110"
                       : "group-hover:scale-110"
                   }`}
-                  style={{ backgroundColor: accent.color }}
+                  style={
+                    accent.gradient
+                      ? { background: accent.gradient }
+                      : { backgroundColor: accent.color }
+                  }
                 />
                 <span className="text-[10px] text-theme-tertiary">{accent.name}</span>
               </button>
