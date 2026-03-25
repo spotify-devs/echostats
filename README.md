@@ -1,14 +1,24 @@
 <div align="center">
 
-# 🎵 EchoStats 🎧
+<img src="https://raw.githubusercontent.com/spotify-devs/echostats/main/web/public/icons/icon-192x192.png" alt="EchoStats" width="80" />
 
-**Your music. Your data. Your server.**
+# EchoStats
 
-*Self-hosted Spotify analytics dashboard with 40+ pages of insights into your listening habits.*
+### 🎵 Your music. Your data. Your server. 🎧
 
-[![GitHub Release](https://img.shields.io/github/v/release/spotify-devs/echostats?style=flat-square&logo=github&label=Release)](https://github.com/spotify-devs/echostats/releases)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](./LICENSE)
-[![Docker Pulls](https://img.shields.io/docker/pulls/spotify-devs/echostats-api?style=flat-square&logo=docker&label=Docker%20Pulls)](https://ghcr.io/spotify-devs/echostats-api)
+*Self-hosted Spotify analytics dashboard — 40+ pages of deep insights into your listening habits.*
+
+[![GitHub Release](https://img.shields.io/github/v/release/spotify-devs/echostats?style=for-the-badge&logo=github&label=Release&color=7c3aed)](https://github.com/spotify-devs/echostats/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](./LICENSE)
+[![CI](https://img.shields.io/github/actions/workflow/status/spotify-devs/echostats/ci.yml?style=for-the-badge&logo=github-actions&label=CI)](https://github.com/spotify-devs/echostats/actions)
+
+<br />
+
+**[Quick Start](#-quick-start-5-minutes)** · **[Features](#-features)** · **[API Reference](#-api-reference)** · **[Docs](./docs/)** · **[Releases](https://github.com/spotify-devs/echostats/releases)**
+
+<br />
+
+<sub>Think Spotify Wrapped — but year-round, with 40+ pages, running on **your** server.</sub>
 
 </div>
 
@@ -16,234 +26,309 @@
 
 ## 🎶 What is EchoStats?
 
-EchoStats is a **self-hosted** Spotify analytics platform that connects to your Spotify account, syncs your listening history automatically, and serves up beautiful dashboards with deep insights into your music taste. Think Spotify Wrapped — but year-round, with 40+ pages, and running on *your* server.
+EchoStats connects to your Spotify account, **syncs your listening history** automatically every 15 minutes, and serves up beautiful dashboards with deep insights — top artists, genre breakdowns, music DNA, listening patterns, mood analysis, and much more.
 
 ```bash
-# Get your analytics snapshot with a single call
+# Get your analytics snapshot
 curl http://localhost:8000/api/v1/analytics/overview \
-  -H "Cookie: session=<your_jwt_token>"
+  -H "Cookie: session=<jwt>"
 ```
+
+<details>
+<summary>📦 Example Response</summary>
 
 ```json
 {
+  "total_tracks_played": 1796,
+  "total_hours": 93.7,
+  "unique_artists": 14,
+  "unique_tracks": 25,
+  "listening_streak_days": 90,
   "top_artists": [
-    { "name": "Taylor Swift", "play_count": 342, "total_minutes": 1026 },
-    { "name": "The Weeknd", "play_count": 218, "total_minutes": 741 }
+    { "name": "Taylor Swift", "play_count": 273, "rank": 1 },
+    { "name": "Ed Sheeran", "play_count": 210, "rank": 2 }
   ],
-  "top_tracks": [
-    { "title": "Anti-Hero", "artist": "Taylor Swift", "play_count": 87 }
+  "top_genres": [
+    { "name": "pop", "play_count": 1395 },
+    { "name": "hip hop", "play_count": 249 }
   ],
-  "top_genres": ["pop", "r&b", "indie rock", "hip-hop"],
-  "listening_hours": 486.2,
-  "unique_artists": 312,
-  "streak_days": 47
+  "avg_audio_features": {
+    "danceability": 0.74, "energy": 0.78,
+    "valence": 0.65, "acousticness": 0.15
+  }
 }
 ```
+
+</details>
 
 ---
 
 ## 📊 Features
 
-| Feature | Description |
-|---------|-------------|
-| 🎛️ **40+ Dashboard Pages** | Charts, patterns, listening habits, music DNA, taste profile, mood analysis, year-in-review, and more |
-| 📈 **Listening Analytics** | Top tracks, artists, genres with time-range filters (week / month / year / all-time) |
-| 🧬 **Music DNA** | Audio feature radar — danceability, energy, valence, acousticness, tempo, and more |
-| 🗺️ **Artist Map** | Explore connections between your favorite artists with play share distribution |
-| 🔄 **Sync Engine** | Auto-syncs your Spotify data every 15 minutes via ARQ background worker |
-| 🔐 **Single-User Auto-Login** | Self-hosted mode: auto-authenticates when only one user exists |
-| 🎨 **6 Themes + 8 Accent Colors** | Dark, Light, Dim, Ocean, Midnight, Forest — plus a custom color picker |
-| 📱 **PWA** | Install on any device (mobile / desktop), works offline |
-| 📥 **Data Import** | Import your full Spotify extended streaming history (JSON from privacy export) |
-| 🎵 **Spotify Playback Control** | Play / pause / skip, view queue, switch devices — right from the dashboard |
-| 📋 **API Logs Dashboard** | Monitor Spotify API calls with status distribution, latency stats, and pagination |
-| 🔍 **Sync Job Tracking** | View step-by-step sync progress with detailed API call history |
-| 🔔 **Update Notifications** | Dashboard banner when a new version is available on GitHub |
-| 🏠 **Self-Hosted** | Docker Compose deployment — your data stays on your server |
-| ☸️ **Helm Chart** | Kubernetes deployment via OCI registry |
-| 🏷️ **Version Indicator** | Deployed version shown in sidebar + API health endpoint |
+<table>
+<tr>
+<td width="50%">
+
+### 🎛️ 40+ Dashboard Pages
+Charts, patterns, listening habits, music DNA, taste profile, mood & vibe, timeline, calendar heatmap, year-in-review, wrapped, and more.
+
+### 📈 Listening Analytics
+Top tracks, artists, genres with time-range filters — week, month, 90 days, year, or all-time.
+
+### 🧬 Music DNA
+Audio feature radar chart — danceability, energy, valence, acousticness, tempo, speechiness.
+
+### 🗺️ Artist Map
+Explore connections between artists with play share pie charts and sortable artist grid.
+
+</td>
+<td width="50%">
+
+### 🔄 Auto-Sync Engine
+Background worker syncs your Spotify data every 15 minutes and refreshes analytics automatically.
+
+### 🎨 6 Themes + Custom Accents
+Dark, Light, Dim, Ocean, Midnight, Forest — plus 8 accent colors and a custom color picker.
+
+### 📱 PWA (Installable)
+Install on phone or desktop. Works on any device with responsive mobile-first design.
+
+### 📥 History Import
+Import your full Spotify extended streaming history JSON from the privacy data export.
+
+</td>
+</tr>
+<tr>
+<td>
+
+### 🎵 Playback Control
+Play, pause, skip, view queue, switch devices — right from the dashboard.
+
+### 📋 API & Sync Monitoring
+API logs dashboard with status distribution, latency, and paginated log table. Sync jobs with step-by-step detail view.
+
+</td>
+<td>
+
+### 🔔 Update Notifications
+Banner in dashboard when a newer version is available on GitHub — with one-click link to release notes.
+
+### 🏠 Self-Hosted & Private
+Docker Compose or Helm chart. Your data never leaves your server. Single-user auto-login for personal deployments.
+
+</td>
+</tr>
+</table>
 
 ---
 
 ## 🏗️ Architecture
 
 ```
-┌─────────┐     ┌──────────┐     ┌──────────┐     ┌───────┐
-│ Next.js  │────▶│ FastAPI   │────▶│ MongoDB  │     │ Redis │
-│ Frontend │◀────│ API       │◀────│ Database │     │ Cache │
-└─────────┘     └──────────┘     └──────────┘     └───────┘
-                      │                               │
-                      ▼                               │
-                ┌──────────┐                          │
-                │ ARQ      │──────────────────────────┘
-                │ Worker   │ (cron: sync + analytics)
-                └──────────┘
+                          ┌─────────────────────┐
+                          │    🌐 Browser / PWA   │
+                          └──────────┬──────────┘
+                                     │
+                          ┌──────────▼──────────┐
+                          │   Next.js Frontend   │  ← 42 pages, Tailwind, Framer Motion
+                          │   (SSR + React 19)   │
+                          └──────────┬──────────┘
+                                     │ /api/* proxy
+                          ┌──────────▼──────────┐
+                          │    FastAPI Backend    │  ← 30+ REST endpoints, JWT auth
+                          │    (Python 3.12)      │
+                          └───┬──────────────┬───┘
+                              │              │
+                   ┌──────────▼───┐   ┌──────▼──────┐
+                   │   MongoDB 7   │   │   Redis 7   │
+                   │  (Beanie ODM) │   │  (Cache +   │
+                   │   Documents   │   │   Queue)    │
+                   └──────────────┘   └──────┬──────┘
+                                             │
+                                   ┌─────────▼─────────┐
+                                   │   ARQ Worker       │  ← Cron: sync every 15min
+                                   │   (Background)     │     Analytics every 6h
+                                   └───────────────────┘
 ```
-
-- **Next.js Frontend** — SSR dashboard with 40+ pages, Tailwind styling, Framer Motion animations
-- **FastAPI API** — 30+ REST endpoints handling auth, analytics, playback, and sync
-- **MongoDB** — Document storage for users, tracks, artists, history, and computed analytics
-- **Redis** — Caching layer + message broker for the ARQ task queue
-- **ARQ Worker** — Background cron that syncs Spotify data every 15 minutes and refreshes analytics
 
 ---
 
 ## 🛠️ Tech Stack
 
 | Layer | Technology | Purpose |
-|-------|-----------|---------|
-| Frontend | Next.js 16 / React 19 / TypeScript | SSR dashboard with 42 pages |
-| Styling | Tailwind CSS 4 / Framer Motion | 6 themes + spring animations |
-| Charts | Recharts | Interactive data visualizations |
-| Data Tables | TanStack Table | Sortable, filterable, paginated tables |
-| Backend | Python 3.12 / FastAPI | REST API with 30+ endpoints |
-| Database | MongoDB 7 / Beanie ODM | Document storage for analytics |
-| Cache / Queue | Redis 7 / ARQ | Background sync + task queue |
-| Container | Docker / Helm | Kubernetes-ready deployment |
-| CI/CD | GitHub Actions | Automated testing + GHCR image publishing |
-| Docs | Astro Starlight | Documentation site |
+|:------|:----------|:--------|
+| **Frontend** | Next.js 16 · React 19 · TypeScript | SSR dashboard with 42 pages |
+| **Styling** | Tailwind CSS 4 · Framer Motion | 6 themes, spring animations, responsive |
+| **Charts** | Recharts | Bar, pie, radar, heatmap visualizations |
+| **Tables** | TanStack Table | Sortable, filterable, paginated data tables |
+| **Backend** | Python 3.12 · FastAPI · Pydantic | REST API with 30+ endpoints |
+| **Database** | MongoDB 7 · Beanie ODM | Document storage for all analytics data |
+| **Cache/Queue** | Redis 7 · ARQ | Background sync + task scheduling |
+| **Container** | Docker · Helm 3 | Kubernetes-ready OCI deployment |
+| **CI/CD** | GitHub Actions | Lint, test, build, publish to GHCR |
+| **Docs** | Astro Starlight | Documentation site |
 
 ---
 
 ## 🚀 Quick Start (5 Minutes)
 
-### 1. Create a Spotify App
+### 1️⃣ Create a Spotify App
 
-Go to the [Spotify Developer Dashboard](https://developer.spotify.com/dashboard), create an app, and set the redirect URI to:
+Go to the [Spotify Developer Dashboard](https://developer.spotify.com/dashboard) → Create App → Set redirect URI:
 
 ```
 http://localhost:8000/api/v1/auth/callback
 ```
 
-### 2. Clone and Configure
+### 2️⃣ Clone & Configure
 
 ```bash
 git clone https://github.com/spotify-devs/echostats.git
 cd echostats
-
 cp .env.example .env
 ```
 
-Edit `.env` with your Spotify credentials and generate secrets:
+Edit `.env` — set your Spotify credentials and generate secrets:
 
-```bash
-# Set your Spotify app credentials
-SPOTIFY_CLIENT_ID=your_client_id_here
-SPOTIFY_CLIENT_SECRET=your_client_secret_here
-
-# Generate secrets (run these commands and paste the output)
-python -c "import secrets; print(secrets.token_hex(32))"   # → JWT_SECRET
-python -c "import secrets; print(secrets.token_hex(32))"   # → ENCRYPTION_KEY
+```env
+SPOTIFY_CLIENT_ID=your_client_id
+SPOTIFY_CLIENT_SECRET=your_client_secret
+JWT_SECRET=$(python -c "import secrets; print(secrets.token_hex(32))")
+ENCRYPTION_KEY=$(python -c "import secrets; print(secrets.token_hex(32))")
 ```
 
-### 3. Start the Stack
+### 3️⃣ Launch
 
 ```bash
 docker compose up -d
 ```
 
-This launches **5 services**: MongoDB, Redis, FastAPI API, ARQ Worker, and the Next.js frontend.
+### 4️⃣ Connect
 
-### 4. Connect Your Spotify Account
+Visit **http://localhost:3000** → Click **Connect with Spotify** → Data syncs automatically 🎉
 
-Visit **[http://localhost:3000](http://localhost:3000)** and click **Connect with Spotify**. Your data will start syncing automatically.
-
-### Verify the Installation
+<details>
+<summary>✅ Verify Installation</summary>
 
 ```bash
-# Check all services are healthy
+# All 5 services should be healthy
 docker compose ps
 
-# Test the API
+# API health check
 curl http://localhost:8000/api/health
-# → {"status":"healthy","service":"echostats-api","version":"0.1.0"}
+# → {"status":"healthy","service":"echostats-api","version":"v0.8.0"}
+
+# Check for updates
+curl http://localhost:8000/api/health/update
+# → {"current_version":"v0.8.0","latest_version":"v0.8.0","update_available":false}
 ```
+
+</details>
 
 ---
 
-## ☸️ Helm / Kubernetes
-
-Deploy to Kubernetes with the OCI-hosted Helm chart:
+## ☸️ Kubernetes / Helm
 
 ```bash
 helm install echostats oci://ghcr.io/spotify-devs/charts/echostats \
+  --namespace echostats --create-namespace \
   --set spotify.clientId=YOUR_CLIENT_ID \
   --set spotify.clientSecret=YOUR_SECRET \
-  --set security.jwtSecret=YOUR_JWT_SECRET \
-  --set security.encryptionKey=YOUR_ENCRYPTION_KEY
+  --set security.jwtSecret=$(python -c "import secrets; print(secrets.token_hex(32))") \
+  --set security.encryptionKey=$(python -c "import secrets; print(secrets.token_hex(32))")
 ```
 
-The chart deploys all five components (MongoDB, Redis, API, Worker, Web) with configurable replicas, resource limits, ingress, and autoscaling. See [`helm/echostats/values.yaml`](./helm/echostats/values.yaml) for the full list of options.
+See [`helm/echostats/values.yaml`](./helm/echostats/values.yaml) for all options (replicas, resources, ingress, TLS).
 
 ---
 
 ## 📡 API Reference
 
-All endpoints are under `/api/v1/` and require JWT authentication via session cookies (except health checks).
+All endpoints under `/api/v1/` require JWT auth via session cookies (set automatically at login).
 
 | Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/api/v1/analytics/overview` | Analytics snapshot (top artists, tracks, genres, stats) |
-| `GET` | `/api/v1/tracks/top` | Top tracks by play count |
-| `GET` | `/api/v1/artists/top` | Top artists by play count |
-| `GET` | `/api/v1/history` | Listening history with pagination |
-| `GET` | `/api/v1/genres/distribution` | Genre breakdown |
-| `POST` | `/api/v1/sync-jobs/trigger` | Trigger manual data sync |
+|:-------|:---------|:------------|
+| `GET` | `/api/v1/analytics/overview?period=all_time` | Full analytics snapshot |
+| `GET` | `/api/v1/tracks/top?period=month&limit=50` | Top tracks by play count |
+| `GET` | `/api/v1/artists/top?period=year&limit=20` | Top artists by play count |
+| `GET` | `/api/v1/genres/distribution?period=all_time` | Genre breakdown with counts |
+| `GET` | `/api/v1/history?page=1&limit=50` | Paginated listening history |
+| `GET` | `/api/v1/playlists` | User's playlists |
 | `GET` | `/api/v1/player/current` | Currently playing track |
-| `GET` | `/api/health` | Health check with version |
-| `GET` | `/api/health/update` | Check for newer version on GitHub |
+| `POST` | `/api/v1/sync-jobs/trigger` | Trigger manual data sync |
+| `GET` | `/api/v1/sync-jobs/stats` | Sync job statistics |
+| `GET` | `/api/health` | Health check + version |
+| `GET` | `/api/health/update` | Check GitHub for updates |
 
-Interactive API docs available at **[http://localhost:8000/api/docs](http://localhost:8000/api/docs)** (Swagger UI).
+📖 **Full 38-endpoint reference** → [docs/api/endpoints](./docs/src/content/docs/api/endpoints.mdx)
+
+🔗 **Swagger UI** → `http://localhost:8000/api/docs`
 
 ---
 
-## 🌱 Seed Data (Development)
-
-Generate realistic demo data for local development:
+## 🌱 Development
 
 ```bash
+# Start MongoDB + Redis
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d mongodb redis
+
+# API (terminal 1)
+cd api && uv run uvicorn app.main:app --reload --port 8000
+
+# Web (terminal 2)
+cd web && pnpm dev
+
+# Seed test data
 cd api && uv run python seed.py
 ```
 
-This creates:
+<details>
+<summary>🧪 Seed Data Contents</summary>
 
 | Data | Count |
-|------|-------|
-| 🎤 Artists | 15 (Taylor Swift, Drake, The Weeknd, and more) |
-| 🎵 Tracks | 25 (with full audio features) |
-| 📜 Listening History | ~2,000 plays across 90 days |
-| 📁 Playlists | 5 (Chill Vibes, Workout Bangers, Late Night Drive, etc.) |
-| 📊 Analytics Snapshots | 4 (week, month, year, all-time) |
-| 🔄 Sync Jobs | 6 (with 1 failed for realism) |
-| 📋 API Logs | ~300 entries across 30 days |
-| 👤 Demo User | `demo@echostats.local` |
+|:-----|:------|
+| 🎤 Artists | 15 (Taylor Swift, Drake, The Weeknd, Ariana Grande, …) |
+| 🎵 Tracks | 25 with full audio features |
+| 📜 History | ~1,800 plays across 90 days |
+| 📁 Playlists | 5 (Chill Vibes, Workout Bangers, Late Night Drive, …) |
+| 📊 Analytics | 4 snapshots (week / month / year / all-time) |
+| 📋 API Logs | ~360 entries with 5% error rate |
+| 🔄 Sync Jobs | 6 jobs (5 completed + 1 failed) |
+
+</details>
+
+```bash
+# Lint & Test
+make lint         # ruff (Python) + biome (TypeScript)
+make test         # pytest + vitest
+make format       # Auto-format all code
+```
 
 ---
 
 ## 🤝 Contributing
 
-We welcome contributions! See the [development guide](./docs/src/content/docs/contributing/development.mdx) for local setup instructions.
+Contributions welcome! See the [development guide](./docs/src/content/docs/contributing/development.mdx) for setup details.
 
-```bash
-# Quick dev setup
-make dev          # Start all services with hot-reload
-make test         # Run all tests (pytest + vitest)
-make lint         # Lint everything (ruff + biome)
-make format       # Auto-format (ruff + biome)
-```
+1. Fork the repo
+2. Create a feature branch (`git checkout -b feat/my-feature`)
+3. Commit your changes
+4. Push and open a Pull Request
 
 ---
 
 ## 📄 License
 
-MIT License — see [LICENSE](./LICENSE) for details.
+[MIT License](./LICENSE) — use it, modify it, self-host it.
 
 ---
 
 <div align="center">
 
-**[Documentation](./docs/)** · **[Report Bug](https://github.com/spotify-devs/echostats/issues)** · **[Request Feature](https://github.com/spotify-devs/echostats/issues)**
+**[📖 Docs](./docs/)** · **[🐛 Report Bug](https://github.com/spotify-devs/echostats/issues)** · **[💡 Request Feature](https://github.com/spotify-devs/echostats/issues)** · **[📦 Releases](https://github.com/spotify-devs/echostats/releases)**
 
-Made with 🎵 by the EchoStats community
+<br />
+
+<sub>Made with 🎵 by the EchoStats community</sub>
 
 </div>
