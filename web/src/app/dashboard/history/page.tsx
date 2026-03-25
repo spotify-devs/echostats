@@ -1,18 +1,21 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Clock, Upload, Download } from "lucide-react";
 import { api } from "@/lib/api";
 import { TrackCard } from "@/components/music/track-card";
 import { DateRangeFilter } from "@/components/ui/date-range-filter";
 import { ListSkeleton } from "@/components/ui/loading-skeleton";
 import { exportListeningHistory } from "@/lib/export";
+import { ImportHistoryModal } from "@/components/ui/import-modal";
 
 export default function HistoryPage() {
   const [page, setPage] = useState(1);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [importOpen, setImportOpen] = useState(false);
+  const queryClient = useQueryClient();
 
   // Reset to page 1 when date range changes
   useEffect(() => {
@@ -56,11 +59,21 @@ export default function HistoryPage() {
           >
             <Download className="w-4 h-4" /> Export CSV
           </button>
-          <button className="btn-primary flex items-center gap-2 text-sm">
+          <button
+            onClick={() => setImportOpen(true)}
+            className="btn-primary flex items-center gap-2 text-sm"
+          >
             <Upload className="w-4 h-4" /> Import History
           </button>
         </div>
       </div>
+
+      {/* Import Modal */}
+      <ImportHistoryModal
+        isOpen={importOpen}
+        onClose={() => setImportOpen(false)}
+        onComplete={() => queryClient.invalidateQueries({ queryKey: ["history"] })}
+      />
 
       {isLoading ? (
         <ListSkeleton rows={10} />

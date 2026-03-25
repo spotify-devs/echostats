@@ -1,12 +1,19 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { Settings, User, RefreshCw, Upload, Shield, Palette, Paintbrush, Check } from "lucide-react";
+import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Settings, User, RefreshCw, Upload, Shield, Palette, Paintbrush, Check, Loader2 } from "lucide-react";
 import { api } from "@/lib/api";
 import { useTheme } from "@/components/theme-provider";
 import { themes, accents, type ThemeId, type AccentId } from "@/lib/themes";
+import { ImportHistoryModal } from "@/components/ui/import-modal";
+import { showToast } from "@/components/ui/toast";
 
 export default function SettingsPage() {
+  const [importOpen, setImportOpen] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const queryClient = useQueryClient();
+
   const { data: authStatus } = useQuery({
     queryKey: ["auth-status"],
     queryFn: () => api.get<any>("/api/v1/auth/status"),
@@ -142,15 +149,41 @@ export default function SettingsPage() {
           <RefreshCw className="w-5 h-5 text-spotify-green" /> Data Sync
         </h2>
         <div className="flex gap-3">
-          <button className="btn-primary text-sm flex items-center gap-2">
-            <RefreshCw className="w-4 h-4" /> Force Sync
+          <button
+            onClick={async () => {
+              setSyncing(true);
+              try {
+                await api.post("/api/v1/analytics/refresh?period=all_time");
+                queryClient.invalidateQueries();
+                showToast("success", "Analytics refreshed successfully");
+              } catch {
+                showToast("error", "Sync failed — check your Spotify connection");
+              } finally {
+                setSyncing(false);
+              }
+            }}
+            disabled={syncing}
+            className="btn-primary text-sm flex items-center gap-2 disabled:opacity-50"
+          >
+            {syncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+            {syncing ? "Syncing..." : "Force Sync"}
           </button>
-          <button className="btn-primary text-sm flex items-center gap-2">
+          <button
+            onClick={() => setImportOpen(true)}
+            className="btn-primary text-sm flex items-center gap-2"
+          >
             <Upload className="w-4 h-4" /> Import History
           </button>
         </div>
         <p className="text-xs text-theme-tertiary">Data syncs automatically every 15 minutes</p>
       </div>
+
+      {/* Import Modal */}
+      <ImportHistoryModal
+        isOpen={importOpen}
+        onClose={() => setImportOpen(false)}
+        onComplete={() => queryClient.invalidateQueries()}
+      />
 
       {/* Security */}
       <div className="glass-card p-6 space-y-4">
