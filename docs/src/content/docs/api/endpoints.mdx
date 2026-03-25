@@ -5,4 +5,458 @@ description: Complete API endpoint reference for EchoStats.
 
 # Endpoints
 
-_Documentation coming soon._
+All endpoints below are relative to the base URL `http://localhost:8000`. Versioned endpoints require JWT authentication via the `session` cookie unless noted otherwise.
+
+---
+
+## Health
+
+Health and readiness probes. **No authentication required.**
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/health` | Health check with service name and version |
+| `GET` | `/api/health/ready` | Readiness probe — verifies MongoDB and Redis connectivity |
+| `GET` | `/api/health/update` | Checks GitHub for newer releases |
+
+### `GET /api/health`
+
+```json
+{
+  "status": "healthy",
+  "service": "echostats-api",
+  "version": "0.1.0"
+}
+```
+
+### `GET /api/health/update`
+
+```json
+{
+  "update_available": true,
+  "current_version": "0.1.0",
+  "latest_version": "0.2.0",
+  "release_url": "https://github.com/spotify-devs/echostats/releases/tag/v0.2.0"
+}
+```
+
+---
+
+## Authentication
+
+OAuth 2.0 flow with Spotify and JWT session management.
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/v1/auth/login` | Generate Spotify authorization URL and redirect |
+| `GET` | `/api/v1/auth/callback` | Spotify OAuth callback — exchanges code for tokens, sets session cookie |
+| `POST` | `/api/v1/auth/refresh` | Refresh the JWT session token |
+| `GET` | `/api/v1/auth/status` | Get current authentication status and user info |
+| `POST` | `/api/v1/auth/logout` | Clear session cookie and log out |
+| `GET` | `/api/v1/auth/dev-login` | Development-only: bypass OAuth for local testing |
+
+### `GET /api/v1/auth/status`
+
+```json
+{
+  "authenticated": true,
+  "user": {
+    "spotify_id": "user123",
+    "display_name": "John",
+    "email": "john@example.com",
+    "avatar_url": "https://i.scdn.co/image/..."
+  }
+}
+```
+
+---
+
+## Analytics
+
+Pre-computed analytics snapshots.
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/v1/analytics/overview` | Full analytics snapshot — top artists, tracks, genres, listening stats |
+| `POST` | `/api/v1/analytics/refresh` | Force-refresh analytics (normally runs on schedule) |
+
+### `GET /api/v1/analytics/overview`
+
+**Query Parameters:**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `period` | string | `month` | Time range: `week`, `month`, `quarter`, `year`, `all_time` |
+
+**Response:**
+
+```json
+{
+  "period": "month",
+  "top_artists": [
+    { "name": "Taylor Swift", "play_count": 142, "total_minutes": 426, "image_url": "..." }
+  ],
+  "top_tracks": [
+    { "title": "Anti-Hero", "artist": "Taylor Swift", "play_count": 37, "image_url": "..." }
+  ],
+  "top_genres": ["pop", "indie rock", "r&b"],
+  "stats": {
+    "total_listening_hours": 86.4,
+    "unique_artists": 78,
+    "unique_tracks": 312,
+    "unique_genres": 24,
+    "streak_days": 14
+  },
+  "hourly_distribution": [0, 0, 0, 1, 2, 5, 12, 18, ...],
+  "daily_distribution": [42, 38, 45, 51, 48, 62, 58],
+  "audio_features": {
+    "danceability": 0.68,
+    "energy": 0.72,
+    "valence": 0.55,
+    "acousticness": 0.23,
+    "instrumentalness": 0.04,
+    "speechiness": 0.08
+  }
+}
+```
+
+---
+
+## Tracks
+
+Track analytics and details.
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/v1/tracks/top` | Top tracks ranked by play count |
+| `GET` | `/api/v1/tracks/{track_id}` | Detailed track info including audio features |
+
+### `GET /api/v1/tracks/top`
+
+**Query Parameters:**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `period` | string | `month` | Time range: `week`, `month`, `quarter`, `year`, `all_time` |
+| `limit` | int | `20` | Number of results (max: 100) |
+| `page` | int | `1` | Page number |
+
+**Response:**
+
+```json
+{
+  "tracks": [
+    {
+      "track_id": "spotify:track:abc123",
+      "title": "Anti-Hero",
+      "artist": "Taylor Swift",
+      "album": "Midnights",
+      "play_count": 87,
+      "total_minutes": 261,
+      "image_url": "https://i.scdn.co/image/...",
+      "audio_features": {
+        "danceability": 0.637,
+        "energy": 0.535,
+        "valence": 0.533
+      }
+    }
+  ],
+  "total": 312,
+  "page": 1,
+  "limit": 20
+}
+```
+
+---
+
+## Artists
+
+Artist analytics and details.
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/v1/artists/top` | Top artists ranked by play count |
+| `GET` | `/api/v1/artists/{artist_id}` | Detailed artist info with top tracks and genres |
+
+### `GET /api/v1/artists/top`
+
+**Query Parameters:**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `period` | string | `month` | Time range: `week`, `month`, `quarter`, `year`, `all_time` |
+| `limit` | int | `20` | Number of results (max: 100) |
+| `page` | int | `1` | Page number |
+
+**Response:**
+
+```json
+{
+  "artists": [
+    {
+      "artist_id": "spotify:artist:xyz789",
+      "name": "Taylor Swift",
+      "genres": ["pop", "indie pop"],
+      "play_count": 342,
+      "total_minutes": 1026,
+      "image_url": "https://i.scdn.co/image/...",
+      "unique_tracks": 45
+    }
+  ],
+  "total": 78,
+  "page": 1,
+  "limit": 20
+}
+```
+
+---
+
+## Genres
+
+Genre distribution analytics.
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/v1/genres/distribution` | Genre breakdown by play count |
+
+### `GET /api/v1/genres/distribution`
+
+**Query Parameters:**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `period` | string | `month` | Time range filter |
+
+**Response:**
+
+```json
+{
+  "genres": [
+    { "name": "pop", "play_count": 482, "percentage": 28.5 },
+    { "name": "indie rock", "play_count": 256, "percentage": 15.1 },
+    { "name": "r&b", "play_count": 198, "percentage": 11.7 }
+  ]
+}
+```
+
+---
+
+## Listening History
+
+Raw listening history with pagination and import.
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/v1/history` | Paginated listening history |
+| `POST` | `/api/v1/history/import` | Import Spotify extended streaming history (JSON) |
+
+### `GET /api/v1/history`
+
+**Query Parameters:**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `page` | int | `1` | Page number |
+| `limit` | int | `20` | Results per page (max: 100) |
+
+**Response:**
+
+```json
+{
+  "history": [
+    {
+      "track_name": "Blinding Lights",
+      "artist_name": "The Weeknd",
+      "album_name": "After Hours",
+      "played_at": "2024-01-15T14:32:00Z",
+      "duration_ms": 200040,
+      "image_url": "https://i.scdn.co/image/..."
+    }
+  ],
+  "total": 15842,
+  "page": 1,
+  "limit": 20
+}
+```
+
+### `POST /api/v1/history/import`
+
+Upload Spotify extended streaming history JSON files (from [Spotify Privacy Data Export](https://www.spotify.com/account/privacy/)).
+
+**Content-Type:** `multipart/form-data`
+
+---
+
+## Playlists
+
+User's Spotify playlists.
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/v1/playlists` | List user's playlists |
+
+### `GET /api/v1/playlists`
+
+**Query Parameters:**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `page` | int | `1` | Page number |
+| `limit` | int | `20` | Results per page (max: 100) |
+
+---
+
+## Player
+
+Spotify playback control. Requires an active Spotify session on a device.
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/v1/player/current` | Currently playing track |
+| `GET` | `/api/v1/player/devices` | Available playback devices |
+| `GET` | `/api/v1/player/queue` | Player queue |
+| `POST` | `/api/v1/player/play` | Start or resume playback |
+| `POST` | `/api/v1/player/pause` | Pause playback |
+| `POST` | `/api/v1/player/next` | Skip to next track |
+| `POST` | `/api/v1/player/previous` | Go to previous track |
+
+### `GET /api/v1/player/current`
+
+```json
+{
+  "is_playing": true,
+  "track": {
+    "name": "Blinding Lights",
+    "artist": "The Weeknd",
+    "album": "After Hours",
+    "image_url": "https://i.scdn.co/image/...",
+    "progress_ms": 45000,
+    "duration_ms": 200040
+  },
+  "device": {
+    "name": "MacBook Pro",
+    "type": "Computer",
+    "volume_percent": 65
+  }
+}
+```
+
+---
+
+## Library
+
+User's Spotify library.
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/v1/library/followed-artists` | Artists the user follows |
+| `GET` | `/api/v1/library/saved-albums` | User's saved albums |
+
+---
+
+## Recommendations
+
+Music recommendations based on listening history.
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/v1/recommendations` | Personalized track recommendations |
+
+---
+
+## Browse
+
+Spotify's curated content.
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/v1/browse/new-releases` | New album releases |
+| `GET` | `/api/v1/browse/featured-playlists` | Spotify's featured playlists |
+| `GET` | `/api/v1/browse/categories` | Browse categories |
+
+---
+
+## Sync Jobs
+
+Background data sync management.
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/v1/sync-jobs` | List sync jobs with status and timing |
+| `GET` | `/api/v1/sync-jobs/stats` | Sync job statistics (success rate, avg duration) |
+| `POST` | `/api/v1/sync-jobs/trigger` | Manually trigger a data sync |
+
+### `GET /api/v1/sync-jobs`
+
+**Query Parameters:**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `page` | int | `1` | Page number |
+| `limit` | int | `20` | Results per page (max: 100) |
+| `status` | string | — | Filter by status: `pending`, `running`, `completed`, `failed` |
+| `job_type` | string | — | Filter by job type |
+
+**Response:**
+
+```json
+{
+  "jobs": [
+    {
+      "id": "abc123",
+      "job_type": "spotify_sync",
+      "status": "completed",
+      "started_at": "2024-01-15T14:00:00Z",
+      "completed_at": "2024-01-15T14:00:12Z",
+      "duration_seconds": 12,
+      "items_synced": 47,
+      "api_calls": 8
+    }
+  ],
+  "total": 284,
+  "page": 1,
+  "limit": 20
+}
+```
+
+### `POST /api/v1/sync-jobs/trigger`
+
+Triggers an immediate sync outside the normal 15-minute schedule.
+
+```json
+{
+  "job_id": "def456",
+  "status": "pending",
+  "message": "Sync job queued"
+}
+```
+
+---
+
+## API Logs
+
+Monitoring dashboard data for Spotify API calls.
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/v1/api-logs` | Paginated API request logs |
+| `GET` | `/api/v1/api-logs/stats` | Aggregated API log statistics (status distribution, latency) |
+
+### `GET /api/v1/api-logs/stats`
+
+```json
+{
+  "total_requests": 4821,
+  "success_rate": 0.95,
+  "avg_latency_ms": 145,
+  "status_distribution": {
+    "200": 4580,
+    "401": 12,
+    "429": 189,
+    "500": 40
+  },
+  "endpoints": [
+    { "endpoint": "/v1/me/player/recently-played", "count": 1204, "avg_latency_ms": 120 }
+  ]
+}
+```

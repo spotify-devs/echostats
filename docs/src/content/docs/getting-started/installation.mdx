@@ -1,36 +1,106 @@
 ---
 title: Installation
-description: How to install and deploy EchoStats.
+description: How to install and deploy EchoStats with Docker Compose or Helm.
 ---
 
 # Installation
 
 ## Prerequisites
 
-- [Docker](https://docs.docker.com/get-docker/) and Docker Compose
-- A [Spotify Developer](https://developer.spotify.com/dashboard) account
+- [Docker](https://docs.docker.com/get-docker/) and Docker Compose v2+
+- A [Spotify Developer](https://developer.spotify.com/dashboard) account with an app created (see [Spotify Setup](/getting-started/spotify-setup))
+- 512 MB RAM minimum (1 GB recommended)
 
 ## Quick Start with Docker Compose
 
+### 1. Clone the Repository
+
 ```bash
-# Clone the repository
 git clone https://github.com/spotify-devs/echostats.git
 cd echostats
+```
 
-# Copy and configure environment
+### 2. Configure Environment Variables
+
+```bash
 cp .env.example .env
-# Edit .env with your Spotify credentials (see Spotify App Setup)
+```
 
-# Start the stack
+Open `.env` and fill in the required values:
+
+```bash
+# ── Required: Spotify API credentials ──
+SPOTIFY_CLIENT_ID=your_spotify_client_id
+SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
+SPOTIFY_REDIRECT_URI=http://localhost:8000/api/v1/auth/callback
+
+# ── Required: Security secrets ──
+# Generate each with: python -c "import secrets; print(secrets.token_hex(32))"
+JWT_SECRET=paste_generated_secret_here
+ENCRYPTION_KEY=paste_generated_secret_here
+```
+
+See [Configuration](/getting-started/configuration) for the full environment variable reference.
+
+### 3. Start the Stack
+
+```bash
 docker compose up -d
 ```
 
-EchoStats will be available at:
-- **Web Dashboard**: http://localhost:3000
-- **API**: http://localhost:8000
-- **API Docs**: http://localhost:8000/api/docs
+This launches **5 services**:
 
-## Using Helm (Kubernetes)
+| Service | Description | Port |
+|---------|------------|------|
+| `mongodb` | MongoDB 7 database | 27017 (internal) |
+| `redis` | Redis 7 cache + task broker | 6379 (internal) |
+| `api` | FastAPI backend | **8000** |
+| `worker` | ARQ background sync worker | — |
+| `web` | Next.js frontend | **3000** |
+
+### 4. Connect Your Spotify Account
+
+Visit **http://localhost:3000** and click **Connect with Spotify**. Your listening data will start syncing automatically every 15 minutes.
+
+## Verifying the Installation
+
+```bash
+# Check all services are healthy
+docker compose ps
+
+# Test API health
+curl http://localhost:8000/api/health
+# → {"status":"healthy","service":"echostats-api","version":"0.1.0"}
+
+# Test database connectivity
+curl http://localhost:8000/api/health/ready
+# → {"status":"ready"}
+
+# Check for updates
+curl http://localhost:8000/api/health/update
+# → {"update_available":false,"current_version":"0.1.0"}
+```
+
+## Using Pre-built Images
+
+Instead of building from source, you can use the pre-built images from GitHub Container Registry:
+
+```yaml
+# In docker-compose.yml, replace the build sections:
+services:
+  api:
+    image: ghcr.io/spotify-devs/echostats-api:latest
+    # ... rest of config
+  web:
+    image: ghcr.io/spotify-devs/echostats-web:latest
+    # ... rest of config
+```
+
+## Helm / Kubernetes Deployment
+
+Deploy to any Kubernetes cluster using the OCI-hosted Helm chart:
+
+### Basic Install
 
 ```bash
 helm install echostats oci://ghcr.io/spotify-devs/charts/echostats \
@@ -40,17 +110,98 @@ helm install echostats oci://ghcr.io/spotify-devs/charts/echostats \
   --set security.encryptionKey=YOUR_ENCRYPTION_KEY
 ```
 
-## Verifying Installation
+### With Custom Values
+
+Create a `values.yaml` for your environment:
+
+```yaml
+spotify:
+  clientId: "your_client_id"
+  clientSecret: "your_client_secret"
+  redirectUri: "https://echostats.example.com/api/v1/auth/callback"
+
+security:
+  jwtSecret: "your_jwt_secret"
+  encryptionKey: "your_encryption_key"
+
+# Use external MongoDB instead of the bundled one
+mongodb:
+  enabled: false
+  external:
+    uri: "mongodb://user:pass@mongo.example.com:27017/echostats?authSource=admin"
+
+# Use external Redis
+redis:
+  enabled: false
+  external:
+    url: "redis://redis.example.com:6379/0"
+
+# Enable ingress
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+  hosts:
+    - host: echostats.example.com
+      paths:
+        - path: /api
+          pathType: Prefix
+          service: api
+        - path: /
+          pathType: Prefix
+          service: web
+  tls:
+    - secretName: echostats-tls
+      hosts:
+        - echostats.example.com
+
+# Resource limits
+api:
+  workers: 4
+  resources:
+    limits:
+      memory: 512Mi
+      cpu: 500m
+
+# Autoscaling
+autoscaling:
+  api:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 80
+```
 
 ```bash
-# Check all services are running
-docker compose ps
+helm install echostats oci://ghcr.io/spotify-devs/charts/echostats \
+  -f values.yaml
+```
 
-# Test API health
-curl http://localhost:8000/api/health
-# Expected: {"status":"healthy","service":"echostats-api"}
+### Traefik IngressRoute
 
-# Test database connectivity
-curl http://localhost:8000/api/health/ready
-# Expected: {"status":"ready"}
+The chart also supports Traefik `IngressRoute` resources as an alternative to nginx Ingress. See [`helm/echostats/values.yaml`](https://github.com/spotify-devs/echostats/blob/main/helm/echostats/values.yaml) for the full configuration reference.
+
+## Upgrading
+
+```bash
+# Docker Compose
+docker compose pull
+docker compose up -d
+
+# Helm
+helm upgrade echostats oci://ghcr.io/spotify-devs/charts/echostats
+```
+
+## Stopping / Uninstalling
+
+```bash
+# Docker Compose — stop services (data is preserved in volumes)
+docker compose down
+
+# Docker Compose — stop and remove all data
+docker compose down -v
+
+# Helm
+helm uninstall echostats
 ```

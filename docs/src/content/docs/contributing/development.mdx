@@ -5,4 +5,258 @@ description: Setting up a local development environment for EchoStats.
 
 # Development Setup
 
-_Documentation coming soon._
+This guide covers setting up EchoStats for local development with hot-reload for both the API and frontend.
+
+## Prerequisites
+
+- **Python 3.12+** with [uv](https://docs.astral.sh/uv/) (fast Python package manager)
+- **Node.js 22+** with [pnpm](https://pnpm.io/) (enable via `corepack enable`)
+- **Docker & Docker Compose** (for MongoDB and Redis)
+- A [Spotify Developer App](https://developer.spotify.com/dashboard) with redirect URI set to `http://localhost:8000/api/v1/auth/callback`
+
+## Quick Start
+
+The fastest way to get everything running with hot-reload:
+
+```bash
+# Clone and configure
+git clone https://github.com/spotify-devs/echostats.git
+cd echostats
+cp .env.example .env
+# Edit .env with your Spotify credentials and secrets
+
+# Start everything with hot-reload
+make dev
+```
+
+This uses `docker-compose.dev.yml` which:
+- Exposes MongoDB (27017) and Redis (6379) ports for direct access
+- Mounts source code as volumes for live reloading
+- Runs the API with `uvicorn --reload` and the web app with `pnpm dev`
+- Sets `LOG_LEVEL=debug` for verbose output
+
+## Manual Setup (Without Docker Dev Compose)
+
+If you prefer to run services individually:
+
+### 1. Start Infrastructure
+
+```bash
+# Start only MongoDB and Redis
+docker compose up -d mongodb redis
+```
+
+### 2. API (FastAPI)
+
+```bash
+cd api
+
+# Install dependencies
+uv sync
+
+# Run with hot-reload
+uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+The API will be available at **http://localhost:8000** with auto-reload on file changes.
+
+### 3. Web (Next.js)
+
+```bash
+cd web
+
+# Install dependencies
+pnpm install
+
+# Run dev server
+pnpm dev
+```
+
+The frontend will be available at **http://localhost:3000** with hot module replacement.
+
+### 4. Worker (optional)
+
+```bash
+cd api
+
+# Run the ARQ background worker
+uv run arq app.tasks.worker.WorkerSettings
+```
+
+## Seed Data
+
+Generate realistic demo data for development without connecting a Spotify account:
+
+```bash
+cd api && uv run python seed.py
+```
+
+This creates:
+
+| Data | Count | Details |
+|------|-------|---------|
+| 🎤 Artists | 15 | Taylor Swift, Drake, The Weeknd, Ariana Grande, and more |
+| 🎵 Tracks | 25 | With full audio features (danceability, energy, valence, etc.) |
+| 📜 History | ~2,000 | Plays distributed across 90 days with realistic patterns |
+| 📁 Playlists | 5 | Chill Vibes, Workout Bangers, Late Night Drive, etc. |
+| 📊 Snapshots | 4 | Analytics for week, month, year, all-time |
+| 🔄 Sync Jobs | 6 | Including 1 failed job for realism |
+| 📋 API Logs | ~300 | Entries across 30 days with 5% error rate |
+| 👤 User | 1 | `demo@echostats.local` |
+
+After seeding, use the **dev-login** endpoint to authenticate without Spotify:
+
+```bash
+curl http://localhost:8000/api/v1/auth/dev-login
+```
+
+## Running Tests
+
+### API Tests (pytest)
+
+```bash
+cd api
+
+# Run all tests
+uv run pytest -v
+
+# Run with coverage
+uv run pytest -v --cov=app --cov-report=html
+
+# Run a specific test file
+uv run pytest tests/test_health.py -v
+```
+
+Tests use `pytest-asyncio` with `asyncio_mode = "auto"`. The CI pipeline runs tests against real MongoDB and Redis services.
+
+### Web Tests (vitest)
+
+```bash
+cd web
+
+# Run tests
+pnpm test
+
+# Run in watch mode
+pnpm test --watch
+```
+
+### All Tests
+
+```bash
+make test         # Runs test-api + test-web
+```
+
+## Linting & Formatting
+
+### Python (ruff + mypy)
+
+```bash
+cd api
+
+# Lint
+uv run ruff check .
+
+# Auto-fix lint issues
+uv run ruff check . --fix
+
+# Type checking
+uv run mypy .
+
+# Format
+uv run ruff format .
+```
+
+### TypeScript (biome)
+
+```bash
+cd web
+
+# Lint
+pnpm lint
+
+# Format
+pnpm format
+```
+
+### All at Once
+
+```bash
+make lint         # Lint API + Web
+make format       # Format API + Web
+```
+
+## Makefile Commands
+
+The project `Makefile` provides shortcuts for common tasks:
+
+| Command | Description |
+|---------|-------------|
+| `make dev` | Start all services with hot-reload (Docker Compose dev) |
+| `make dev-api` | Start API only with hot-reload |
+| `make dev-web` | Start Next.js dev server only |
+| `make dev-docs` | Start Astro docs dev server |
+| `make build` | Build all Docker images |
+| `make test` | Run all tests (API + Web) |
+| `make lint` | Run all linters (ruff + biome) |
+| `make format` | Auto-format all code |
+| `make db-seed` | Seed the database with demo data |
+| `make db-shell` | Open MongoDB shell |
+| `make docker-up` | Start services (production) |
+| `make docker-down` | Stop services |
+| `make docker-logs` | Tail service logs |
+| `make docker-clean` | Remove all containers, volumes, and images |
+| `make clean` | Remove build artifacts, caches, and node_modules |
+
+## Project Structure
+
+```
+echostats/
+├── api/                    # FastAPI backend
+│   ├── app/
+│   │   ├── main.py         # FastAPI app entry point
+│   │   ├── routers/        # API route handlers (14 files)
+│   │   ├── models/         # Beanie ODM models
+│   │   ├── services/       # Business logic
+│   │   └── tasks/          # ARQ worker tasks
+│   ├── tests/              # pytest test suite
+│   ├── seed.py             # Demo data generator
+│   ├── Dockerfile          # Multi-stage build
+│   └── pyproject.toml      # Python dependencies (uv)
+├── web/                    # Next.js frontend
+│   ├── src/
+│   │   ├── app/            # Next.js pages (42+ routes)
+│   │   ├── components/     # React components
+│   │   └── lib/            # Utilities and API client
+│   ├── Dockerfile          # Multi-stage build
+│   └── package.json        # Node dependencies (pnpm)
+├── docs/                   # Astro Starlight documentation
+├── helm/echostats/         # Helm chart for Kubernetes
+├── docker-compose.yml      # Production compose
+├── docker-compose.dev.yml  # Development compose (hot-reload)
+├── Makefile                # Task runner
+└── .env.example            # Environment variable template
+```
+
+## Code Style
+
+- **Python**: [ruff](https://docs.astral.sh/ruff/) for linting and formatting, [mypy](https://mypy-lang.org/) for type checking
+- **TypeScript**: [Biome](https://biomejs.dev/) for linting and formatting
+- **Commits**: Conventional Commits format (`feat:`, `fix:`, `docs:`, etc.) — used for automated versioning
+
+## CI/CD Pipeline
+
+The GitHub Actions CI pipeline runs on every push and PR to `main`:
+
+1. **lint-api** — ruff check
+2. **lint-web** — biome lint
+3. **typecheck-web** — TypeScript type checking
+4. **test-api** — pytest with coverage (against MongoDB + Redis services)
+5. **build-api** — Docker image build verification
+6. **build-web** — Next.js production build
+
+On merge to `main`, the **release** workflow:
+1. Creates a semantic version tag based on commit messages
+2. Builds and pushes Docker images to GHCR (`ghcr.io/spotify-devs/echostats-api`, `ghcr.io/spotify-devs/echostats-web`)
+3. Packages and pushes the Helm chart to `oci://ghcr.io/spotify-devs/charts/echostats`
+4. Creates a GitHub Release with changelog

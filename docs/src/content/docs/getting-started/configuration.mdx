@@ -1,31 +1,117 @@
 ---
 title: Configuration
-description: EchoStats environment variables reference.
+description: Complete environment variable reference for EchoStats.
 ---
 
 # Configuration
 
-All configuration is done via environment variables. Copy `.env.example` to `.env` and customize.
+All configuration is done via environment variables. Copy `.env.example` to `.env` and customize the values for your deployment.
+
+```bash
+cp .env.example .env
+```
 
 ## Required Variables
 
-| Variable | Description |
-|----------|-------------|
-| `SPOTIFY_CLIENT_ID` | Spotify OAuth client ID |
-| `SPOTIFY_CLIENT_SECRET` | Spotify OAuth client secret |
-| `JWT_SECRET` | Secret for signing JWT tokens (min 32 chars) |
-| `ENCRYPTION_KEY` | AES-256 key for token encryption (64 hex chars) |
+These must be set before starting EchoStats.
 
-## Generating Secrets
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `SPOTIFY_CLIENT_ID` | OAuth client ID from your [Spotify Developer App](https://developer.spotify.com/dashboard) | `a1b2c3d4e5f6...` |
+| `SPOTIFY_CLIENT_SECRET` | OAuth client secret from your Spotify Developer App | `f6e5d4c3b2a1...` |
+| `JWT_SECRET` | Secret key for signing JWT session tokens. Must be at least 32 characters. | (see below) |
+| `ENCRYPTION_KEY` | AES-256 key for encrypting Spotify OAuth tokens at rest. 64 hex characters. | (see below) |
+
+### Generating Secrets
 
 ```bash
-# Generate JWT secret
+# Generate JWT_SECRET (64-char hex string)
 python -c "import secrets; print(secrets.token_hex(32))"
 
-# Generate encryption key
+# Generate ENCRYPTION_KEY (64-char hex string)
 python -c "import secrets; print(secrets.token_hex(32))"
 ```
 
-## All Variables
+## Spotify API
 
-See the [.env.example](https://github.com/spotify-devs/echostats/blob/main/.env.example) file for the complete list with descriptions.
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `SPOTIFY_CLIENT_ID` | OAuth client ID | *(required)* |
+| `SPOTIFY_CLIENT_SECRET` | OAuth client secret | *(required)* |
+| `SPOTIFY_REDIRECT_URI` | OAuth callback URL. Must match the redirect URI configured in your Spotify app. | `http://localhost:8000/api/v1/auth/callback` |
+
+## MongoDB
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `MONGO_URI` | Full MongoDB connection string including authentication | `mongodb://echostats:changeme@mongodb:27017/echostats?authSource=admin` |
+| `MONGO_DB` | Database name | `echostats` |
+| `MONGO_USER` | MongoDB root username (used by Docker Compose to initialize the database) | `echostats` |
+| `MONGO_PASSWORD` | MongoDB root password (used by Docker Compose to initialize the database) | `changeme` |
+
+:::caution
+Change `MONGO_PASSWORD` from the default value in production deployments. Update the password in both `MONGO_PASSWORD` and the `MONGO_URI` connection string.
+:::
+
+## Redis
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `REDIS_URL` | Redis connection URL. Used for caching and as the ARQ task queue broker. | `redis://redis:6379/0` |
+
+## API Server
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `API_HOST` | Host address the API server binds to | `0.0.0.0` |
+| `API_PORT` | Port the API server listens on | `8000` |
+| `API_WORKERS` | Number of Uvicorn worker processes | `2` |
+| `LOG_LEVEL` | Logging level (`debug`, `info`, `warning`, `error`) | `info` |
+| `CORS_ORIGINS` | Comma-separated list of allowed CORS origins | `http://localhost:3000` |
+
+## Security
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `JWT_SECRET` | Secret key for JWT token signing. Generate with `secrets.token_hex(32)`. | *(required)* |
+| `ENCRYPTION_KEY` | AES-256 encryption key for Spotify token storage. 64 hex characters. | *(required)* |
+
+## Web Frontend
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `NEXT_PUBLIC_API_URL` | Public API URL as seen by the browser. Used for client-side API calls. | `http://localhost:8000` |
+| `INTERNAL_API_URL` | Internal API URL used for server-side rendering (SSR) requests within the Docker network. | `http://api:8000` |
+
+## Background Worker
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `SYNC_INTERVAL_MINUTES` | How often the ARQ worker syncs Spotify data (in minutes) | `15` |
+| `ANALYTICS_REFRESH_HOURS` | How often computed analytics snapshots are refreshed (in hours) | `6` |
+
+## Telemetry (Optional)
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `UMAMI_URL` | URL of your self-hosted [Umami](https://umami.is/) analytics instance | *(empty — disabled)* |
+| `UMAMI_WEBSITE_ID` | Umami website ID for tracking | *(empty — disabled)* |
+
+## Docker
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `COMPOSE_PROJECT_NAME` | Docker Compose project name prefix for containers and volumes | `echostats` |
+| `WEB_PORT` | Host port to expose the Next.js frontend on | `3000` |
+
+## Production Checklist
+
+Before deploying to production, ensure you:
+
+1. ✅ Set strong, unique values for `JWT_SECRET` and `ENCRYPTION_KEY`
+2. ✅ Change `MONGO_PASSWORD` from the default and update `MONGO_URI` accordingly
+3. ✅ Set `CORS_ORIGINS` to your actual domain (e.g., `https://echostats.example.com`)
+4. ✅ Update `SPOTIFY_REDIRECT_URI` to your public URL
+5. ✅ Set `NEXT_PUBLIC_API_URL` to your public API URL
+6. ✅ Consider increasing `API_WORKERS` based on expected load
+7. ✅ Set `LOG_LEVEL` to `warning` or `error` to reduce log volume

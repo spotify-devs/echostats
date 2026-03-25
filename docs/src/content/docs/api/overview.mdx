@@ -1,8 +1,111 @@
 ---
 title: API Overview
-description: Overview of the EchoStats REST API.
+description: Overview of the EchoStats REST API — architecture, authentication, and conventions.
 ---
 
 # API Overview
 
-_Documentation coming soon._
+The EchoStats API is a **FastAPI**-based REST API that serves as the backend for the dashboard and exposes all analytics, playback, and sync functionality.
+
+## Base URL
+
+```
+http://localhost:8000
+```
+
+All versioned endpoints are prefixed with `/api/v1/`. Health endpoints are at `/api/`.
+
+## Authentication
+
+EchoStats uses **Spotify OAuth 2.0** for user authentication and **JWT session cookies** for API access.
+
+### Authentication Flow
+
+1. **User visits** `/api/v1/auth/login` → redirected to Spotify authorization page
+2. **Spotify redirects** to `/api/v1/auth/callback` with an authorization code
+3. **EchoStats exchanges** the code for Spotify access + refresh tokens
+4. **Tokens are encrypted** with AES-256 and stored in MongoDB
+5. **A JWT session cookie** is set in the browser (`session` cookie, HttpOnly)
+6. **All subsequent API calls** are authenticated via this session cookie
+
+### Session Cookie
+
+```
+Cookie: session=eyJhbGciOiJIUzI1NiIs...
+```
+
+The session cookie is:
+- **HttpOnly** — not accessible via JavaScript
+- **Secure** — only sent over HTTPS in production
+- **SameSite=Lax** — CSRF protection
+
+### Single-User Auto-Login
+
+When only one user exists in the database (typical for self-hosted setups), EchoStats can auto-authenticate without requiring manual login on each visit.
+
+## Request / Response Conventions
+
+- **Content-Type**: `application/json`
+- **Timestamps**: ISO 8601 format in UTC
+- **Pagination**: Query parameters `page` (1-based) and `limit` (default: 20, max: 100)
+- **Time Ranges**: `period` parameter with values: `week`, `month`, `quarter`, `year`, `all_time`
+- **Error Responses**: Standard JSON format with `detail` field
+
+### Pagination Example
+
+```bash
+curl "http://localhost:8000/api/v1/history?page=1&limit=50" \
+  -H "Cookie: session=<token>"
+```
+
+### Error Response
+
+```json
+{
+  "detail": "Not authenticated"
+}
+```
+
+HTTP status codes follow standard conventions:
+
+| Status | Meaning |
+|--------|---------|
+| `200` | Success |
+| `401` | Not authenticated — missing or invalid session |
+| `403` | Forbidden — insufficient permissions |
+| `404` | Resource not found |
+| `422` | Validation error — invalid query parameters |
+| `500` | Internal server error |
+| `502` | Spotify API unavailable |
+
+## Interactive Docs
+
+FastAPI auto-generates interactive API documentation:
+
+- **Swagger UI**: [http://localhost:8000/api/docs](http://localhost:8000/api/docs)
+- **ReDoc**: [http://localhost:8000/api/redoc](http://localhost:8000/api/redoc)
+
+## API Architecture
+
+```
+/api
+├── /health              # Health check (no auth)
+├── /health/ready        # Readiness probe (no auth)
+├── /health/update       # Version update check (no auth)
+└── /v1
+    ├── /auth            # OAuth login, callback, status, logout
+    ├── /analytics       # Computed analytics overview
+    ├── /tracks          # Top tracks, track details
+    ├── /artists         # Top artists, artist details
+    ├── /genres          # Genre distribution
+    ├── /history         # Listening history + import
+    ├── /playlists       # User playlists
+    ├── /player          # Playback control (play/pause/skip/queue)
+    ├── /library         # Followed artists, saved albums
+    ├── /recommendations # Music recommendations
+    ├── /browse          # New releases, featured playlists, categories
+    ├── /sync-jobs       # Sync job management + trigger
+    └── /api-logs        # API request logs + stats
+```
+
+See the [Endpoints](/api/endpoints) reference for the complete list of routes, parameters, and response shapes.

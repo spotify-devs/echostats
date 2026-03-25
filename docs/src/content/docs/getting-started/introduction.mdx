@@ -1,41 +1,75 @@
 ---
 title: Introduction
-description: Welcome to EchoStats — your self-hosted Spotify analytics dashboard.
+description: Welcome to EchoStats — your self-hosted Spotify analytics dashboard with 40+ pages of music insights.
 ---
 
 # Welcome to EchoStats 🎵
 
-EchoStats is a **self-hosted** web application that connects to your Spotify account, tracks your listening history, and provides beautiful analytics and visualizations about your music taste.
+EchoStats is a **self-hosted** Spotify analytics platform that connects to your Spotify account, automatically syncs your listening history, and delivers 40+ pages of beautiful dashboards, charts, and insights about your music taste. Think of it as **Spotify Wrapped — but year-round**, running entirely on your own server.
+
+## Who is EchoStats for?
+
+- **Self-hosters** who want full control over their data and infrastructure
+- **Privacy-conscious Spotify users** who don't want analytics data sent to third parties
+- **Music data enthusiasts** who want deeper insights than Spotify provides natively
+- **Developers** looking for a modern full-stack reference project (FastAPI + Next.js + MongoDB)
 
 ## Key Features
 
-- **🔐 Spotify OAuth** — Secure authentication via Spotify
-- **📊 Rich Analytics** — Listening time, top artists, tracks, genres, patterns
-- **📈 Interactive Charts** — Line, bar, pie, heatmap, and radar charts
-- **📋 Data Tables** — Sortable, filterable tables with pagination
-- **🎯 Recommendations** — Discover new music based on your taste
-- **🎵 Playlist Management** — Create and manage playlists
-- **📱 PWA** — Install as an app on any device
-- **🏠 Self-Hosted** — Your data stays on your server
-- **📚 Full History Import** — Import Spotify privacy data exports
+### 🎛️ Analytics & Visualization
+- **40+ Dashboard Pages** — Stats, charts, heatmaps, radar charts, listening calendars, mood analysis, and more
+- **Listening Analytics** — Top tracks, artists, genres, and albums with time-range filters (week / month / year / all-time)
+- **Music DNA** — Audio feature radar showing danceability, energy, valence, acousticness, tempo, and more
+- **Artist Map** — Explore connections between favorite artists with play-share distribution
+- **Taste Profile** — Deep analysis of your listening patterns and preferences
+- **Year in Review** — Spotify Wrapped-style annual summary generated from your data
 
-## Tech Stack
+### 🔄 Sync & Data
+- **Auto Sync** — Background worker syncs your Spotify data every 15 minutes via ARQ cron
+- **Data Import** — Import your full Spotify extended streaming history (JSON from privacy data export)
+- **Sync Job Tracking** — View step-by-step sync progress with detailed API call history
+- **API Logs Dashboard** — Monitor all Spotify API calls with status distribution and latency stats
 
-| Component | Technology |
-|-----------|-----------|
-| Backend | Python 3.12 / FastAPI |
-| Frontend | Next.js 16 / React 19 |
-| Database | MongoDB 7 |
-| Cache | Redis 7 |
-| Worker | ARQ (async task queue) |
+### 🎵 Playback & Discovery
+- **Spotify Playback Control** — Play, pause, skip, view queue, and switch devices from the dashboard
+- **Recommendations** — Discover new music based on your listening patterns
+- **Browse** — New releases, featured playlists, and categories from Spotify
+
+### 🎨 Customization & UX
+- **6 Themes + 8 Accent Colors** — Dark, Light, Dim, Ocean, Midnight, Forest + custom color picker
+- **PWA** — Install on any device (mobile and desktop), works offline
+- **Single-User Auto-Login** — Auto-authenticates when only one user exists (ideal for self-hosting)
+- **Update Notifications** — Dashboard banner when a new version is available on GitHub
+
+### 🏠 Deployment
+- **Docker Compose** — One-command deployment with all services included
+- **Helm Chart** — Kubernetes deployment via OCI registry with full configurability
+- **Version Indicator** — Deployed version shown in sidebar and API health endpoint
 
 ## How It Works
 
-1. **Authenticate** with your Spotify account
-2. **EchoStats syncs** your listening data every 15 minutes
-3. **Explore** your analytics through the dashboard
-4. **Import** historical data from Spotify privacy exports for full history
+1. **Authenticate** — Connect your Spotify account via OAuth
+2. **Sync** — EchoStats automatically syncs your listening data every 15 minutes
+3. **Explore** — Browse 40+ dashboard pages of analytics, charts, and insights
+4. **Import** — Optionally import your full Spotify history from privacy data exports
+
+## Tech Stack
+
+| Layer | Technology | Purpose |
+|-------|-----------|---------|
+| Frontend | Next.js 16 / React 19 / TypeScript | SSR dashboard with 42 pages |
+| Styling | Tailwind CSS 4 / Framer Motion | 6 themes + spring animations |
+| Charts | Recharts | Interactive data visualizations |
+| Backend | Python 3.12 / FastAPI | REST API with 30+ endpoints |
+| Database | MongoDB 7 / Beanie ODM | Document storage for analytics |
+| Cache / Queue | Redis 7 / ARQ | Background sync + task queue |
+| Container | Docker / Helm | Kubernetes-ready deployment |
+| CI/CD | GitHub Actions | Automated testing + GHCR publishing |
+
+## Screenshots
+
+> 🖼️ *Screenshots coming soon — the dashboard features interactive charts, listening heatmaps, artist radar views, music DNA profiles, and more.*
 
 ## Getting Started
 
-Head to the [Installation](/getting-started/installation) guide to get started.
+Head to the [Installation](/getting-started/installation) guide to get EchoStats running in under 5 minutes.
