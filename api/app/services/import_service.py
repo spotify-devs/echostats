@@ -37,11 +37,21 @@ async def import_streaming_history(
             try:
                 history = await _parse_history_entry(user_id, entry, filename)
                 if history:
-                    # Dedup check
+                    # Dedup: check both old format (played_at=end_time) and
+                    # new format (played_at=start_time) to avoid duplicates
+                    # across re-imports.
+                    end_time = history.played_at + timedelta(
+                        milliseconds=history.ms_played or 0
+                    )
                     existing = await ListeningHistory.find_one(
-                        ListeningHistory.user_id == user_id,
-                        ListeningHistory.track.spotify_id == history.track.spotify_id,
-                        ListeningHistory.played_at == history.played_at,
+                        {
+                            "user_id": user_id,
+                            "track.spotify_id": history.track.spotify_id,
+                            "$or": [
+                                {"played_at": history.played_at},
+                                {"played_at": end_time},
+                            ],
+                        }
                     )
                     if not existing:
                         await history.insert()
