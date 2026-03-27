@@ -1,7 +1,7 @@
 """Import service for Spotify privacy data exports."""
 
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any
 
 import structlog
@@ -87,7 +87,7 @@ async def _parse_history_entry(
 ) -> ListeningHistory | None:
     """Parse a single entry from Spotify export data."""
 
-    # Extended streaming history format (endsong*.json)
+    # Extended streaming history format (endsong*.json / Streaming_History_Audio*.json)
     if "ts" in entry:
         played_at_str = entry.get("ts", "")
         track_name = entry.get("master_metadata_track_name", "")
@@ -100,7 +100,10 @@ async def _parse_history_entry(
             return None
 
         spotify_id = spotify_uri.split(":")[-1] if spotify_uri else ""
-        played_at = datetime.fromisoformat(played_at_str.replace("Z", "+00:00"))
+
+        # ts is when the track STOPPED playing; compute start time
+        end_time = datetime.fromisoformat(played_at_str.replace("Z", "+00:00"))
+        played_at = end_time - timedelta(milliseconds=ms_played)
 
         return ListeningHistory(
             user_id=user_id,
@@ -109,7 +112,7 @@ async def _parse_history_entry(
                 name=track_name,
                 artist_name=artist_name or "Unknown",
                 album_name=album_name or "",
-                duration_ms=ms_played,
+                duration_ms=0,  # actual track duration unknown from export
             ),
             played_at=played_at,
             ms_played=ms_played,
@@ -126,7 +129,8 @@ async def _parse_history_entry(
         if not track_name:
             return None
 
-        played_at = datetime.strptime(played_at_str, "%Y-%m-%d %H:%M")
+        end_time = datetime.strptime(played_at_str, "%Y-%m-%d %H:%M")
+        played_at = end_time - timedelta(milliseconds=ms_played)
 
         return ListeningHistory(
             user_id=user_id,
@@ -134,7 +138,7 @@ async def _parse_history_entry(
                 spotify_id="",  # Not available in basic format
                 name=track_name,
                 artist_name=artist_name or "Unknown",
-                duration_ms=ms_played,
+                duration_ms=0,  # actual track duration unknown from export
             ),
             played_at=played_at,
             ms_played=ms_played,
