@@ -1,5 +1,6 @@
 """Analytics API endpoints."""
 
+from datetime import datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query
@@ -53,10 +54,16 @@ async def refresh_analytics(
     user: Annotated[User, Depends(get_current_user)],
     period: str = Query("all_time", pattern="^(week|month|quarter|year|all_time)$"),
 ) -> dict:
-    """Force recompute analytics for a time period."""
-    snapshot = await compute_analytics_snapshot(str(user.id), period)
+    """Force recompute analytics for a time period (or all periods)."""
+    periods = [period]
+    if period == "all_time":
+        periods = ["week", "month", "quarter", "year", "all_time"]
+
+    for p in periods:
+        await compute_analytics_snapshot(str(user.id), p)
+
     return {
         "status": "refreshed",
-        "period": period,
-        "computed_at": snapshot.computed_at.isoformat(),
+        "periods": periods,
+        "computed_at": datetime.utcnow().isoformat(),
     }

@@ -6,6 +6,7 @@ from typing import Any
 
 import structlog
 
+from app.models.analytics import AnalyticsSnapshot
 from app.models.listening_history import HistoryTrackRef, ListeningHistory
 from app.models.sync_job import SyncJob
 
@@ -52,6 +53,18 @@ async def import_streaming_history(
         job.status = "completed"
         job.items_processed = count
         job.completed_at = datetime.utcnow()
+
+        # Invalidate all cached analytics snapshots so they get recomputed
+        if count > 0:
+            deleted = await AnalyticsSnapshot.find(
+                AnalyticsSnapshot.user_id == user_id
+            ).delete()
+            logger.info(
+                "Invalidated analytics snapshots after import",
+                user_id=user_id,
+                deleted=deleted,
+            )
+
         logger.info(
             "Import completed",
             user_id=user_id,
