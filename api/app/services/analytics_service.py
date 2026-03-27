@@ -36,6 +36,32 @@ def _get_period_range(period: str) -> tuple[datetime | None, datetime | None]:
     return None, now
 
 
+async def get_or_compute_snapshot(user_id: str, period: str = "all_time") -> AnalyticsSnapshot:
+    """Return cached snapshot if data hasn't changed, otherwise recompute."""
+    snapshot = await AnalyticsSnapshot.find_one(
+        AnalyticsSnapshot.user_id == user_id,
+        AnalyticsSnapshot.period == period,
+    )
+
+    if snapshot:
+        # Lightweight staleness check: compare total record count
+        total = await ListeningHistory.find(
+            ListeningHistory.user_id == user_id
+        ).count()
+        all_time_snap = (
+            snapshot
+            if period == "all_time"
+            else await AnalyticsSnapshot.find_one(
+                AnalyticsSnapshot.user_id == user_id,
+                AnalyticsSnapshot.period == "all_time",
+            )
+        )
+        if all_time_snap and all_time_snap.total_tracks_played == total:
+            return snapshot
+
+    return await compute_analytics_snapshot(user_id, period)
+
+
 async def compute_analytics_snapshot(user_id: str, period: str = "all_time") -> AnalyticsSnapshot:
     """Compute and store analytics for a user over a time period."""
     period_start, period_end = _get_period_range(period)

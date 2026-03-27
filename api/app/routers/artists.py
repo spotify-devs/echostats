@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from app.middleware.auth import get_current_user
 from app.models.artist import Artist
 from app.models.user import User
-from app.services.analytics_service import compute_analytics_snapshot
+from app.services.analytics_service import get_or_compute_snapshot
 
 router = APIRouter()
 
@@ -19,7 +19,7 @@ async def get_top_artists(
     limit: int = Query(50, ge=1, le=100),
 ) -> dict:
     """Get top artists for a time period."""
-    snapshot = await compute_analytics_snapshot(str(user.id), period)
+    snapshot = await get_or_compute_snapshot(str(user.id), period)
 
     return {
         "items": [item.model_dump() for item in snapshot.top_artists[:limit]],
