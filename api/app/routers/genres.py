@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, Query
 from app.middleware.auth import get_current_user
 from app.models.analytics import AnalyticsSnapshot
 from app.models.user import User
+from app.services.analytics_service import compute_analytics_snapshot
 
 router = APIRouter()
 
@@ -22,7 +23,7 @@ async def get_genre_distribution(
         AnalyticsSnapshot.period == period,
     )
     if not snapshot:
-        return {"genres": [], "period": period}
+        snapshot = await compute_analytics_snapshot(str(user.id), period)
 
     return {
         "genres": [item.model_dump() for item in snapshot.top_genres],
