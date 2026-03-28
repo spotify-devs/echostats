@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from app.middleware.auth import get_current_user
 from app.models.user import User
 from app.services.analytics_service import compute_analytics_snapshot, get_or_compute_snapshot
+from app.services.rollup_service import get_rollup_status
 
 router = APIRouter()
 logger = structlog.get_logger()
@@ -70,3 +71,60 @@ async def refresh_analytics(
         "periods": periods,
         "computed_at": datetime.utcnow().isoformat(),
     }
+
+
+@router.get("/rollup-status")
+async def rollup_status(
+    user: Annotated[User, Depends(get_current_user)],
+) -> dict:
+    """Get rollup build status for the current user."""
+    try:
+        return await get_rollup_status(str(user.id))
+    except Exception as e:
+        logger.error("Rollup status check failed", user_id=str(user.id), error=str(e))
+        raise HTTPException(status_code=502, detail="Failed to check rollup status")
+
+
+@router.post("/rollup-build")
+async def trigger_rollup_build(
+    user: Annotated[User, Depends(get_current_user)],
+) -> dict:
+    """Trigger a background rollup build for the current user."""
+    from arq.connections import ArqRedis, create_pool
+
+    from app.config import settings as app_settings
+    from app.models.sync_job import SyncJob
+
+    user_id = str(user.id)
+
+    # Check if a build is already running
+    existing = await SyncJob.find_one(
+        {"user_id": user_id, "job_type": "rollup_build", "status": "running"},
+    )
+    if existing:
+        return {"status": "already_running", "job_id": str(existing.id)}
+
+    # Create a tracking job
+    job = SyncJob(
+        user_id=user_id,
+        job_type="rollup_build",
+        status="pending",
+    )
+    await job.insert()
+
+    # Enqueue ARQ task
+    try:
+        from arq.connections import RedisSettings
+
+        redis_settings = RedisSettings.from_dsn(app_settings.redis_url)
+        redis: ArqRedis = await create_pool(redis_settings)
+        await redis.enqueue_job("build_user_rollups", user_id, str(job.id))
+        await redis.aclose()
+    except Exception as e:
+        logger.error("Failed to enqueue rollup build", user_id=user_id, error=str(e))
+        job.status = "failed"
+        job.error_message = f"Failed to enqueue: {e}"
+        await job.save()
+        raise HTTPException(status_code=502, detail="Failed to start rollup build")
+
+    return {"status": "started", "job_id": str(job.id)}

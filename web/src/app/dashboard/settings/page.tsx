@@ -3,6 +3,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Check,
+  Database,
   Loader2,
   Paintbrush,
   Palette,
@@ -11,6 +12,7 @@ import {
   Shield,
   Upload,
   User,
+  Zap,
 } from "lucide-react";
 import { useState } from "react";
 import { useTheme } from "@/components/theme-provider";
@@ -19,14 +21,30 @@ import { showToast } from "@/components/ui/toast";
 import { api } from "@/lib/api";
 import { accents, themes } from "@/lib/themes";
 
+interface RollupStatus {
+  rollup_days: number;
+  history_days: number;
+  is_building: boolean;
+  started_at: string | null;
+  last_built_at: string | null;
+  items_processed: number;
+}
+
 export default function SettingsPage() {
   const [importOpen, setImportOpen] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [buildingRollups, setBuildingRollups] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: authStatus } = useQuery({
     queryKey: ["auth-status"],
     queryFn: () => api.get<any>("/api/v1/auth/status"),
+  });
+
+  const { data: rollupStatus, refetch: refetchRollups } = useQuery({
+    queryKey: ["rollup-status"],
+    queryFn: () => api.get<RollupStatus>("/api/v1/analytics/rollup-status"),
+    refetchInterval: buildingRollups ? 2000 : false,
   });
 
   const { themeId, accentId, customAccentColor, setTheme, setAccent, setCustomAccentColor } =
@@ -239,6 +257,130 @@ export default function SettingsPage() {
           </button>
         </div>
         <p className="text-xs text-theme-tertiary">Data syncs automatically every 15 minutes</p>
+      </div>
+
+      {/* Data Rollups */}
+      <div className="glass-card p-6 space-y-4">
+        <h2 className="text-lg font-semibold text-theme flex items-center gap-2">
+          <Database className="w-5 h-5 text-accent-dynamic" /> Data Rollups
+        </h2>
+        <p className="text-sm text-theme-secondary">
+          Rollups pre-aggregate your listening history into daily summaries for instant analytics
+          across any time window — even decades of data.
+        </p>
+
+        {rollupStatus && (
+          <div className="space-y-3">
+            {/* Progress bar */}
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-theme-secondary">
+                  {rollupStatus.history_days === 0
+                    ? "No listening data yet"
+                    : rollupStatus.is_building
+                      ? "Building rollups..."
+                      : rollupStatus.rollup_days >= rollupStatus.history_days
+                        ? "Rollups up to date"
+                        : "Rollups need building"}
+                </span>
+                <span className="text-sm font-mono text-theme">
+                  {rollupStatus.rollup_days.toLocaleString()} /{" "}
+                  {rollupStatus.history_days.toLocaleString()} days
+                </span>
+              </div>
+              <div className="w-full h-2.5 rounded-full bg-current/[0.1] overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all duration-500 ${
+                    rollupStatus.is_building
+                      ? "bg-amber-400 animate-pulse"
+                      : rollupStatus.rollup_days >= rollupStatus.history_days &&
+                          rollupStatus.history_days > 0
+                        ? "bg-emerald-400"
+                        : "bg-accent-dynamic"
+                  }`}
+                  style={{
+                    width: `${rollupStatus.history_days > 0 ? Math.min(100, (rollupStatus.rollup_days / rollupStatus.history_days) * 100) : 0}%`,
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Status details */}
+            <div className="p-3 rounded-xl bg-theme-surface-2 border border-current/[0.08] space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-xs text-theme-tertiary">Status</span>
+                {rollupStatus.is_building ? (
+                  <span className="flex items-center gap-1.5 text-xs text-amber-400">
+                    <Loader2 className="w-3 h-3 animate-spin" /> Building
+                  </span>
+                ) : rollupStatus.rollup_days >= rollupStatus.history_days &&
+                  rollupStatus.history_days > 0 ? (
+                  <span className="flex items-center gap-1.5 text-xs text-emerald-400">
+                    <Zap className="w-3 h-3" /> Ready
+                  </span>
+                ) : (
+                  <span className="text-xs text-theme-secondary">Not built</span>
+                )}
+              </div>
+              {rollupStatus.last_built_at && (
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-theme-tertiary">Last Built</span>
+                  <span className="text-xs text-theme-secondary font-mono">
+                    {new Date(rollupStatus.last_built_at).toLocaleString()}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Build button */}
+            <button
+              onClick={async () => {
+                setBuildingRollups(true);
+                try {
+                  const res = await api.post<{ status: string }>("/api/v1/analytics/rollup-build");
+                  if (res.status === "already_running") {
+                    showToast("info", "Rollup build is already in progress");
+                  } else {
+                    showToast("success", "Rollup build started");
+                  }
+                  // Poll until build completes
+                  const poll = setInterval(async () => {
+                    const s = await api.get<RollupStatus>("/api/v1/analytics/rollup-status");
+                    if (!s.is_building) {
+                      clearInterval(poll);
+                      setBuildingRollups(false);
+                      refetchRollups();
+                      queryClient.invalidateQueries();
+                      showToast(
+                        "success",
+                        `Rollups built — ${s.rollup_days.toLocaleString()} days indexed`,
+                      );
+                    }
+                  }, 2000);
+                } catch {
+                  setBuildingRollups(false);
+                  showToast("error", "Failed to start rollup build");
+                }
+              }}
+              disabled={
+                buildingRollups || rollupStatus.is_building || rollupStatus.history_days === 0
+              }
+              className="btn-primary text-sm flex items-center gap-2 disabled:opacity-50"
+            >
+              {buildingRollups || rollupStatus.is_building ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Database className="w-4 h-4" />
+              )}
+              {buildingRollups || rollupStatus.is_building
+                ? "Building..."
+                : rollupStatus.rollup_days >= rollupStatus.history_days &&
+                    rollupStatus.history_days > 0
+                  ? "Rebuild Rollups"
+                  : "Build Rollups"}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Import Modal */}
