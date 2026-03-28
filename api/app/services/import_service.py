@@ -9,6 +9,7 @@ import structlog
 from app.models.analytics import AnalyticsSnapshot
 from app.models.listening_history import HistoryTrackRef, ListeningHistory
 from app.models.sync_job import SyncJob
+from app.services.rollup_service import build_rollups
 
 logger = structlog.get_logger()
 
@@ -74,6 +75,11 @@ async def import_streaming_history(
                 user_id=user_id,
                 deleted=deleted,
             )
+            # Rebuild rollups from raw history so analytics are instant
+            try:
+                await build_rollups(user_id)
+            except Exception as e:
+                logger.error("Rollup rebuild after import failed", user_id=user_id, error=str(e))
 
         logger.info(
             "Import completed",

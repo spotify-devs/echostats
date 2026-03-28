@@ -3,13 +3,15 @@
 from datetime import datetime
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query
+import structlog
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from app.middleware.auth import get_current_user
 from app.models.user import User
 from app.services.analytics_service import compute_analytics_snapshot, get_or_compute_snapshot
 
 router = APIRouter()
+logger = structlog.get_logger()
 
 
 @router.get("/overview")
@@ -18,7 +20,11 @@ async def get_overview(
     period: str = Query("all_time", pattern="^(week|month|quarter|year|all_time)$"),
 ) -> dict:
     """Get analytics overview for a time period."""
-    snapshot = await get_or_compute_snapshot(str(user.id), period)
+    try:
+        snapshot = await get_or_compute_snapshot(str(user.id), period)
+    except Exception as e:
+        logger.error("Analytics overview failed", user_id=str(user.id), period=period, error=str(e))
+        raise HTTPException(status_code=502, detail="Analytics computation failed — please retry")
 
     return {
         "period": period,
@@ -52,8 +58,12 @@ async def refresh_analytics(
     if period == "all_time":
         periods = ["week", "month", "quarter", "year", "all_time"]
 
-    for p in periods:
-        await compute_analytics_snapshot(str(user.id), p)
+    try:
+        for p in periods:
+            await compute_analytics_snapshot(str(user.id), p)
+    except Exception as e:
+        logger.error("Analytics refresh failed", user_id=str(user.id), periods=periods, error=str(e))
+        raise HTTPException(status_code=502, detail="Analytics refresh failed — please retry")
 
     return {
         "status": "refreshed",
