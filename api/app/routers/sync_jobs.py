@@ -166,7 +166,7 @@ async def _run_manual_sync(user_id: str, job_id: str) -> None:
     """Run a manual sync in the background."""
     from app.models.sync_job import SyncStep
     from app.services.analytics_service import compute_analytics_snapshot
-    from app.services.sync_service import sync_playlists
+    from app.services.sync_service import sync_playlists, sync_top_items
 
     job = await SyncJob.get(PydanticObjectId(job_id))
     if not job:
@@ -227,6 +227,21 @@ async def _run_manual_sync(user_id: str, job_id: str) -> None:
                 step_pl.detail = "Failed to sync playlists"
             step_pl.completed_at = datetime.now(tz=UTC)
             job.steps.append(step_pl)
+
+            # Step 4: Sync top artists & tracks (refreshes artist genres)
+            step_top = SyncStep(action="sync_top_items", detail="Syncing top artists & tracks")
+            try:
+                top_counts = await sync_top_items(client, user_id)
+                top_total = top_counts["artists"] + top_counts["tracks"]
+                step_top.status = "completed"
+                step_top.items = top_total
+                step_top.detail = f"Synced {top_counts['artists']} artists, {top_counts['tracks']} tracks"
+            except Exception as e:
+                step_top.status = "failed"
+                step_top.error = str(e)[:200]
+                step_top.detail = "Failed to sync top items"
+            step_top.completed_at = datetime.now(tz=UTC)
+            job.steps.append(step_top)
 
             job.status = "completed"
             job.items_processed = count
