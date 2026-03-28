@@ -41,7 +41,11 @@ async def sync_all_users(ctx: dict) -> None:
     from app.services.analytics_service import compute_analytics_snapshot
     from app.services.rollup_service import update_rollup_for_date
     from app.services.spotify_client import SpotifyClient
-    from app.services.sync_service import enrich_audio_features, sync_recently_played
+    from app.services.sync_service import (
+        enrich_audio_features,
+        sync_playlists,
+        sync_recently_played,
+    )
     from app.services.token_service import get_valid_access_token
 
     logger = structlog.get_logger()
@@ -94,6 +98,20 @@ async def sync_all_users(ctx: dict) -> None:
                     step2.detail = f"Enriched audio features for {enriched} track{'s' if enriched != 1 else ''}"
                     step2.completed_at = datetime.now(tz=UTC)
                     job.steps.append(step2)
+
+                # Step 3: Sync playlists
+                step_pl = SyncStep(action="sync_playlists", detail="Syncing playlists from Spotify")
+                try:
+                    pl_count = await sync_playlists(client, user_id)
+                    step_pl.status = "completed"
+                    step_pl.items = pl_count
+                    step_pl.detail = f"Synced {pl_count} playlist{'s' if pl_count != 1 else ''}"
+                except Exception as e:
+                    step_pl.status = "failed"
+                    step_pl.error = str(e)[:200]
+                    step_pl.detail = "Failed to sync playlists"
+                step_pl.completed_at = datetime.now(tz=UTC)
+                job.steps.append(step_pl)
 
                 job.status = "completed"
                 job.items_processed = count
