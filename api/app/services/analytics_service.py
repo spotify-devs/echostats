@@ -96,7 +96,7 @@ async def compute_analytics_snapshot(user_id: str, period: str = "all_time") -> 
         (
             stats_res,
             n_artists_res, n_albums_res, n_tracks_res,
-            artist_res, track_res,
+            artist_res, album_res, track_res,
             hourly_res, daily_res,
             dates_res, sample_tracks_res,
         ) = await asyncio.gather(
@@ -136,6 +136,16 @@ async def compute_analytics_snapshot(user_id: str, period: str = "all_time") -> 
             DailyRollup.aggregate([
                 _match(),
                 {"$project": {"a": {"$objectToArray": "$artist_plays"}}},
+                {"$unwind": "$a"},
+                {"$group": {"_id": "$a.k", "c": {"$sum": "$a.v"}}},
+                {"$sort": {"c": -1}},
+                {"$limit": 50},
+            ], **agg_opts).to_list(),
+
+            # Top albums (merge across days)
+            DailyRollup.aggregate([
+                _match(),
+                {"$project": {"a": {"$objectToArray": "$album_plays"}}},
                 {"$unwind": "$a"},
                 {"$group": {"_id": "$a.k", "c": {"$sum": "$a.v"}}},
                 {"$sort": {"c": -1}},
@@ -246,6 +256,35 @@ async def compute_analytics_snapshot(user_id: str, period: str = "all_time") -> 
             rank=rank, image_url=t.album.image_url if t and t.album else "",
         ))
 
+    # Build top album items with images from loaded track docs
+    album_meta: dict[str, tuple[str, str]] = {}  # album_name -> (image_url, artist_name)
+    for t in track_docs:
+        if t.album and t.album.name:
+            album_meta.setdefault(t.album.name, (
+                t.album.image_url or "",
+                t.artists[0].name if t.artists else "",
+            ))
+
+    # Fetch images for top albums not covered by already-loaded tracks
+    missing_names = [r["_id"] for r in album_res[:30] if r["_id"] and r["_id"] not in album_meta]
+    if missing_names:
+        extra_tracks = await Track.find({"album.name": {"$in": missing_names}}).limit(100).to_list()
+        for t in extra_tracks:
+            if t.album and t.album.name:
+                album_meta.setdefault(t.album.name, (
+                    t.album.image_url or "",
+                    t.artists[0].name if t.artists else "",
+                ))
+
+    top_album_items = []
+    for rank, r in enumerate(album_res[:50], 1):
+        name = r["_id"] or ""
+        img, artist = album_meta.get(name, ("", ""))
+        display = f"{name} — {artist}" if artist else name
+        top_album_items.append(TopItem(
+            name=display, play_count=r["c"], rank=rank, image_url=img,
+        ))
+
     # Genre analysis from batch-loaded artists
     genre_counts: Counter[str] = Counter()
     for r in artist_res:
@@ -281,6 +320,7 @@ async def compute_analytics_snapshot(user_id: str, period: str = "all_time") -> 
         listening_streak_days=streak,
         top_artists=top_artist_items[:20],
         top_tracks=top_track_items[:20],
+        top_albums=top_album_items[:20],
         top_genres=top_genres[:20],
         hourly_distribution=[
             ListeningHour(hour=r["_id"], count=r["c"], total_ms=r["ms"])

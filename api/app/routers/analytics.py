@@ -40,6 +40,7 @@ async def get_overview(
         "listening_streak_days": snapshot.listening_streak_days,
         "top_artists": [item.model_dump() for item in snapshot.top_artists[:10]],
         "top_tracks": [item.model_dump() for item in snapshot.top_tracks[:10]],
+        "top_albums": [item.model_dump() for item in snapshot.top_albums[:10]],
         "top_genres": [item.model_dump() for item in snapshot.top_genres[:10]],
         "hourly_distribution": [item.model_dump() for item in snapshot.hourly_distribution],
         "daily_distribution": [item.model_dump() for item in snapshot.daily_distribution],

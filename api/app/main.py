@@ -13,6 +13,7 @@ from app.database import close_db, init_db
 from app.middleware.rate_limit import RateLimitMiddleware
 from app.middleware.security import RequestLoggingMiddleware, SecurityHeadersMiddleware
 from app.routers import (
+    albums,
     analytics,
     api_logs,
     artists,
@@ -77,6 +78,7 @@ app.include_router(history.router, prefix="/api/v1/history", tags=["History"])
 app.include_router(analytics.router, prefix="/api/v1/analytics", tags=["Analytics"])
 app.include_router(artists.router, prefix="/api/v1/artists", tags=["Artists"])
 app.include_router(tracks.router, prefix="/api/v1/tracks", tags=["Tracks"])
+app.include_router(albums.router, prefix="/api/v1/albums", tags=["Albums"])
 app.include_router(genres.router, prefix="/api/v1/genres", tags=["Genres"])
 app.include_router(playlists.router, prefix="/api/v1/playlists", tags=["Playlists"])
 app.include_router(player.router, prefix="/api/v1/player", tags=["Player"])
