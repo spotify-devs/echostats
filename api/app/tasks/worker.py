@@ -179,6 +179,86 @@ async def build_user_rollups(ctx: dict, user_id: str, job_id: str) -> None:
     await job.save()
 
 
+async def periodic_rollup_build(ctx: dict) -> None:
+    """Periodic task: build missing rollups for all users.
+
+    Compares rollup day count vs listening history day count and rebuilds
+    when there are unprocessed days.
+    """
+    import structlog
+
+    from app.models.sync_job import SyncJob, SyncStep
+    from app.models.user import User
+    from app.services.rollup_service import build_rollups, get_rollup_status
+
+    logger = structlog.get_logger()
+    users = await User.find_all().to_list()
+    logger.info("Starting periodic rollup build", user_count=len(users))
+
+    for user in users:
+        user_id = str(user.id)
+
+        try:
+            status = await get_rollup_status(user_id)
+
+            # Skip if already building or fully up to date
+            if status["is_building"]:
+                logger.info("Rollup build already running, skipping", user_id=user_id)
+                continue
+            if status["history_days"] == 0:
+                continue
+            if status["rollup_days"] >= status["history_days"]:
+                logger.debug("Rollups up to date", user_id=user_id)
+                continue
+
+            missing = status["history_days"] - status["rollup_days"]
+            logger.info(
+                "Building missing rollups",
+                user_id=user_id,
+                rollup_days=status["rollup_days"],
+                history_days=status["history_days"],
+                missing=missing,
+            )
+
+            job = SyncJob(
+                user_id=user_id,
+                job_type="rollup_build",
+                status="running",
+                started_at=datetime.now(tz=UTC),
+                items_total=status["history_days"],
+            )
+            await job.insert()
+
+            step = SyncStep(
+                action="build_rollups",
+                detail=f"Building rollups for {missing} missing day(s)",
+            )
+
+            try:
+                days_built = await build_rollups(user_id)
+                step.status = "completed"
+                step.items = days_built
+                step.detail = f"Built rollups for {days_built} day(s)"
+                step.completed_at = datetime.now(tz=UTC)
+                job.status = "completed"
+                job.items_processed = days_built
+                logger.info("Periodic rollup build complete", user_id=user_id, days=days_built)
+            except Exception as e:
+                step.status = "failed"
+                step.error = str(e)[:500]
+                step.completed_at = datetime.now(tz=UTC)
+                job.status = "failed"
+                job.error_message = str(e)[:500]
+                logger.error("Periodic rollup build failed", user_id=user_id, error=str(e))
+
+            job.steps.append(step)
+            job.completed_at = datetime.now(tz=UTC)
+            await job.save()
+
+        except Exception as e:
+            logger.error("Periodic rollup build error", user_id=user_id, error=str(e))
+
+
 def _parse_redis_url() -> RedisSettings:
     """Parse Redis URL into ARQ RedisSettings."""
     return RedisSettings.from_dsn(settings.redis_url)
@@ -187,13 +267,14 @@ def _parse_redis_url() -> RedisSettings:
 class WorkerSettings:
     """ARQ worker settings."""
 
-    functions = [sync_all_users, refresh_analytics, build_user_rollups]
+    functions = [sync_all_users, refresh_analytics, build_user_rollups, periodic_rollup_build]
     on_startup = startup
     on_shutdown = shutdown
     redis_settings = _parse_redis_url()
     cron_jobs = [
         cron(sync_all_users, minute={0, 15, 30, 45}),  # Every 15 minutes
         cron(refresh_analytics, hour={0, 6, 12, 18}, minute=30),  # Every 6 hours
+        cron(periodic_rollup_build, hour={3, 15}, minute=0),  # Every 12 hours
     ]
     max_jobs = 5
     job_timeout = 600  # 10 minutes (rollup builds can be large)
