@@ -1,6 +1,6 @@
 """ARQ background worker configuration."""
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 from arq import cron
 from arq.connections import RedisSettings
@@ -9,7 +9,7 @@ from app.config import settings
 
 
 async def startup(ctx: dict) -> None:
-    """Worker startup — initialize database."""
+    """Worker startup — initialize database and clean up stale jobs."""
     import structlog
 
     from app.database import init_db
@@ -18,6 +18,11 @@ async def startup(ctx: dict) -> None:
     logger.info("Worker starting", redis_host=_parse_redis_url().host, redis_has_password=bool(_parse_redis_url().password))
     await init_db()
     ctx["db_initialized"] = True
+
+    # Clean up jobs stuck in "running" from a previous crash
+    cleaned = await _reap_stale_jobs()
+    if cleaned:
+        logger.info("Cleaned up stale jobs on startup", count=cleaned)
 
 
 async def shutdown(ctx: dict) -> None:
@@ -36,7 +41,12 @@ async def sync_all_users(ctx: dict) -> None:
     from app.services.analytics_service import compute_analytics_snapshot
     from app.services.rollup_service import update_rollup_for_date
     from app.services.spotify_client import SpotifyClient
-    from app.services.sync_service import enrich_audio_features, sync_recently_played
+    from app.services.sync_service import (
+        enrich_audio_features,
+        sync_playlists,
+        sync_recently_played,
+        sync_top_items,
+    )
     from app.services.token_service import get_valid_access_token
 
     logger = structlog.get_logger()
@@ -89,6 +99,35 @@ async def sync_all_users(ctx: dict) -> None:
                     step2.detail = f"Enriched audio features for {enriched} track{'s' if enriched != 1 else ''}"
                     step2.completed_at = datetime.now(tz=UTC)
                     job.steps.append(step2)
+
+                # Step 3: Sync playlists
+                step_pl = SyncStep(action="sync_playlists", detail="Syncing playlists from Spotify")
+                try:
+                    pl_count = await sync_playlists(client, user_id)
+                    step_pl.status = "completed"
+                    step_pl.items = pl_count
+                    step_pl.detail = f"Synced {pl_count} playlist{'s' if pl_count != 1 else ''}"
+                except Exception as e:
+                    step_pl.status = "failed"
+                    step_pl.error = str(e)[:200]
+                    step_pl.detail = "Failed to sync playlists"
+                step_pl.completed_at = datetime.now(tz=UTC)
+                job.steps.append(step_pl)
+
+                # Step 4: Sync top artists & tracks (refreshes artist genres)
+                step_top = SyncStep(action="sync_top_items", detail="Syncing top artists & tracks from Spotify")
+                try:
+                    top_counts = await sync_top_items(client, user_id)
+                    top_total = top_counts["artists"] + top_counts["tracks"]
+                    step_top.status = "completed"
+                    step_top.items = top_total
+                    step_top.detail = f"Synced {top_counts['artists']} artists, {top_counts['tracks']} tracks"
+                except Exception as e:
+                    step_top.status = "failed"
+                    step_top.error = str(e)[:200]
+                    step_top.detail = "Failed to sync top items"
+                step_top.completed_at = datetime.now(tz=UTC)
+                job.steps.append(step_top)
 
                 job.status = "completed"
                 job.items_processed = count
@@ -259,6 +298,45 @@ async def periodic_rollup_build(ctx: dict) -> None:
             logger.error("Periodic rollup build error", user_id=user_id, error=str(e))
 
 
+# Max time a job can stay in "running" before being considered stale
+STALE_JOB_TIMEOUT_MINUTES = 30
+
+
+async def _reap_stale_jobs() -> int:
+    """Mark jobs stuck in 'running' or 'pending' for too long as failed.
+
+    Returns the number of jobs cleaned up.
+    """
+    from app.models.sync_job import SyncJob
+
+    cutoff = datetime.now(tz=UTC) - timedelta(minutes=STALE_JOB_TIMEOUT_MINUTES)
+
+    stale_jobs = await SyncJob.find(
+        {"status": {"$in": ["running", "pending"]}, "created_at": {"$lt": cutoff}},
+    ).to_list()
+
+    for job in stale_jobs:
+        job.status = "failed"
+        job.error_message = (
+            f"Job timed out — stuck for >{STALE_JOB_TIMEOUT_MINUTES} minutes "
+            f"(likely due to a worker restart)"
+        )
+        job.completed_at = datetime.now(tz=UTC)
+        await job.save()
+
+    return len(stale_jobs)
+
+
+async def cleanup_stale_jobs(ctx: dict) -> None:
+    """Periodic task: reap jobs stuck in running/pending state."""
+    import structlog
+
+    logger = structlog.get_logger()
+    cleaned = await _reap_stale_jobs()
+    if cleaned:
+        logger.info("Cleaned up stale jobs", count=cleaned)
+
+
 def _parse_redis_url() -> RedisSettings:
     """Parse Redis URL into ARQ RedisSettings."""
     return RedisSettings.from_dsn(settings.redis_url)
@@ -267,7 +345,7 @@ def _parse_redis_url() -> RedisSettings:
 class WorkerSettings:
     """ARQ worker settings."""
 
-    functions = [sync_all_users, refresh_analytics, build_user_rollups, periodic_rollup_build]
+    functions = [sync_all_users, refresh_analytics, build_user_rollups, periodic_rollup_build, cleanup_stale_jobs]
     on_startup = startup
     on_shutdown = shutdown
     redis_settings = _parse_redis_url()
@@ -275,6 +353,7 @@ class WorkerSettings:
         cron(sync_all_users, minute={0, 15, 30, 45}),  # Every 15 minutes
         cron(refresh_analytics, hour={0, 6, 12, 18}, minute=30),  # Every 6 hours
         cron(periodic_rollup_build, hour={3, 15}, minute=0),  # Every 12 hours
+        cron(cleanup_stale_jobs, minute={5, 20, 35, 50}),  # Every 15 minutes (offset from sync)
     ]
     max_jobs = 5
     job_timeout = 600  # 10 minutes (rollup builds can be large)

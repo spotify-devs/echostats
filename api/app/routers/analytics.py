@@ -1,12 +1,13 @@
 """Analytics API endpoints."""
 
-from datetime import datetime
-from typing import Annotated
+from datetime import datetime, timedelta
+from typing import Annotated, Any
 
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from app.middleware.auth import get_current_user
+from app.models.rollup import DailyRollup
 from app.models.user import User
 from app.services.analytics_service import compute_analytics_snapshot, get_or_compute_snapshot
 from app.services.rollup_service import get_rollup_status
@@ -39,6 +40,7 @@ async def get_overview(
         "listening_streak_days": snapshot.listening_streak_days,
         "top_artists": [item.model_dump() for item in snapshot.top_artists[:10]],
         "top_tracks": [item.model_dump() for item in snapshot.top_tracks[:10]],
+        "top_albums": [item.model_dump() for item in snapshot.top_albums[:10]],
         "top_genres": [item.model_dump() for item in snapshot.top_genres[:10]],
         "hourly_distribution": [item.model_dump() for item in snapshot.hourly_distribution],
         "daily_distribution": [item.model_dump() for item in snapshot.daily_distribution],
@@ -71,6 +73,91 @@ async def refresh_analytics(
         "periods": periods,
         "computed_at": datetime.utcnow().isoformat(),
     }
+
+
+@router.get("/trend")
+async def get_trend(
+    user: Annotated[User, Depends(get_current_user)],
+    period: str = Query("all_time", pattern="^(week|month|quarter|year|all_time)$"),
+) -> dict:
+    """Get chronological listening trend data from DailyRollups.
+
+    Returns data points grouped by appropriate granularity:
+    - week/month: daily
+    - quarter: weekly
+    - year/all_time: monthly
+    """
+    user_id = str(user.id)
+    now = datetime.utcnow()
+
+    match_filter: dict[str, Any] = {"user_id": user_id}
+    if period == "week":
+        start = (now - timedelta(days=7)).strftime("%Y-%m-%d")
+        match_filter["date"] = {"$gte": start}
+        group_format = "%Y-%m-%d"
+    elif period == "month":
+        start = (now - timedelta(days=30)).strftime("%Y-%m-%d")
+        match_filter["date"] = {"$gte": start}
+        group_format = "%Y-%m-%d"
+    elif period == "quarter":
+        start = (now - timedelta(days=90)).strftime("%Y-%m-%d")
+        match_filter["date"] = {"$gte": start}
+        # Group by ISO week
+        group_format = "%Y-W%V"
+    elif period == "year":
+        start = (now - timedelta(days=365)).strftime("%Y-%m-%d")
+        match_filter["date"] = {"$gte": start}
+        group_format = "%Y-%m"
+    else:
+        group_format = "%Y-%m"
+
+    try:
+        if group_format in ("%Y-%m-%d",):
+            # Daily granularity: each rollup doc is one day
+            results = await DailyRollup.aggregate([
+                {"$match": match_filter},
+                {"$project": {
+                    "_id": 0,
+                    "label": "$date",
+                    "plays": "$total_plays",
+                    "ms": "$total_ms",
+                }},
+                {"$sort": {"label": 1}},
+            ], allowDiskUse=True).to_list()
+        elif group_format == "%Y-W%V":
+            # Weekly granularity
+            results = await DailyRollup.aggregate([
+                {"$match": match_filter},
+                {"$addFields": {"parsed_date": {"$dateFromString": {"dateString": "$date", "format": "%Y-%m-%d"}}}},
+                {"$group": {
+                    "_id": {"$dateToString": {"format": "%Y-W%V", "date": "$parsed_date"}},
+                    "plays": {"$sum": "$total_plays"},
+                    "ms": {"$sum": "$total_ms"},
+                }},
+                {"$sort": {"_id": 1}},
+                {"$project": {"_id": 0, "label": "$_id", "plays": 1, "ms": 1}},
+            ], allowDiskUse=True).to_list()
+        else:
+            # Monthly granularity
+            results = await DailyRollup.aggregate([
+                {"$match": match_filter},
+                {"$group": {
+                    "_id": {"$substrBytes": ["$date", 0, 7]},
+                    "plays": {"$sum": "$total_plays"},
+                    "ms": {"$sum": "$total_ms"},
+                }},
+                {"$sort": {"_id": 1}},
+                {"$project": {"_id": 0, "label": "$_id", "plays": 1, "ms": 1}},
+            ], allowDiskUse=True).to_list()
+    except Exception as e:
+        logger.error("Trend query failed", user_id=user_id, period=period, error=str(e))
+        raise HTTPException(status_code=502, detail="Failed to compute trend data")
+
+    # Add hours for convenience
+    for r in results:
+        r["hours"] = round(r["ms"] / 3_600_000, 1)
+
+    return {"period": period, "granularity": group_format, "points": results}
 
 
 @router.get("/rollup-status")

@@ -52,6 +52,7 @@ const TYPE_LABELS: Record<string, string> = {
   periodic: "Periodic Sync",
   import: "File Import",
   enrichment: "Audio Enrichment",
+  rollup_build: "Rollup Build",
 };
 
 const STEP_LABELS: Record<string, string> = {
@@ -62,6 +63,7 @@ const STEP_LABELS: Record<string, string> = {
   sync_playlists: "Playlists",
   enrich_audio_features: "Audio Features",
   refresh_analytics: "Refresh Analytics",
+  build_rollups: "Build Rollups",
 };
 
 function timeAgo(dateStr: string, now: number): string {
@@ -139,6 +141,12 @@ export default function SyncJobsPage() {
     },
   });
 
+  const { data: rollupStatus } = useQuery({
+    queryKey: ["rollup-status"],
+    queryFn: () => api.get<any>("/api/v1/analytics/rollup-status"),
+    refetchInterval: 10000,
+  });
+
   const items = jobs?.items || [];
   const totalPages = jobs?.pages || 1;
   const isRunning = (stats?.running || 0) > 0;
@@ -169,6 +177,26 @@ export default function SyncJobsPage() {
   }
 
   const nextSync = getNextSyncTime();
+
+  // Compute next rollup build time (worker runs at 03:00 and 15:00 UTC)
+  function getNextRollupTime(): Date {
+    const d = new Date(now);
+    const utcH = d.getUTCHours();
+    const utcM = d.getUTCMinutes();
+    const next = new Date(d);
+    if (utcH < 3 || (utcH === 3 && utcM === 0)) {
+      next.setUTCHours(3, 0, 0, 0);
+    } else if (utcH < 15 || (utcH === 15 && utcM === 0)) {
+      next.setUTCHours(15, 0, 0, 0);
+    } else {
+      next.setUTCDate(next.getUTCDate() + 1);
+      next.setUTCHours(3, 0, 0, 0);
+    }
+    return next;
+  }
+
+  const nextRollup = getNextRollupTime();
+  const isRollupBuilding = rollupStatus?.is_building ?? false;
 
   return (
     <div className="space-y-6">
@@ -294,6 +322,88 @@ export default function SyncJobsPage() {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Rollup Schedule Info */}
+      {stats && (
+        <div className="glass-card p-4 space-y-3">
+          <h2 className="text-sm font-semibold text-theme flex items-center gap-2">
+            <Database className="w-4 h-4 text-accent-cyan" /> Rollup Schedule
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {/* Last Rollup Build */}
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-current/[0.03] border border-current/[0.08]">
+              <CheckCircle
+                className={`w-5 h-5 flex-shrink-0 ${rollupStatus?.last_built_at ? "text-emerald-400" : "text-theme-tertiary"}`}
+              />
+              <div className="min-w-0">
+                <p className="text-[10px] text-theme-tertiary uppercase tracking-wider">
+                  Last Build
+                </p>
+                <p className="text-sm font-medium text-theme truncate">
+                  {rollupStatus?.last_built_at ? timeAgo(rollupStatus.last_built_at, now) : "Never"}
+                </p>
+                {rollupStatus?.last_built_at && (
+                  <p className="text-[10px] text-theme-tertiary">
+                    {new Date(rollupStatus.last_built_at).toLocaleString([], {
+                      dateStyle: "short",
+                      timeStyle: "short",
+                    })}
+                  </p>
+                )}
+              </div>
+            </div>
+            {/* Next Rollup Build */}
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-current/[0.03] border border-current/[0.08]">
+              <RefreshCw
+                className={`w-5 h-5 flex-shrink-0 ${isRollupBuilding ? "text-accent-dynamic animate-spin" : "text-accent-cyan"}`}
+              />
+              <div className="min-w-0">
+                <p className="text-[10px] text-theme-tertiary uppercase tracking-wider">
+                  Next Build
+                </p>
+                <p className="text-sm font-medium text-theme">
+                  {isRollupBuilding ? "In progress…" : `in ~${formatCountdown(nextRollup)}`}
+                </p>
+                <p className="text-[10px] text-theme-tertiary">
+                  {nextRollup.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                </p>
+              </div>
+            </div>
+            {/* Frequency */}
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-current/[0.03] border border-current/[0.08]">
+              <Activity className="w-5 h-5 flex-shrink-0 text-accent-cyan" />
+              <div className="min-w-0">
+                <p className="text-[10px] text-theme-tertiary uppercase tracking-wider">
+                  Frequency
+                </p>
+                <p className="text-sm font-medium text-theme">Every 12 hours</p>
+                <p className="text-[10px] text-theme-tertiary">at 03:00 &amp; 15:00 UTC</p>
+              </div>
+            </div>
+          </div>
+          {/* Rollup coverage bar */}
+          {rollupStatus && rollupStatus.history_days > 0 && (
+            <div className="pt-1">
+              <div className="flex items-center justify-between text-[10px] text-theme-tertiary mb-1">
+                <span>
+                  Coverage: {rollupStatus.rollup_days}/{rollupStatus.history_days} days
+                </span>
+                <span>
+                  {Math.round((rollupStatus.rollup_days / rollupStatus.history_days) * 100)}%
+                </span>
+              </div>
+              <div className="w-full h-1.5 rounded-full bg-theme-surface-3 overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-accent-cyan transition-all"
+                  style={{
+                    width: `${Math.min((rollupStatus.rollup_days / rollupStatus.history_days) * 100, 100)}%`,
+                  }}
+                />
+              </div>
+            </div>
+          )}
         </div>
       )}
 

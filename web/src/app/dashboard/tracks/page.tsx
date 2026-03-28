@@ -1,7 +1,8 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { Download, LayoutGrid, Music, Table2 } from "lucide-react";
+import { Download, Grid3x3, LayoutGrid, List, Music, Play } from "lucide-react";
+import Image from "next/image";
 import { useState } from "react";
 import { TrackCard } from "@/components/music/track-card";
 import { DateRangeFilter } from "@/components/ui/date-range-filter";
@@ -10,9 +11,11 @@ import { TimeRangeSelector } from "@/components/ui/time-range-selector";
 import { api } from "@/lib/api";
 import { exportTopItems } from "@/lib/export";
 
+type ViewMode = "list" | "grid" | "compact";
+
 export default function TopTracksPage() {
   const [period, setPeriod] = useState("all_time");
-  const [view, setView] = useState<"cards" | "table">("cards");
+  const [view, setView] = useState<ViewMode>("list");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
@@ -25,6 +28,8 @@ export default function TopTracksPage() {
       return api.get<any>(url);
     },
   });
+
+  const items = data?.items || [];
 
   return (
     <div className="space-y-6">
@@ -48,34 +53,40 @@ export default function TopTracksPage() {
             }}
           />
           <button
-            onClick={() => data?.items && exportTopItems(data.items, "tracks")}
-            disabled={!data?.items?.length}
+            onClick={() => items.length && exportTopItems(items, "tracks")}
+            disabled={!items.length}
             className="flex items-center gap-2 px-3 py-2 text-sm text-theme-secondary bg-theme-surface-2 rounded-xl border border-current/[0.1] hover:border-current/[0.2] transition-all disabled:opacity-30"
           >
             <Download className="w-4 h-4" />
           </button>
           <div className="flex gap-1 p-1 bg-surface-2 rounded-lg border border-current/[0.08]">
-            <button
-              onClick={() => setView("cards")}
-              className={`p-1.5 rounded-md ${view === "cards" ? "bg-accent-dynamic/20 text-accent-dynamic" : "text-theme-tertiary"}`}
-            >
-              <LayoutGrid className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setView("table")}
-              className={`p-1.5 rounded-md ${view === "table" ? "bg-accent-dynamic/20 text-accent-dynamic" : "text-theme-tertiary"}`}
-            >
-              <Table2 className="w-4 h-4" />
-            </button>
+            {[
+              { mode: "list" as const, icon: List, label: "List" },
+              { mode: "grid" as const, icon: LayoutGrid, label: "Grid" },
+              { mode: "compact" as const, icon: Grid3x3, label: "Compact" },
+            ].map(({ mode, icon: Icon, label }) => (
+              <button
+                key={mode}
+                onClick={() => setView(mode)}
+                title={label}
+                className={`p-1.5 rounded-md ${view === mode ? "bg-accent-dynamic/20 text-accent-dynamic" : "text-theme-tertiary hover:text-theme-secondary"}`}
+              >
+                <Icon className="w-4 h-4" />
+              </button>
+            ))}
           </div>
         </div>
       </div>
 
       {isLoading ? (
         <ListSkeleton rows={10} />
-      ) : (
+      ) : items.length === 0 ? (
+        <div className="glass-card p-8 text-center text-theme-tertiary">
+          No track data yet. Start listening!
+        </div>
+      ) : view === "list" ? (
         <div className="glass-card divide-y divide-current/[0.08]">
-          {(data?.items || []).map((item: any, idx: number) => (
+          {items.map((item: any, idx: number) => (
             <TrackCard
               key={item.spotify_id || idx}
               rank={item.rank || idx + 1}
@@ -85,11 +96,95 @@ export default function TopTracksPage() {
               playCount={item.play_count}
             />
           ))}
-          {(!data?.items || data.items.length === 0) && (
-            <p className="p-8 text-center text-theme-tertiary">
-              No track data yet. Start listening!
-            </p>
-          )}
+        </div>
+      ) : view === "grid" ? (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+          {items.map((item: any, idx: number) => {
+            const trackName = item.name?.split(" — ")[0] || item.name;
+            const artistName = item.name?.split(" — ")[1] || "";
+            return (
+              <div key={item.spotify_id || idx} className="glass-card-hover p-3 space-y-3 group">
+                <div className="relative aspect-square rounded-xl overflow-hidden bg-surface-3">
+                  {item.image_url ? (
+                    <Image
+                      src={item.image_url}
+                      alt={trackName}
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-300"
+                      sizes="200px"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Play className="w-10 h-10 text-theme-tertiary" />
+                    </div>
+                  )}
+                  <div className="absolute top-2 left-2 bg-black/60 text-white text-[10px] font-mono px-1.5 py-0.5 rounded-md">
+                    #{item.rank || idx + 1}
+                  </div>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-theme truncate">{trackName}</p>
+                  {artistName && (
+                    <p className="text-xs text-theme-tertiary truncate">{artistName}</p>
+                  )}
+                  <p className="text-xs text-accent-dynamic mt-0.5">
+                    {item.play_count?.toLocaleString()} plays
+                  </p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="glass-card overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-current/[0.08] text-theme-tertiary text-xs uppercase tracking-wider">
+                <th className="p-3 text-left w-12">#</th>
+                <th className="p-3 text-left">Track</th>
+                <th className="p-3 text-left">Artist</th>
+                <th className="p-3 text-right">Plays</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-current/[0.06]">
+              {items.map((item: any, idx: number) => {
+                const trackName = item.name?.split(" — ")[0] || item.name;
+                const artistName = item.name?.split(" — ")[1] || "";
+                return (
+                  <tr
+                    key={item.spotify_id || idx}
+                    className="hover:bg-current/[0.03] transition-colors"
+                  >
+                    <td className="p-3 text-theme-tertiary font-mono">{item.rank || idx + 1}</td>
+                    <td className="p-3">
+                      <div className="flex items-center gap-3">
+                        <div className="relative w-8 h-8 rounded-md overflow-hidden bg-surface-3 flex-shrink-0">
+                          {item.image_url ? (
+                            <Image
+                              src={item.image_url}
+                              alt={trackName}
+                              fill
+                              className="object-cover"
+                              sizes="32px"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Play className="w-3 h-3 text-theme-tertiary" />
+                            </div>
+                          )}
+                        </div>
+                        <span className="font-medium text-theme truncate">{trackName}</span>
+                      </div>
+                    </td>
+                    <td className="p-3 text-theme-tertiary truncate">{artistName}</td>
+                    <td className="p-3 text-right text-theme-tertiary tabular-nums">
+                      {item.play_count?.toLocaleString()}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       )}
     </div>
