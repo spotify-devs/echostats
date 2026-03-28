@@ -30,7 +30,7 @@ spec:
       {{- end }}
       containers:
         - name: api
-          image: "{{ .Values.image.api.repository }}:{{ .Values.image.api.tag }}"
+          image: "{{ .Values.image.api.repository }}:{{ .Values.image.api.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.api.pullPolicy }}
           ports:
             - containerPort: {{ .Values.api.port }}

@@ -30,7 +30,7 @@ spec:
       {{- end }}
       containers:
         - name: worker
-          image: "{{ .Values.image.api.repository }}:{{ .Values.image.api.tag }}"
+          image: "{{ .Values.image.api.repository }}:{{ .Values.image.api.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.api.pullPolicy }}
           command: ["uv", "run", "arq", "app.tasks.worker.WorkerSettings"]
           envFrom:
