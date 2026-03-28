@@ -1,6 +1,7 @@
 """Analytics computation service."""
 
 import asyncio
+import copy
 from collections import Counter
 from datetime import datetime, timedelta
 from typing import Any
@@ -77,8 +78,16 @@ async def compute_analytics_snapshot(user_id: str, period: str = "all_time") -> 
     if date_filter:
         match_filter["played_at"] = date_filter
 
-    match = {"$match": match_filter}
-    dur = {"$ifNull": ["$ms_played", {"$ifNull": ["$track.duration_ms", 0]}]}
+    # Helper to create independent copies of pipeline stages for each
+    # concurrent aggregation — Motor may mutate pipeline dicts in-place.
+    def _match() -> dict:
+        return {"$match": copy.deepcopy(match_filter)}
+
+    def _dur() -> dict:
+        return {"$ifNull": ["$ms_played", {"$ifNull": ["$track.duration_ms", 0]}]}
+
+    # allowDiskUse prevents 100MB pipeline memory limit failures on large windows
+    agg_opts: dict[str, Any] = {"allowDiskUse": True}
 
     try:
         # Run all independent aggregation pipelines concurrently.
@@ -91,61 +100,62 @@ async def compute_analytics_snapshot(user_id: str, period: str = "all_time") -> 
         ) = await asyncio.gather(
             # Basic stats: total plays + total ms
             ListeningHistory.aggregate([
-                match,
-                {"$group": {"_id": None, "total": {"$sum": 1}, "ms": {"$sum": dur}}},
-            ]).to_list(),
+                _match(),
+                {"$group": {"_id": None, "total": {"$sum": 1}, "ms": {"$sum": _dur()}}},
+            ], **agg_opts).to_list(),
             # Unique track count
             ListeningHistory.aggregate([
-                match, {"$group": {"_id": "$track.spotify_id"}}, {"$count": "n"},
-            ]).to_list(),
+                _match(), {"$group": {"_id": "$track.spotify_id"}}, {"$count": "n"},
+            ], **agg_opts).to_list(),
             # Unique artist count
             ListeningHistory.aggregate([
-                match, {"$group": {"_id": "$track.artist_name"}}, {"$count": "n"},
-            ]).to_list(),
+                _match(), {"$group": {"_id": "$track.artist_name"}}, {"$count": "n"},
+            ], **agg_opts).to_list(),
             # Unique album count
             ListeningHistory.aggregate([
-                match, {"$group": {"_id": "$track.album_name"}}, {"$count": "n"},
-            ]).to_list(),
+                _match(), {"$group": {"_id": "$track.album_name"}}, {"$count": "n"},
+            ], **agg_opts).to_list(),
             # Artist play counts (for top artists + genre analysis)
             ListeningHistory.aggregate([
-                match,
+                _match(),
                 {"$group": {"_id": "$track.artist_name", "c": {"$sum": 1}}},
                 {"$sort": {"c": -1}},
-            ]).to_list(),
+            ], **agg_opts).to_list(),
             # Top tracks (limited to 50)
             ListeningHistory.aggregate([
-                match,
+                _match(),
                 {"$group": {
                     "_id": {"s": "$track.spotify_id", "n": "$track.name", "a": "$track.artist_name"},
                     "c": {"$sum": 1},
                 }},
                 {"$sort": {"c": -1}},
                 {"$limit": 50},
-            ]).to_list(),
+            ], **agg_opts).to_list(),
             # Hourly distribution
             ListeningHistory.aggregate([
-                match,
-                {"$group": {"_id": {"$hour": "$played_at"}, "c": {"$sum": 1}, "ms": {"$sum": dur}}},
+                _match(),
+                {"$group": {"_id": {"$hour": "$played_at"}, "c": {"$sum": 1}, "ms": {"$sum": _dur()}}},
                 {"$sort": {"_id": 1}},
-            ]).to_list(),
+            ], **agg_opts).to_list(),
             # Daily distribution
             ListeningHistory.aggregate([
-                match,
-                {"$group": {"_id": {"$dayOfWeek": "$played_at"}, "c": {"$sum": 1}, "ms": {"$sum": dur}}},
+                _match(),
+                {"$group": {"_id": {"$dayOfWeek": "$played_at"}, "c": {"$sum": 1}, "ms": {"$sum": _dur()}}},
                 {"$sort": {"_id": 1}},
-            ]).to_list(),
-            # Unique play dates for streak
+            ], **agg_opts).to_list(),
+            # Unique play dates for streak (cap to avoid huge result sets)
             ListeningHistory.aggregate([
-                match,
+                _match(),
                 {"$group": {"_id": {"$dateToString": {"format": "%Y-%m-%d", "date": "$played_at"}}}},
                 {"$sort": {"_id": -1}},
-            ]).to_list(),
-            # Sampled track IDs for audio feature averaging (cap at 500)
+                {"$limit": 1000},
+            ], **agg_opts).to_list(),
+            # Sample unique track IDs for audio feature averaging
             ListeningHistory.aggregate([
-                match,
+                _match(),
                 {"$group": {"_id": "$track.spotify_id"}},
-                {"$sample": {"size": 500}},
-            ]).to_list(),
+                {"$limit": 500},
+            ], **agg_opts).to_list(),
         )
 
     except Exception as e:
