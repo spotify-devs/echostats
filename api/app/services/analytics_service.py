@@ -1,6 +1,5 @@
 """Analytics computation service."""
 
-import asyncio
 from collections import Counter
 from datetime import datetime, timedelta
 from typing import Any
@@ -80,71 +79,72 @@ async def compute_analytics_snapshot(user_id: str, period: str = "all_time") -> 
     match = {"$match": match_filter}
     dur = {"$ifNull": ["$ms_played", {"$ifNull": ["$track.duration_ms", 0]}]}
 
-    # Run all aggregation pipelines concurrently on the server
-    stats_task = ListeningHistory.aggregate([
-        match,
-        {"$group": {
-            "_id": None,
-            "total": {"$sum": 1},
-            "ms": {"$sum": dur},
-            "tracks": {"$addToSet": "$track.spotify_id"},
-            "artists": {"$addToSet": "$track.artist_name"},
-            "albums": {"$addToSet": "$track.album_name"},
-        }},
-        {"$project": {
-            "total": 1, "ms": 1,
-            "n_tracks": {"$size": "$tracks"},
-            "n_artists": {"$size": "$artists"},
-            "n_albums": {"$size": "$albums"},
-            "track_ids": "$tracks",
-        }},
-    ]).to_list()
+    try:
+        # Run aggregation pipelines sequentially for reliability
+        stats_res = await ListeningHistory.aggregate([
+            match,
+            {"$group": {
+                "_id": None,
+                "total": {"$sum": 1},
+                "ms": {"$sum": dur},
+                "tracks": {"$addToSet": "$track.spotify_id"},
+                "artists": {"$addToSet": "$track.artist_name"},
+                "albums": {"$addToSet": "$track.album_name"},
+            }},
+            {"$project": {
+                "total": 1, "ms": 1,
+                "n_tracks": {"$size": "$tracks"},
+                "n_artists": {"$size": "$artists"},
+                "n_albums": {"$size": "$albums"},
+                "track_ids": "$tracks",
+            }},
+        ]).to_list()
 
-    artists_task = ListeningHistory.aggregate([
-        match,
-        {"$group": {"_id": "$track.artist_name", "c": {"$sum": 1}}},
-        {"$sort": {"c": -1}},
-    ]).to_list()
+        if not stats_res:
+            snapshot = AnalyticsSnapshot(
+                user_id=user_id, period=period,
+                period_start=period_start, period_end=period_end,
+            )
+            await _upsert_snapshot(snapshot)
+            return snapshot
 
-    tracks_task = ListeningHistory.aggregate([
-        match,
-        {"$group": {
-            "_id": {"s": "$track.spotify_id", "n": "$track.name", "a": "$track.artist_name"},
-            "c": {"$sum": 1},
-        }},
-        {"$sort": {"c": -1}},
-        {"$limit": 50},
-    ]).to_list()
+        artist_res = await ListeningHistory.aggregate([
+            match,
+            {"$group": {"_id": "$track.artist_name", "c": {"$sum": 1}}},
+            {"$sort": {"c": -1}},
+        ]).to_list()
 
-    hourly_task = ListeningHistory.aggregate([
-        match,
-        {"$group": {"_id": {"$hour": "$played_at"}, "c": {"$sum": 1}, "ms": {"$sum": dur}}},
-        {"$sort": {"_id": 1}},
-    ]).to_list()
+        track_res = await ListeningHistory.aggregate([
+            match,
+            {"$group": {
+                "_id": {"s": "$track.spotify_id", "n": "$track.name", "a": "$track.artist_name"},
+                "c": {"$sum": 1},
+            }},
+            {"$sort": {"c": -1}},
+            {"$limit": 50},
+        ]).to_list()
 
-    daily_task = ListeningHistory.aggregate([
-        match,
-        {"$group": {"_id": {"$dayOfWeek": "$played_at"}, "c": {"$sum": 1}, "ms": {"$sum": dur}}},
-        {"$sort": {"_id": 1}},
-    ]).to_list()
+        hourly_res = await ListeningHistory.aggregate([
+            match,
+            {"$group": {"_id": {"$hour": "$played_at"}, "c": {"$sum": 1}, "ms": {"$sum": dur}}},
+            {"$sort": {"_id": 1}},
+        ]).to_list()
 
-    dates_task = ListeningHistory.aggregate([
-        match,
-        {"$group": {"_id": {"$dateToString": {"format": "%Y-%m-%d", "date": "$played_at"}}}},
-        {"$sort": {"_id": -1}},
-    ]).to_list()
+        daily_res = await ListeningHistory.aggregate([
+            match,
+            {"$group": {"_id": {"$dayOfWeek": "$played_at"}, "c": {"$sum": 1}, "ms": {"$sum": dur}}},
+            {"$sort": {"_id": 1}},
+        ]).to_list()
 
-    stats_res, artist_res, track_res, hourly_res, daily_res, date_res = await asyncio.gather(
-        stats_task, artists_task, tracks_task, hourly_task, daily_task, dates_task,
-    )
+        dates_res = await ListeningHistory.aggregate([
+            match,
+            {"$group": {"_id": {"$dateToString": {"format": "%Y-%m-%d", "date": "$played_at"}}}},
+            {"$sort": {"_id": -1}},
+        ]).to_list()
 
-    if not stats_res:
-        snapshot = AnalyticsSnapshot(
-            user_id=user_id, period=period,
-            period_start=period_start, period_end=period_end,
-        )
-        await _upsert_snapshot(snapshot)
-        return snapshot
+    except Exception as e:
+        logger.error("Aggregation pipeline failed", user_id=user_id, period=period, error=str(e))
+        raise
 
     s = stats_res[0]
 
@@ -193,7 +193,7 @@ async def compute_analytics_snapshot(user_id: str, period: str = "all_time") -> 
     ]
 
     # Listening streak
-    play_dates = [d["_id"] for d in date_res]
+    play_dates = [d["_id"] for d in dates_res]
     streak = _calculate_streak(play_dates)
 
     # Audio features
