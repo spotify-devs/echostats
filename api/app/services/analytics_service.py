@@ -116,15 +116,17 @@ async def compute_analytics_snapshot(user_id: str, period: str = "all_time") -> 
     # Calculate listening streak
     streak = _calculate_streak(sorted(play_dates, reverse=True))
 
+    # Batch-load artist docs for top artists + genre analysis (eliminates N+1 queries)
+    all_artist_names = list(artist_names.keys())
+    artist_docs = await Artist.find({"name": {"$in": all_artist_names}}).to_list()
+    artist_by_name: dict[str, Artist] = {a.name: a for a in artist_docs}
+
     # Top artists with images
     top_artist_items = []
     for rank, (name, count) in enumerate(artist_names.most_common(50), 1):
-        artist = await Artist.find_one(Artist.name == name)
-        image_url = ""
-        spotify_id = ""
-        if artist:
-            image_url = artist.image_url
-            spotify_id = artist.spotify_id
+        artist = artist_by_name.get(name)
+        image_url = artist.image_url if artist else ""
+        spotify_id = artist.spotify_id if artist else ""
         top_artist_items.append(
             TopItem(
                 spotify_id=spotify_id, name=name, play_count=count,
@@ -132,14 +134,19 @@ async def compute_analytics_snapshot(user_id: str, period: str = "all_time") -> 
             )
         )
 
-    # Top tracks
+    # Top tracks - batch-load track docs
+    top_track_keys = track_plays.most_common(50)
+    top_track_sids = [k.split("|", 2)[0] for k, _ in top_track_keys if k.split("|", 2)[0]]
+    track_docs = await Track.find({"spotify_id": {"$in": top_track_sids}}).to_list() if top_track_sids else []
+    track_by_sid: dict[str, Track] = {t.spotify_id: t for t in track_docs}
+
     top_track_items = []
-    for rank, (key, count) in enumerate(track_plays.most_common(50), 1):
+    for rank, (key, count) in enumerate(top_track_keys, 1):
         parts = key.split("|", 2)
         sid = parts[0] if len(parts) > 0 else ""
         name = parts[1] if len(parts) > 1 else ""
         artist = parts[2] if len(parts) > 2 else ""
-        track = await Track.find_one(Track.spotify_id == sid) if sid else None
+        track = track_by_sid.get(sid)
         image_url = track.album.image_url if track and track.album else ""
         top_track_items.append(
             TopItem(
@@ -148,10 +155,10 @@ async def compute_analytics_snapshot(user_id: str, period: str = "all_time") -> 
             )
         )
 
-    # Genre analysis from artists
+    # Genre analysis from batch-loaded artists
     genre_counts: Counter[str] = Counter()
     for name in artist_names:
-        artist = await Artist.find_one(Artist.name == name)
+        artist = artist_by_name.get(name)
         if artist and artist.genres:
             for genre in artist.genres:
                 genre_counts[genre] += artist_names[name]
