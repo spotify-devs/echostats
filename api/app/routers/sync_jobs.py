@@ -1,6 +1,6 @@
 """Sync job tracking endpoints."""
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
 import structlog
@@ -81,6 +81,18 @@ async def get_sync_stats(
 ) -> dict:
     """Get sync job statistics."""
     user_id = str(user.id)
+
+    # Reap stale jobs (stuck in running/pending for >30 min)
+    cutoff = datetime.now(tz=UTC) - timedelta(minutes=30)
+    stale_jobs = await SyncJob.find(
+        {"user_id": user_id, "status": {"$in": ["running", "pending"]}, "created_at": {"$lt": cutoff}},
+    ).to_list()
+    for job in stale_jobs:
+        job.status = "failed"
+        job.error_message = "Job timed out — stuck for >30 minutes (likely due to a worker restart)"
+        job.completed_at = datetime.now(tz=UTC)
+        await job.save()
+
     total = await SyncJob.find(SyncJob.user_id == user_id).count()
     completed = await SyncJob.find(
         SyncJob.user_id == user_id, SyncJob.status == "completed"
