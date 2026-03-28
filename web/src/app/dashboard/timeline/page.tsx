@@ -17,10 +17,38 @@ export default function TimelinePage() {
     queryFn: () => api.get<any>(`/api/v1/analytics/overview?period=${period}`),
   });
 
-  const dailyTrend = (data?.daily_distribution || []).map((d: any) => ({
-    day: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][d.day] || "",
-    plays: d.count,
-    hours: Math.round((d.total_ms / 3600000) * 10) / 10,
+  const { data: trendData } = useQuery({
+    queryKey: ["analytics-trend", period],
+    queryFn: () => api.get<any>(`/api/v1/analytics/trend?period=${period}`),
+  });
+
+  const PERIOD_LABELS: Record<string, string> = {
+    week: "Daily",
+    month: "Daily",
+    quarter: "Weekly",
+    year: "Monthly",
+    all_time: "Monthly",
+  };
+
+  const formatLabel = (label: string, granularity: string) => {
+    if (!label) return "";
+    if (granularity === "%Y-%m-%d") {
+      const d = new Date(label + "T00:00:00");
+      return d.toLocaleDateString([], { month: "short", day: "numeric" });
+    }
+    if (granularity === "%Y-%m") {
+      const [y, m] = label.split("-");
+      const d = new Date(Number(y), Number(m) - 1);
+      return d.toLocaleDateString([], { month: "short", year: "2-digit" });
+    }
+    // Weekly: "2025-W12" → "W12"
+    return label.replace(/^\d{4}-/, "");
+  };
+
+  const trendPoints = (trendData?.points || []).map((p: any) => ({
+    label: formatLabel(p.label, trendData?.granularity || ""),
+    plays: p.plays,
+    hours: p.hours,
   }));
 
   const totalPlays = data?.total_tracks_played || 0;
@@ -54,13 +82,15 @@ export default function TimelinePage() {
         </div>
       ) : (
         <>
-          {/* Weekly Trend */}
+          {/* Listening Trend */}
           <div className="glass-card p-6">
-            <h2 className="text-lg font-semibold text-theme mb-4">Weekly Listening Trend</h2>
-            {dailyTrend.length > 0 ? (
+            <h2 className="text-lg font-semibold text-theme mb-4">
+              {PERIOD_LABELS[period] || "Monthly"} Listening Trend
+            </h2>
+            {trendPoints.length > 0 ? (
               <LineChart
-                data={dailyTrend}
-                xKey="day"
+                data={trendPoints}
+                xKey="label"
                 lines={[
                   { key: "plays", color: "rgb(var(--accent))", name: "Plays" },
                   { key: "hours", color: "#10b981", name: "Hours" },
