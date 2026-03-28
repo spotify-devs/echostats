@@ -80,10 +80,8 @@ async def compute_analytics_snapshot(user_id: str, period: str = "all_time") -> 
     match = {"$match": match_filter}
     dur = {"$ifNull": ["$ms_played", {"$ifNull": ["$track.duration_ms", 0]}]}
 
-    col = ListeningHistory.get_motor_collection()
-
     # Run all aggregation pipelines concurrently on the server
-    stats_task = col.aggregate([
+    stats_task = ListeningHistory.aggregate([
         match,
         {"$group": {
             "_id": None,
@@ -100,15 +98,15 @@ async def compute_analytics_snapshot(user_id: str, period: str = "all_time") -> 
             "n_albums": {"$size": "$albums"},
             "track_ids": "$tracks",
         }},
-    ]).to_list(1)
+    ]).to_list()
 
-    artists_task = col.aggregate([
+    artists_task = ListeningHistory.aggregate([
         match,
         {"$group": {"_id": "$track.artist_name", "c": {"$sum": 1}}},
         {"$sort": {"c": -1}},
-    ]).to_list(None)
+    ]).to_list()
 
-    tracks_task = col.aggregate([
+    tracks_task = ListeningHistory.aggregate([
         match,
         {"$group": {
             "_id": {"s": "$track.spotify_id", "n": "$track.name", "a": "$track.artist_name"},
@@ -116,25 +114,25 @@ async def compute_analytics_snapshot(user_id: str, period: str = "all_time") -> 
         }},
         {"$sort": {"c": -1}},
         {"$limit": 50},
-    ]).to_list(50)
+    ]).to_list()
 
-    hourly_task = col.aggregate([
+    hourly_task = ListeningHistory.aggregate([
         match,
         {"$group": {"_id": {"$hour": "$played_at"}, "c": {"$sum": 1}, "ms": {"$sum": dur}}},
         {"$sort": {"_id": 1}},
-    ]).to_list(24)
+    ]).to_list()
 
-    daily_task = col.aggregate([
+    daily_task = ListeningHistory.aggregate([
         match,
         {"$group": {"_id": {"$dayOfWeek": "$played_at"}, "c": {"$sum": 1}, "ms": {"$sum": dur}}},
         {"$sort": {"_id": 1}},
-    ]).to_list(7)
+    ]).to_list()
 
-    dates_task = col.aggregate([
+    dates_task = ListeningHistory.aggregate([
         match,
         {"$group": {"_id": {"$dateToString": {"format": "%Y-%m-%d", "date": "$played_at"}}}},
         {"$sort": {"_id": -1}},
-    ]).to_list(None)
+    ]).to_list()
 
     stats_res, artist_res, track_res, hourly_res, daily_res, date_res = await asyncio.gather(
         stats_task, artists_task, tracks_task, hourly_task, daily_task, dates_task,
