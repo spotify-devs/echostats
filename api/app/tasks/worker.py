@@ -146,6 +146,39 @@ async def refresh_analytics(ctx: dict) -> None:
             logger.error("Analytics refresh failed", user_id=str(user.id), error=str(e))
 
 
+async def build_user_rollups(ctx: dict, user_id: str, job_id: str) -> None:
+    """Background task: build DailyRollup documents for a user."""
+    import structlog
+
+    from app.models.sync_job import SyncJob
+    from app.services.rollup_service import build_rollups
+
+    logger = structlog.get_logger()
+
+    job = await SyncJob.get(job_id)
+    if not job:
+        logger.error("Rollup build job not found", job_id=job_id)
+        return
+
+    job.status = "running"
+    job.started_at = datetime.now(tz=UTC)
+    await job.save()
+
+    try:
+        days_built = await build_rollups(user_id)
+        job.status = "completed"
+        job.items_processed = days_built
+        job.completed_at = datetime.now(tz=UTC)
+        logger.info("Rollup build complete", user_id=user_id, days=days_built)
+    except Exception as e:
+        job.status = "failed"
+        job.error_message = str(e)[:500]
+        job.completed_at = datetime.now(tz=UTC)
+        logger.error("Rollup build failed", user_id=user_id, error=str(e))
+
+    await job.save()
+
+
 def _parse_redis_url() -> RedisSettings:
     """Parse Redis URL into ARQ RedisSettings."""
     return RedisSettings.from_dsn(settings.redis_url)
@@ -154,7 +187,7 @@ def _parse_redis_url() -> RedisSettings:
 class WorkerSettings:
     """ARQ worker settings."""
 
-    functions = [sync_all_users, refresh_analytics]
+    functions = [sync_all_users, refresh_analytics, build_user_rollups]
     on_startup = startup
     on_shutdown = shutdown
     redis_settings = _parse_redis_url()
@@ -163,4 +196,4 @@ class WorkerSettings:
         cron(refresh_analytics, hour={0, 6, 12, 18}, minute=30),  # Every 6 hours
     ]
     max_jobs = 5
-    job_timeout = 300  # 5 minutes
+    job_timeout = 600  # 10 minutes (rollup builds can be large)

@@ -208,3 +208,38 @@ async def ensure_rollups_exist(user_id: str) -> None:
         history_records=history_count,
     )
     await build_rollups(user_id)
+
+
+async def get_rollup_status(user_id: str) -> dict:
+    """Return rollup build status for a user."""
+    from app.models.sync_job import SyncJob
+
+    rollup_days = await DailyRollup.find({"user_id": user_id}).count()
+
+    # Count distinct days in listening history
+    history_days_res = await ListeningHistory.aggregate([
+        {"$match": {"user_id": user_id}},
+        {"$group": {"_id": {"$dateToString": {"format": "%Y-%m-%d", "date": "$played_at"}}}},
+        {"$count": "n"},
+    ], allowDiskUse=True).to_list()
+    history_days = history_days_res[0]["n"] if history_days_res else 0
+
+    # Check if a rollup build job is currently running
+    running_job = await SyncJob.find_one(
+        {"user_id": user_id, "job_type": "rollup_build", "status": "running"},
+    )
+
+    # Get last completed rollup build
+    last_job = await SyncJob.find_one(
+        {"user_id": user_id, "job_type": "rollup_build", "status": "completed"},
+        sort=[("completed_at", -1)],
+    )
+
+    return {
+        "rollup_days": rollup_days,
+        "history_days": history_days,
+        "is_building": running_job is not None,
+        "started_at": running_job.started_at.isoformat() if running_job else None,
+        "last_built_at": last_job.completed_at.isoformat() if last_job and last_job.completed_at else None,
+        "items_processed": running_job.items_processed if running_job else 0,
+    }
