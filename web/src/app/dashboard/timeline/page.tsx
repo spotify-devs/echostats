@@ -10,7 +10,7 @@ import { TimeRangeSelector } from "@/components/ui/time-range-selector";
 import { api } from "@/lib/api";
 
 export default function TimelinePage() {
-  const [period, setPeriod] = useState("all_time");
+  const [period, setPeriod] = useState("week");
 
   const { data, isLoading } = useQuery({
     queryKey: ["analytics-overview", period],

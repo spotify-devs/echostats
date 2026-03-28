@@ -11,7 +11,7 @@ import { api } from "@/lib/api";
 import { exportTopItems } from "@/lib/export";
 
 export default function TopTracksPage() {
-  const [period, setPeriod] = useState("all_time");
+  const [period, setPeriod] = useState("week");
   const [view, setView] = useState<"cards" | "table">("cards");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");

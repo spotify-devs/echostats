@@ -13,11 +13,11 @@ replicaCount:
 image:
   api:
     repository: ghcr.io/spotify-devs/echostats-api
-    tag: latest
+    tag: ""
     pullPolicy: IfNotPresent
   web:
     repository: ghcr.io/spotify-devs/echostats-web
-    tag: latest
+    tag: ""
     pullPolicy: IfNotPresent
 
 imagePullSecrets: []

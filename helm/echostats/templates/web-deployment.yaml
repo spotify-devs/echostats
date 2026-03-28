@@ -30,7 +30,7 @@ spec:
       {{- end }}
       containers:
         - name: web
-          image: "{{ .Values.image.web.repository }}:{{ .Values.image.web.tag }}"
+          image: "{{ .Values.image.web.repository }}:{{ .Values.image.web.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.web.pullPolicy }}
           ports:
             - containerPort: {{ .Values.web.port }}
