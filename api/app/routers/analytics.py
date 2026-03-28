@@ -15,7 +15,7 @@ router = APIRouter()
 @router.get("/overview")
 async def get_overview(
     user: Annotated[User, Depends(get_current_user)],
-    period: str = Query("week", pattern="^(week|month|quarter|year|all_time)$"),
+    period: str = Query("all_time", pattern="^(week|month|quarter|year|all_time)$"),
 ) -> dict:
     """Get analytics overview for a time period."""
     snapshot = await get_or_compute_snapshot(str(user.id), period)

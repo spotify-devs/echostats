@@ -15,7 +15,7 @@ router = APIRouter()
 @router.get("/top")
 async def get_top_tracks(
     user: Annotated[User, Depends(get_current_user)],
-    period: str = Query("week", pattern="^(week|month|quarter|year|all_time)$"),
+    period: str = Query("all_time", pattern="^(week|month|quarter|year|all_time)$"),
     limit: int = Query(50, ge=1, le=100),
 ) -> dict:
     """Get top tracks for a time period."""
