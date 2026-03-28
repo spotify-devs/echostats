@@ -1,6 +1,7 @@
 """Analytics computation service."""
 
-from collections import Counter, defaultdict
+import asyncio
+from collections import Counter
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -63,146 +64,175 @@ async def get_or_compute_snapshot(user_id: str, period: str = "all_time") -> Ana
 
 
 async def compute_analytics_snapshot(user_id: str, period: str = "all_time") -> AnalyticsSnapshot:
-    """Compute and store analytics for a user over a time period."""
+    """Compute analytics using MongoDB aggregation pipelines (handles 100K+ records)."""
     period_start, period_end = _get_period_range(period)
 
-    # Build query filters
-    query_filters: list[Any] = [ListeningHistory.user_id == user_id]
+    # Build match filter
+    match_filter: dict[str, Any] = {"user_id": user_id}
+    date_filter: dict[str, Any] = {}
     if period_start:
-        query_filters.append(ListeningHistory.played_at >= period_start)
+        date_filter["$gte"] = period_start
     if period_end:
-        query_filters.append(ListeningHistory.played_at <= period_end)
+        date_filter["$lte"] = period_end
+    if date_filter:
+        match_filter["played_at"] = date_filter
 
-    # Fetch all listening history for the period
-    history = await ListeningHistory.find(*query_filters).sort("-played_at").to_list()
+    match = {"$match": match_filter}
+    dur = {"$ifNull": ["$ms_played", {"$ifNull": ["$track.duration_ms", 0]}]}
 
-    if not history:
+    col = ListeningHistory.get_motor_collection()
+
+    # Run all aggregation pipelines concurrently on the server
+    stats_task = col.aggregate([
+        match,
+        {"$group": {
+            "_id": None,
+            "total": {"$sum": 1},
+            "ms": {"$sum": dur},
+            "tracks": {"$addToSet": "$track.spotify_id"},
+            "artists": {"$addToSet": "$track.artist_name"},
+            "albums": {"$addToSet": "$track.album_name"},
+        }},
+        {"$project": {
+            "total": 1, "ms": 1,
+            "n_tracks": {"$size": "$tracks"},
+            "n_artists": {"$size": "$artists"},
+            "n_albums": {"$size": "$albums"},
+            "track_ids": "$tracks",
+        }},
+    ]).to_list(1)
+
+    artists_task = col.aggregate([
+        match,
+        {"$group": {"_id": "$track.artist_name", "c": {"$sum": 1}}},
+        {"$sort": {"c": -1}},
+    ]).to_list(None)
+
+    tracks_task = col.aggregate([
+        match,
+        {"$group": {
+            "_id": {"s": "$track.spotify_id", "n": "$track.name", "a": "$track.artist_name"},
+            "c": {"$sum": 1},
+        }},
+        {"$sort": {"c": -1}},
+        {"$limit": 50},
+    ]).to_list(50)
+
+    hourly_task = col.aggregate([
+        match,
+        {"$group": {"_id": {"$hour": "$played_at"}, "c": {"$sum": 1}, "ms": {"$sum": dur}}},
+        {"$sort": {"_id": 1}},
+    ]).to_list(24)
+
+    daily_task = col.aggregate([
+        match,
+        {"$group": {"_id": {"$dayOfWeek": "$played_at"}, "c": {"$sum": 1}, "ms": {"$sum": dur}}},
+        {"$sort": {"_id": 1}},
+    ]).to_list(7)
+
+    dates_task = col.aggregate([
+        match,
+        {"$group": {"_id": {"$dateToString": {"format": "%Y-%m-%d", "date": "$played_at"}}}},
+        {"$sort": {"_id": -1}},
+    ]).to_list(None)
+
+    stats_res, artist_res, track_res, hourly_res, daily_res, date_res = await asyncio.gather(
+        stats_task, artists_task, tracks_task, hourly_task, daily_task, dates_task,
+    )
+
+    if not stats_res:
         snapshot = AnalyticsSnapshot(
-            user_id=user_id,
-            period=period,
-            period_start=period_start,
-            period_end=period_end,
+            user_id=user_id, period=period,
+            period_start=period_start, period_end=period_end,
         )
         await _upsert_snapshot(snapshot)
         return snapshot
 
-    # Count stats
-    track_ids = set()
-    artist_names: Counter[str] = Counter()
-    album_names: Counter[str] = Counter()
-    track_plays: Counter[str] = Counter()
-    total_ms = 0
-    hourly: defaultdict[int, dict[str, int]] = defaultdict(lambda: {"count": 0, "ms": 0})
-    daily: defaultdict[int, dict[str, int]] = defaultdict(lambda: {"count": 0, "ms": 0})
-    play_dates: set[str] = set()
+    s = stats_res[0]
 
-    for entry in history:
-        track_ids.add(entry.track.spotify_id)
-        artist_names[entry.track.artist_name] += 1
-        if entry.track.album_name:
-            album_names[entry.track.album_name] += 1
-        track_plays[f"{entry.track.spotify_id}|{entry.track.name}|{entry.track.artist_name}"] += 1
-        duration = entry.ms_played or entry.track.duration_ms or 0
-        total_ms += duration
-
-        hour = entry.played_at.hour
-        day = entry.played_at.weekday()
-        hourly[hour]["count"] += 1
-        hourly[hour]["ms"] += duration
-        daily[day]["count"] += 1
-        daily[day]["ms"] += duration
-        play_dates.add(entry.played_at.strftime("%Y-%m-%d"))
-
-    # Calculate listening streak
-    streak = _calculate_streak(sorted(play_dates, reverse=True))
-
-    # Batch-load artist docs for top artists + genre analysis (eliminates N+1 queries)
-    all_artist_names = list(artist_names.keys())
+    # Batch-load artist docs for images + genre analysis
+    all_artist_names = [r["_id"] for r in artist_res]
     artist_docs = await Artist.find({"name": {"$in": all_artist_names}}).to_list()
     artist_by_name: dict[str, Artist] = {a.name: a for a in artist_docs}
 
-    # Top artists with images
+    # Top artists
     top_artist_items = []
-    for rank, (name, count) in enumerate(artist_names.most_common(50), 1):
-        artist = artist_by_name.get(name)
-        image_url = artist.image_url if artist else ""
-        spotify_id = artist.spotify_id if artist else ""
-        top_artist_items.append(
-            TopItem(
-                spotify_id=spotify_id, name=name, play_count=count,
-                rank=rank, image_url=image_url,
-            )
-        )
+    for rank, r in enumerate(artist_res[:50], 1):
+        name = r["_id"]
+        a = artist_by_name.get(name)
+        top_artist_items.append(TopItem(
+            spotify_id=a.spotify_id if a else "", name=name,
+            play_count=r["c"], rank=rank, image_url=a.image_url if a else "",
+        ))
 
-    # Top tracks - batch-load track docs
-    top_track_keys = track_plays.most_common(50)
-    top_track_sids = [k.split("|", 2)[0] for k, _ in top_track_keys if k.split("|", 2)[0]]
-    track_docs = await Track.find({"spotify_id": {"$in": top_track_sids}}).to_list() if top_track_sids else []
+    # Top tracks — batch-load track docs
+    top_sids = [r["_id"]["s"] for r in track_res if r["_id"].get("s")]
+    track_docs = await Track.find({"spotify_id": {"$in": top_sids}}).to_list() if top_sids else []
     track_by_sid: dict[str, Track] = {t.spotify_id: t for t in track_docs}
 
     top_track_items = []
-    for rank, (key, count) in enumerate(top_track_keys, 1):
-        parts = key.split("|", 2)
-        sid = parts[0] if len(parts) > 0 else ""
-        name = parts[1] if len(parts) > 1 else ""
-        artist = parts[2] if len(parts) > 2 else ""
-        track = track_by_sid.get(sid)
-        image_url = track.album.image_url if track and track.album else ""
-        top_track_items.append(
-            TopItem(
-                spotify_id=sid, name=f"{name} — {artist}", play_count=count,
-                rank=rank, image_url=image_url,
-            )
-        )
+    for rank, r in enumerate(track_res, 1):
+        sid = r["_id"].get("s", "")
+        name = r["_id"].get("n", "")
+        artist = r["_id"].get("a", "")
+        t = track_by_sid.get(sid)
+        top_track_items.append(TopItem(
+            spotify_id=sid, name=f"{name} — {artist}", play_count=r["c"],
+            rank=rank, image_url=t.album.image_url if t and t.album else "",
+        ))
 
     # Genre analysis from batch-loaded artists
     genre_counts: Counter[str] = Counter()
-    for name in artist_names:
-        artist = artist_by_name.get(name)
-        if artist and artist.genres:
-            for genre in artist.genres:
-                genre_counts[genre] += artist_names[name]
+    for r in artist_res:
+        a = artist_by_name.get(r["_id"])
+        if a and a.genres:
+            for g in a.genres:
+                genre_counts[g] += r["c"]
 
     top_genres = [
-        TopItem(name=genre, play_count=count, rank=rank)
-        for rank, (genre, count) in enumerate(genre_counts.most_common(30), 1)
+        TopItem(name=g, play_count=c, rank=i)
+        for i, (g, c) in enumerate(genre_counts.most_common(30), 1)
     ]
 
-    # Audio feature averages
-    avg_features = await _compute_avg_audio_features(list(track_ids))
+    # Listening streak
+    play_dates = [d["_id"] for d in date_res]
+    streak = _calculate_streak(play_dates)
 
-    # Unique counts
-    unique_artists = len(artist_names)
-    unique_albums = len(album_names)
+    # Audio features
+    avg_features = await _compute_avg_audio_features(s.get("track_ids", []))
+
+    # MongoDB $dayOfWeek: 1=Sun..7=Sat → Python weekday: 0=Mon..6=Sun
+    mongo_to_py = {1: 6, 2: 0, 3: 1, 4: 2, 5: 3, 6: 4, 7: 5}
 
     snapshot = AnalyticsSnapshot(
         user_id=user_id,
         period=period,
         period_start=period_start,
         period_end=period_end,
-        total_tracks_played=len(history),
-        total_ms_played=total_ms,
-        unique_tracks=len(track_ids),
-        unique_artists=unique_artists,
-        unique_albums=unique_albums,
+        total_tracks_played=s["total"],
+        total_ms_played=s["ms"],
+        unique_tracks=s["n_tracks"],
+        unique_artists=s["n_artists"],
+        unique_albums=s["n_albums"],
         unique_genres=len(genre_counts),
         listening_streak_days=streak,
         top_artists=top_artist_items[:20],
         top_tracks=top_track_items[:20],
         top_genres=top_genres[:20],
         hourly_distribution=[
-            ListeningHour(hour=h, count=d["count"], total_ms=d["ms"])
-            for h, d in sorted(hourly.items())
+            ListeningHour(hour=r["_id"], count=r["c"], total_ms=r["ms"])
+            for r in hourly_res
         ],
-        daily_distribution=[
-            ListeningDay(day=d, count=v["count"], total_ms=v["ms"])
-            for d, v in sorted(daily.items())
-        ],
+        daily_distribution=sorted(
+            [ListeningDay(day=mongo_to_py.get(r["_id"], 0), count=r["c"], total_ms=r["ms"])
+             for r in daily_res],
+            key=lambda x: x.day,
+        ),
         avg_audio_features=avg_features,
     )
 
     await _upsert_snapshot(snapshot)
-    logger.info("Analytics snapshot computed", user_id=user_id, period=period, tracks=len(history))
+    logger.info("Analytics snapshot computed", user_id=user_id, period=period, tracks=s["total"])
     return snapshot
 
 
