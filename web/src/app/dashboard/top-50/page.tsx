@@ -23,7 +23,7 @@ const RANK_ICONS: Record<number, any> = {
 };
 
 export default function Top50Page() {
-  const [period, setPeriod] = useState("week");
+  const [period, setPeriod] = useState("all_time");
   const [expanded, setExpanded] = useState<number | null>(null);
 
   const { data, isLoading } = useQuery({

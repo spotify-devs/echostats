@@ -1,5 +1,6 @@
 """Analytics computation service."""
 
+import asyncio
 from collections import Counter
 from datetime import datetime, timedelta
 from typing import Any
@@ -63,7 +64,7 @@ async def get_or_compute_snapshot(user_id: str, period: str = "all_time") -> Ana
 
 
 async def compute_analytics_snapshot(user_id: str, period: str = "all_time") -> AnalyticsSnapshot:
-    """Compute analytics using MongoDB aggregation pipelines (handles 100K+ records)."""
+    """Compute analytics using concurrent MongoDB aggregation pipelines."""
     period_start, period_end = _get_period_range(period)
 
     # Build match filter
@@ -80,73 +81,89 @@ async def compute_analytics_snapshot(user_id: str, period: str = "all_time") -> 
     dur = {"$ifNull": ["$ms_played", {"$ifNull": ["$track.duration_ms", 0]}]}
 
     try:
-        # Run aggregation pipelines sequentially for reliability
-        stats_res = await ListeningHistory.aggregate([
-            match,
-            {"$group": {
-                "_id": None,
-                "total": {"$sum": 1},
-                "ms": {"$sum": dur},
-                "tracks": {"$addToSet": "$track.spotify_id"},
-                "artists": {"$addToSet": "$track.artist_name"},
-                "albums": {"$addToSet": "$track.album_name"},
-            }},
-            {"$project": {
-                "total": 1, "ms": 1,
-                "n_tracks": {"$size": "$tracks"},
-                "n_artists": {"$size": "$artists"},
-                "n_albums": {"$size": "$albums"},
-                "track_ids": "$tracks",
-            }},
-        ]).to_list()
-
-        if not stats_res:
-            snapshot = AnalyticsSnapshot(
-                user_id=user_id, period=period,
-                period_start=period_start, period_end=period_end,
-            )
-            await _upsert_snapshot(snapshot)
-            return snapshot
-
-        artist_res = await ListeningHistory.aggregate([
-            match,
-            {"$group": {"_id": "$track.artist_name", "c": {"$sum": 1}}},
-            {"$sort": {"c": -1}},
-        ]).to_list()
-
-        track_res = await ListeningHistory.aggregate([
-            match,
-            {"$group": {
-                "_id": {"s": "$track.spotify_id", "n": "$track.name", "a": "$track.artist_name"},
-                "c": {"$sum": 1},
-            }},
-            {"$sort": {"c": -1}},
-            {"$limit": 50},
-        ]).to_list()
-
-        hourly_res = await ListeningHistory.aggregate([
-            match,
-            {"$group": {"_id": {"$hour": "$played_at"}, "c": {"$sum": 1}, "ms": {"$sum": dur}}},
-            {"$sort": {"_id": 1}},
-        ]).to_list()
-
-        daily_res = await ListeningHistory.aggregate([
-            match,
-            {"$group": {"_id": {"$dayOfWeek": "$played_at"}, "c": {"$sum": 1}, "ms": {"$sum": dur}}},
-            {"$sort": {"_id": 1}},
-        ]).to_list()
-
-        dates_res = await ListeningHistory.aggregate([
-            match,
-            {"$group": {"_id": {"$dateToString": {"format": "%Y-%m-%d", "date": "$played_at"}}}},
-            {"$sort": {"_id": -1}},
-        ]).to_list()
+        # Run all independent aggregation pipelines concurrently.
+        # Unique counts use $group + $count instead of $addToSet to avoid
+        # accumulating huge arrays in memory for large time windows.
+        (
+            stats_res, n_tracks_res, n_artists_res, n_albums_res,
+            artist_res, track_res, hourly_res, daily_res, dates_res,
+            feature_sample_res,
+        ) = await asyncio.gather(
+            # Basic stats: total plays + total ms
+            ListeningHistory.aggregate([
+                match,
+                {"$group": {"_id": None, "total": {"$sum": 1}, "ms": {"$sum": dur}}},
+            ]).to_list(),
+            # Unique track count
+            ListeningHistory.aggregate([
+                match, {"$group": {"_id": "$track.spotify_id"}}, {"$count": "n"},
+            ]).to_list(),
+            # Unique artist count
+            ListeningHistory.aggregate([
+                match, {"$group": {"_id": "$track.artist_name"}}, {"$count": "n"},
+            ]).to_list(),
+            # Unique album count
+            ListeningHistory.aggregate([
+                match, {"$group": {"_id": "$track.album_name"}}, {"$count": "n"},
+            ]).to_list(),
+            # Artist play counts (for top artists + genre analysis)
+            ListeningHistory.aggregate([
+                match,
+                {"$group": {"_id": "$track.artist_name", "c": {"$sum": 1}}},
+                {"$sort": {"c": -1}},
+            ]).to_list(),
+            # Top tracks (limited to 50)
+            ListeningHistory.aggregate([
+                match,
+                {"$group": {
+                    "_id": {"s": "$track.spotify_id", "n": "$track.name", "a": "$track.artist_name"},
+                    "c": {"$sum": 1},
+                }},
+                {"$sort": {"c": -1}},
+                {"$limit": 50},
+            ]).to_list(),
+            # Hourly distribution
+            ListeningHistory.aggregate([
+                match,
+                {"$group": {"_id": {"$hour": "$played_at"}, "c": {"$sum": 1}, "ms": {"$sum": dur}}},
+                {"$sort": {"_id": 1}},
+            ]).to_list(),
+            # Daily distribution
+            ListeningHistory.aggregate([
+                match,
+                {"$group": {"_id": {"$dayOfWeek": "$played_at"}, "c": {"$sum": 1}, "ms": {"$sum": dur}}},
+                {"$sort": {"_id": 1}},
+            ]).to_list(),
+            # Unique play dates for streak
+            ListeningHistory.aggregate([
+                match,
+                {"$group": {"_id": {"$dateToString": {"format": "%Y-%m-%d", "date": "$played_at"}}}},
+                {"$sort": {"_id": -1}},
+            ]).to_list(),
+            # Sampled track IDs for audio feature averaging (cap at 500)
+            ListeningHistory.aggregate([
+                match,
+                {"$group": {"_id": "$track.spotify_id"}},
+                {"$sample": {"size": 500}},
+            ]).to_list(),
+        )
 
     except Exception as e:
         logger.error("Aggregation pipeline failed", user_id=user_id, period=period, error=str(e))
         raise
 
+    if not stats_res:
+        snapshot = AnalyticsSnapshot(
+            user_id=user_id, period=period,
+            period_start=period_start, period_end=period_end,
+        )
+        await _upsert_snapshot(snapshot)
+        return snapshot
+
     s = stats_res[0]
+    n_tracks = n_tracks_res[0]["n"] if n_tracks_res else 0
+    n_artists = n_artists_res[0]["n"] if n_artists_res else 0
+    n_albums = n_albums_res[0]["n"] if n_albums_res else 0
 
     # Batch-load artist docs for images + genre analysis
     all_artist_names = [r["_id"] for r in artist_res]
@@ -196,8 +213,9 @@ async def compute_analytics_snapshot(user_id: str, period: str = "all_time") -> 
     play_dates = [d["_id"] for d in dates_res]
     streak = _calculate_streak(play_dates)
 
-    # Audio features
-    avg_features = await _compute_avg_audio_features(s.get("track_ids", []))
+    # Audio features from sampled track IDs
+    sample_ids = [r["_id"] for r in feature_sample_res if r["_id"]]
+    avg_features = await _compute_avg_audio_features(sample_ids)
 
     # MongoDB $dayOfWeek: 1=Sun..7=Sat → Python weekday: 0=Mon..6=Sun
     mongo_to_py = {1: 6, 2: 0, 3: 1, 4: 2, 5: 3, 6: 4, 7: 5}
@@ -209,9 +227,9 @@ async def compute_analytics_snapshot(user_id: str, period: str = "all_time") -> 
         period_end=period_end,
         total_tracks_played=s["total"],
         total_ms_played=s["ms"],
-        unique_tracks=s["n_tracks"],
-        unique_artists=s["n_artists"],
-        unique_albums=s["n_albums"],
+        unique_tracks=n_tracks,
+        unique_artists=n_artists,
+        unique_albums=n_albums,
         unique_genres=len(genre_counts),
         listening_streak_days=streak,
         top_artists=top_artist_items[:20],

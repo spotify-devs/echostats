@@ -15,7 +15,7 @@ import { api } from "@/lib/api";
 const DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
 export default function PatternsPage() {
-  const [period, setPeriod] = useState("week");
+  const [period, setPeriod] = useState("all_time");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const isMobile = useIsMobile();

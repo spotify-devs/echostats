@@ -27,7 +27,7 @@ function getMoodLabel(valence: number): string {
 }
 
 export default function MoodPage() {
-  const [period, setPeriod] = useState("week");
+  const [period, setPeriod] = useState("all_time");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
