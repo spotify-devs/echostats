@@ -269,9 +269,9 @@ export default function SettingsPage() {
           across any time window — even decades of data.
         </p>
 
+        {/* Progress bar + status (shown when data is available) */}
         {rollupStatus && (
           <div className="space-y-3">
-            {/* Progress bar */}
             <div className="space-y-2">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-theme-secondary">
@@ -305,7 +305,6 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            {/* Status details */}
             <div className="p-3 rounded-xl bg-theme-surface-2 border border-current/[0.08] space-y-2">
               <div className="flex justify-between items-center">
                 <span className="text-xs text-theme-tertiary">Status</span>
@@ -331,56 +330,60 @@ export default function SettingsPage() {
                 </div>
               )}
             </div>
-
-            {/* Build button */}
-            <button
-              onClick={async () => {
-                setBuildingRollups(true);
-                try {
-                  const res = await api.post<{ status: string }>("/api/v1/analytics/rollup-build");
-                  if (res.status === "already_running") {
-                    showToast("info", "Rollup build is already in progress");
-                  } else {
-                    showToast("success", "Rollup build started");
-                  }
-                  // Poll until build completes
-                  const poll = setInterval(async () => {
-                    const s = await api.get<RollupStatus>("/api/v1/analytics/rollup-status");
-                    if (!s.is_building) {
-                      clearInterval(poll);
-                      setBuildingRollups(false);
-                      refetchRollups();
-                      queryClient.invalidateQueries();
-                      showToast(
-                        "success",
-                        `Rollups built — ${s.rollup_days.toLocaleString()} days indexed`,
-                      );
-                    }
-                  }, 2000);
-                } catch {
-                  setBuildingRollups(false);
-                  showToast("error", "Failed to start rollup build");
-                }
-              }}
-              disabled={
-                buildingRollups || rollupStatus.is_building || rollupStatus.history_days === 0
-              }
-              className="btn-primary text-sm flex items-center gap-2 disabled:opacity-50"
-            >
-              {buildingRollups || rollupStatus.is_building ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Database className="w-4 h-4" />
-              )}
-              {buildingRollups || rollupStatus.is_building
-                ? "Building..."
-                : rollupStatus.rollup_days >= rollupStatus.history_days &&
-                    rollupStatus.history_days > 0
-                  ? "Rebuild Rollups"
-                  : "Build Rollups"}
-            </button>
           </div>
         )}
+
+        {/* Build button — always visible */}
+        <button
+          onClick={async () => {
+            setBuildingRollups(true);
+            try {
+              const res = await api.post<{ status: string }>("/api/v1/analytics/rollup-build");
+              if (res.status === "already_running") {
+                showToast("info", "Rollup build is already in progress");
+              } else {
+                showToast("success", "Rollup build started");
+              }
+              const poll = setInterval(async () => {
+                try {
+                  const s = await api.get<RollupStatus>("/api/v1/analytics/rollup-status");
+                  if (!s.is_building) {
+                    clearInterval(poll);
+                    setBuildingRollups(false);
+                    refetchRollups();
+                    queryClient.invalidateQueries();
+                    showToast(
+                      "success",
+                      `Rollups built — ${s.rollup_days.toLocaleString()} days indexed`,
+                    );
+                  }
+                } catch {
+                  clearInterval(poll);
+                  setBuildingRollups(false);
+                  refetchRollups();
+                }
+              }, 2000);
+            } catch {
+              setBuildingRollups(false);
+              showToast("error", "Failed to start rollup build");
+            }
+          }}
+          disabled={buildingRollups || rollupStatus?.is_building}
+          className="btn-primary text-sm flex items-center gap-2 disabled:opacity-50"
+        >
+          {buildingRollups || rollupStatus?.is_building ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <Database className="w-4 h-4" />
+          )}
+          {buildingRollups || rollupStatus?.is_building
+            ? "Building..."
+            : rollupStatus &&
+                rollupStatus.rollup_days >= rollupStatus.history_days &&
+                rollupStatus.history_days > 0
+              ? "Rebuild Rollups"
+              : "Build Rollups"}
+        </button>
       </div>
 
       {/* Import Modal */}
