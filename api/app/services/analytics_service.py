@@ -17,7 +17,9 @@ from app.models.analytics import (
 )
 from app.models.artist import Artist
 from app.models.listening_history import ListeningHistory
+from app.models.rollup import DailyRollup
 from app.models.track import Track
+from app.services.rollup_service import ensure_rollups_exist
 
 logger = structlog.get_logger()
 
@@ -65,101 +67,140 @@ async def get_or_compute_snapshot(user_id: str, period: str = "all_time") -> Ana
 
 
 async def compute_analytics_snapshot(user_id: str, period: str = "all_time") -> AnalyticsSnapshot:
-    """Compute analytics using concurrent MongoDB aggregation pipelines."""
+    """Compute analytics from pre-aggregated DailyRollup documents.
+
+    Rollups reduce the query surface from millions of raw records to
+    ~18K small documents (one per day over 50 years).
+    """
+    # Ensure rollups have been built for this user
+    await ensure_rollups_exist(user_id)
+
     period_start, period_end = _get_period_range(period)
 
-    # Build match filter
+    # Build match filter for rollups (date strings, not datetimes)
     match_filter: dict[str, Any] = {"user_id": user_id}
     date_filter: dict[str, Any] = {}
     if period_start:
-        date_filter["$gte"] = period_start
+        date_filter["$gte"] = period_start.strftime("%Y-%m-%d")
     if period_end:
-        date_filter["$lte"] = period_end
+        date_filter["$lte"] = period_end.strftime("%Y-%m-%d")
     if date_filter:
-        match_filter["played_at"] = date_filter
+        match_filter["date"] = date_filter
 
-    # Helper to create independent copies of pipeline stages for each
-    # concurrent aggregation — Motor may mutate pipeline dicts in-place.
     def _match() -> dict:
         return {"$match": copy.deepcopy(match_filter)}
 
-    def _dur() -> dict:
-        return {"$ifNull": ["$ms_played", {"$ifNull": ["$track.duration_ms", 0]}]}
-
-    # allowDiskUse prevents 100MB pipeline memory limit failures on large windows
     agg_opts: dict[str, Any] = {"allowDiskUse": True}
 
     try:
-        # Run all independent aggregation pipelines concurrently.
-        # Unique counts use $group + $count instead of $addToSet to avoid
-        # accumulating huge arrays in memory for large time windows.
         (
-            stats_res, n_tracks_res, n_artists_res, n_albums_res,
-            artist_res, track_res, hourly_res, daily_res, dates_res,
-            feature_sample_res,
+            stats_res,
+            n_artists_res, n_albums_res, n_tracks_res,
+            artist_res, track_res,
+            hourly_res, daily_res,
+            dates_res, sample_tracks_res,
         ) = await asyncio.gather(
-            # Basic stats: total plays + total ms
-            ListeningHistory.aggregate([
+            # Total plays + ms (sum over rollups)
+            DailyRollup.aggregate([
                 _match(),
-                {"$group": {"_id": None, "total": {"$sum": 1}, "ms": {"$sum": _dur()}}},
+                {"$group": {"_id": None, "plays": {"$sum": "$total_plays"}, "ms": {"$sum": "$total_ms"}}},
             ], **agg_opts).to_list(),
-            # Unique track count
-            ListeningHistory.aggregate([
-                _match(), {"$group": {"_id": "$track.spotify_id"}}, {"$count": "n"},
-            ], **agg_opts).to_list(),
+
             # Unique artist count
-            ListeningHistory.aggregate([
-                _match(), {"$group": {"_id": "$track.artist_name"}}, {"$count": "n"},
+            DailyRollup.aggregate([
+                _match(),
+                {"$project": {"a": {"$objectToArray": "$artist_plays"}}},
+                {"$unwind": "$a"},
+                {"$group": {"_id": "$a.k"}},
+                {"$count": "n"},
             ], **agg_opts).to_list(),
+
             # Unique album count
-            ListeningHistory.aggregate([
-                _match(), {"$group": {"_id": "$track.album_name"}}, {"$count": "n"},
-            ], **agg_opts).to_list(),
-            # Artist play counts (for top artists + genre analysis)
-            ListeningHistory.aggregate([
+            DailyRollup.aggregate([
                 _match(),
-                {"$group": {"_id": "$track.artist_name", "c": {"$sum": 1}}},
+                {"$project": {"a": {"$objectToArray": "$album_plays"}}},
+                {"$unwind": "$a"},
+                {"$group": {"_id": "$a.k"}},
+                {"$count": "n"},
+            ], **agg_opts).to_list(),
+
+            # Unique track count
+            DailyRollup.aggregate([
+                _match(),
+                {"$unwind": "$track_plays"},
+                {"$group": {"_id": "$track_plays.spotify_id"}},
+                {"$count": "n"},
+            ], **agg_opts).to_list(),
+
+            # Top artists (merge across days)
+            DailyRollup.aggregate([
+                _match(),
+                {"$project": {"a": {"$objectToArray": "$artist_plays"}}},
+                {"$unwind": "$a"},
+                {"$group": {"_id": "$a.k", "c": {"$sum": "$a.v"}}},
                 {"$sort": {"c": -1}},
+                {"$limit": 50},
             ], **agg_opts).to_list(),
-            # Top tracks (limited to 50)
-            ListeningHistory.aggregate([
+
+            # Top tracks (merge across days)
+            DailyRollup.aggregate([
                 _match(),
+                {"$unwind": "$track_plays"},
                 {"$group": {
-                    "_id": {"s": "$track.spotify_id", "n": "$track.name", "a": "$track.artist_name"},
-                    "c": {"$sum": 1},
+                    "_id": {
+                        "s": "$track_plays.spotify_id",
+                        "n": "$track_plays.name",
+                        "a": "$track_plays.artist_name",
+                    },
+                    "c": {"$sum": "$track_plays.count"},
                 }},
                 {"$sort": {"c": -1}},
                 {"$limit": 50},
             ], **agg_opts).to_list(),
-            # Hourly distribution
-            ListeningHistory.aggregate([
+
+            # Hourly distribution (merge across days)
+            DailyRollup.aggregate([
                 _match(),
-                {"$group": {"_id": {"$hour": "$played_at"}, "c": {"$sum": 1}, "ms": {"$sum": _dur()}}},
+                {"$unwind": "$hourly"},
+                {"$group": {
+                    "_id": "$hourly.hour",
+                    "c": {"$sum": "$hourly.count"},
+                    "ms": {"$sum": "$hourly.ms"},
+                }},
                 {"$sort": {"_id": 1}},
             ], **agg_opts).to_list(),
-            # Daily distribution
-            ListeningHistory.aggregate([
+
+            # Day-of-week distribution (sum by stored day_of_week)
+            DailyRollup.aggregate([
                 _match(),
-                {"$group": {"_id": {"$dayOfWeek": "$played_at"}, "c": {"$sum": 1}, "ms": {"$sum": _dur()}}},
+                {"$group": {
+                    "_id": "$day_of_week",
+                    "c": {"$sum": "$total_plays"},
+                    "ms": {"$sum": "$total_ms"},
+                }},
                 {"$sort": {"_id": 1}},
             ], **agg_opts).to_list(),
-            # Unique play dates for streak (cap to avoid huge result sets)
-            ListeningHistory.aggregate([
+
+            # Dates with activity (for streak calculation)
+            DailyRollup.aggregate([
                 _match(),
-                {"$group": {"_id": {"$dateToString": {"format": "%Y-%m-%d", "date": "$played_at"}}}},
-                {"$sort": {"_id": -1}},
+                {"$match": {"total_plays": {"$gt": 0}}},
+                {"$sort": {"date": -1}},
                 {"$limit": 1000},
+                {"$project": {"_id": 0, "date": 1}},
             ], **agg_opts).to_list(),
-            # Sample unique track IDs for audio feature averaging
-            ListeningHistory.aggregate([
+
+            # Sample track IDs for audio feature averaging
+            DailyRollup.aggregate([
                 _match(),
-                {"$group": {"_id": "$track.spotify_id"}},
+                {"$unwind": "$track_plays"},
+                {"$group": {"_id": "$track_plays.spotify_id"}},
                 {"$limit": 500},
             ], **agg_opts).to_list(),
         )
 
     except Exception as e:
-        logger.error("Aggregation pipeline failed", user_id=user_id, period=period, error=str(e))
+        logger.error("Rollup aggregation failed", user_id=user_id, period=period, error=str(e))
         raise
 
     if not stats_res:
@@ -171,26 +212,25 @@ async def compute_analytics_snapshot(user_id: str, period: str = "all_time") -> 
         return snapshot
 
     s = stats_res[0]
-    n_tracks = n_tracks_res[0]["n"] if n_tracks_res else 0
     n_artists = n_artists_res[0]["n"] if n_artists_res else 0
     n_albums = n_albums_res[0]["n"] if n_albums_res else 0
+    n_tracks = n_tracks_res[0]["n"] if n_tracks_res else 0
 
     # Batch-load artist docs for images + genre analysis
-    all_artist_names = [r["_id"] for r in artist_res]
+    all_artist_names = [r["_id"] for r in artist_res if r["_id"]]
     artist_docs = await Artist.find({"name": {"$in": all_artist_names}}).to_list()
     artist_by_name: dict[str, Artist] = {a.name: a for a in artist_docs}
 
-    # Top artists
     top_artist_items = []
     for rank, r in enumerate(artist_res[:50], 1):
         name = r["_id"]
         a = artist_by_name.get(name)
         top_artist_items.append(TopItem(
-            spotify_id=a.spotify_id if a else "", name=name,
+            spotify_id=a.spotify_id if a else "", name=name or "",
             play_count=r["c"], rank=rank, image_url=a.image_url if a else "",
         ))
 
-    # Top tracks — batch-load track docs
+    # Batch-load track docs for images
     top_sids = [r["_id"]["s"] for r in track_res if r["_id"].get("s")]
     track_docs = await Track.find({"spotify_id": {"$in": top_sids}}).to_list() if top_sids else []
     track_by_sid: dict[str, Track] = {t.spotify_id: t for t in track_docs}
@@ -220,22 +260,19 @@ async def compute_analytics_snapshot(user_id: str, period: str = "all_time") -> 
     ]
 
     # Listening streak
-    play_dates = [d["_id"] for d in dates_res]
+    play_dates = [d["date"] for d in dates_res]
     streak = _calculate_streak(play_dates)
 
     # Audio features from sampled track IDs
-    sample_ids = [r["_id"] for r in feature_sample_res if r["_id"]]
+    sample_ids = [r["_id"] for r in sample_tracks_res if r["_id"]]
     avg_features = await _compute_avg_audio_features(sample_ids)
-
-    # MongoDB $dayOfWeek: 1=Sun..7=Sat → Python weekday: 0=Mon..6=Sun
-    mongo_to_py = {1: 6, 2: 0, 3: 1, 4: 2, 5: 3, 6: 4, 7: 5}
 
     snapshot = AnalyticsSnapshot(
         user_id=user_id,
         period=period,
         period_start=period_start,
         period_end=period_end,
-        total_tracks_played=s["total"],
+        total_tracks_played=s["plays"],
         total_ms_played=s["ms"],
         unique_tracks=n_tracks,
         unique_artists=n_artists,
@@ -250,7 +287,7 @@ async def compute_analytics_snapshot(user_id: str, period: str = "all_time") -> 
             for r in hourly_res
         ],
         daily_distribution=sorted(
-            [ListeningDay(day=mongo_to_py.get(r["_id"], 0), count=r["c"], total_ms=r["ms"])
+            [ListeningDay(day=r["_id"], count=r["c"], total_ms=r["ms"])
              for r in daily_res],
             key=lambda x: x.day,
         ),
@@ -258,7 +295,7 @@ async def compute_analytics_snapshot(user_id: str, period: str = "all_time") -> 
     )
 
     await _upsert_snapshot(snapshot)
-    logger.info("Analytics snapshot computed", user_id=user_id, period=period, tracks=s["total"])
+    logger.info("Analytics snapshot computed from rollups", user_id=user_id, period=period, tracks=s["plays"])
     return snapshot
 
 

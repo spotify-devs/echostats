@@ -34,6 +34,7 @@ async def sync_all_users(ctx: dict) -> None:
     from app.models.sync_job import SyncJob, SyncStep
     from app.models.user import User
     from app.services.analytics_service import compute_analytics_snapshot
+    from app.services.rollup_service import update_rollup_for_date
     from app.services.spotify_client import SpotifyClient
     from app.services.sync_service import enrich_audio_features, sync_recently_played
     from app.services.token_service import get_valid_access_token
@@ -98,14 +99,19 @@ async def sync_all_users(ctx: dict) -> None:
 
             # Step 3: Refresh analytics
             if count > 0:
-                step3 = SyncStep(action="refresh_analytics", detail="Recomputing analytics snapshots")
+                step3 = SyncStep(action="refresh_analytics", detail="Updating rollups and analytics snapshots")
+                today = datetime.now(tz=UTC).strftime("%Y-%m-%d")
+                try:
+                    await update_rollup_for_date(user_id, today)
+                except Exception:
+                    pass
                 for period in ["week", "month", "all_time"]:
                     try:
                         await compute_analytics_snapshot(user_id, period)
                     except Exception:
                         pass
                 step3.status = "completed"
-                step3.detail = "Analytics refreshed for week, month, all_time"
+                step3.detail = "Rollups + analytics refreshed for week, month, all_time"
                 step3.completed_at = datetime.now(tz=UTC)
                 job.steps.append(step3)
 
@@ -119,17 +125,20 @@ async def sync_all_users(ctx: dict) -> None:
 
 
 async def refresh_analytics(ctx: dict) -> None:
-    """Periodic task: recompute analytics snapshots."""
+    """Periodic task: update rollups and recompute analytics snapshots."""
     import structlog
 
     from app.models.user import User
     from app.services.analytics_service import compute_analytics_snapshot
+    from app.services.rollup_service import update_rollup_for_date
 
     logger = structlog.get_logger()
     users = await User.find_all().to_list()
+    today = datetime.now(tz=UTC).strftime("%Y-%m-%d")
 
     for user in users:
         try:
+            await update_rollup_for_date(str(user.id), today)
             for period in ["week", "month", "year", "all_time"]:
                 await compute_analytics_snapshot(str(user.id), period)
             logger.info("Analytics refreshed", user_id=str(user.id))

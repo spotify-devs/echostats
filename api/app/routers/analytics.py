@@ -1,9 +1,9 @@
 """Analytics API endpoints."""
 
-import structlog
 from datetime import datetime
 from typing import Annotated
 
+import structlog
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from app.middleware.auth import get_current_user
