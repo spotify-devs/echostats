@@ -41,7 +41,7 @@ function getEmoji(genre: string): string {
 }
 
 export default function MusicDnaPage() {
-  const [period, setPeriod] = useState("all_time");
+  const [period, setPeriod] = useState("week");
 
   const { data, isLoading } = useQuery({
     queryKey: ["genre-distribution-dna", period],
