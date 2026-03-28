@@ -4,7 +4,7 @@ import asyncio
 import random
 from datetime import datetime, timedelta
 
-from motor.motor_asyncio import AsyncIOMotorClient
+from pymongo import AsyncMongoClient
 
 # ── Sample Data ──────────────────────────────────────────────────────────────
 
@@ -75,7 +75,7 @@ async def seed():
     """Insert test data into MongoDB."""
     import os
     mongo_uri = os.environ.get("MONGO_URI", "mongodb://echostats:changeme@localhost:27017/echostats?authSource=admin")
-    client = AsyncIOMotorClient(mongo_uri)
+    client = AsyncMongoClient(mongo_uri)
     db = client["echostats"]
 
     # Clear existing seed data
@@ -437,7 +437,7 @@ async def seed():
     print(f"{'='*50}")
     print("\n🌐 Open http://localhost:3000/dashboard to see the data!")
 
-    client.close()
+    await client.close()
 
 
 if __name__ == "__main__":
