@@ -63,10 +63,15 @@ function CallbackContent() {
     })
       .then(async (res) => {
         if (!res.ok) {
-          const body = await res.json().catch(() => ({}));
-          throw new Error(body.detail || "Authentication failed");
+          const body = await res.json().catch(() => null);
+          throw new Error(
+            body?.detail ||
+              (res.status === 503
+                ? "API server is unavailable — please try again"
+                : `Authentication failed (${res.status})`),
+          );
         }
-        return res.json();
+        return res.json().catch(() => ({}));
       })
       .then(() => {
         setStatus("success");

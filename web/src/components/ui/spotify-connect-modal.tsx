@@ -45,7 +45,7 @@ export function SpotifyConnectModal({ isOpen, onClose, onConnected }: SpotifyCon
         // Check if we're now authenticated
         try {
           const res = await fetch("/api/v1/auth/status", { credentials: "include" });
-          const data = await res.json();
+          const data = await res.json().catch(() => ({}));
           if (data.authenticated) {
             setStatus("success");
             setTimeout(() => {
@@ -109,9 +109,18 @@ export function SpotifyConnectModal({ isOpen, onClose, onConnected }: SpotifyCon
         credentials: "include",
         headers: { Accept: "application/json" },
       });
-      const data = await res.json();
 
-      if (!data.url) {
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(
+          res.status === 503
+            ? "API server is unavailable — please check that the backend is running"
+            : `Server error (${res.status}): ${text.slice(0, 100)}`,
+        );
+      }
+
+      const data = await res.json().catch(() => null);
+      if (!data?.url) {
         throw new Error("Failed to get authorization URL");
       }
 
@@ -144,14 +153,22 @@ export function SpotifyConnectModal({ isOpen, onClose, onConnected }: SpotifyCon
   const handleDevLogin = async () => {
     setStatus("connecting");
     try {
-      await fetch("/api/v1/auth/dev-login", { credentials: "include" });
+      const res = await fetch("/api/v1/auth/dev-login", { credentials: "include" });
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(
+          res.status === 503
+            ? "API server is unavailable"
+            : `Login failed (${res.status}): ${text.slice(0, 100)}`,
+        );
+      }
       setStatus("success");
       setTimeout(() => {
         window.location.href = "/dashboard";
       }, 1000);
-    } catch {
+    } catch (err: any) {
       setStatus("error");
-      setError("Demo login failed");
+      setError(err.message || "Demo login failed");
     }
   };
 
