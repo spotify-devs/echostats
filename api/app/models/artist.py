@@ -35,7 +35,5 @@ class Artist(Document):
     class Settings:
         name = "artists"
         indexes = [
-            "spotify_id",
-            "name",
             "genres",
         ]

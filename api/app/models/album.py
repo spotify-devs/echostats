@@ -41,7 +41,3 @@ class Album(Document):
 
     class Settings:
         name = "albums"
-        indexes = [
-            "spotify_id",
-            "name",
-        ]

@@ -21,9 +21,7 @@ class ApiLog(Document):
     class Settings:
         name = "api_logs"
         indexes = [
-            "user_id",
-            "timestamp",
-            "service",
             [("user_id", 1), ("timestamp", -1)],
             [("service", 1), ("status_code", 1)],
+            [("timestamp", 1), {"expireAfterSeconds": 2592000}],  # TTL: 30 days
         ]
