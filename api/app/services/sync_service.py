@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import Any
 
 import structlog
+from pymongo import UpdateOne
 
 from app.models.artist import Artist, ArtistImage
 from app.models.listening_history import HistoryTrackRef, ListeningHistory
@@ -22,33 +23,46 @@ async def sync_recently_played(client: SpotifyClient, user_id: str) -> int:
         data = await client.get_recently_played(limit=50)
         items = data.get("items", [])
 
+        if not items:
+            return 0
+
+        # Batch dedup: collect all (track_id, played_at) pairs and check at once
+        candidate_keys = []
+        valid_items = []
         for item in items:
             track_data = item.get("track", {})
             played_at_str = item.get("played_at", "")
             if not track_data or not played_at_str:
                 continue
-
             played_at = datetime.fromisoformat(played_at_str.replace("Z", "+00:00"))
             spotify_id = track_data.get("id", "")
+            candidate_keys.append({"user_id": user_id, "track.spotify_id": spotify_id, "played_at": played_at})
+            valid_items.append((item, track_data, played_at, spotify_id))
 
-            # Check for duplicate
-            existing = await ListeningHistory.find_one(
-                ListeningHistory.user_id == user_id,
-                ListeningHistory.track.spotify_id == spotify_id,
-                ListeningHistory.played_at == played_at,
-            )
-            if existing:
+        # Batch check for existing entries
+        existing_set: set[tuple[str, str]] = set()
+        if candidate_keys:
+            existing_docs = await ListeningHistory.find(
+                {"$or": candidate_keys}
+            ).project_model(ListeningHistory).to_list()
+            for doc in existing_docs:
+                existing_set.add((doc.track.spotify_id, doc.played_at.isoformat()))
+
+        # Build new entries and collect tracks to upsert
+        new_entries: list[ListeningHistory] = []
+        tracks_to_upsert: dict[str, dict] = {}
+
+        for item, track_data, played_at, spotify_id in valid_items:
+            key = (spotify_id, played_at.isoformat())
+            if key in existing_set:
                 continue
 
-            # Extract artist info
             artists = track_data.get("artists", [])
             artist_name = artists[0]["name"] if artists else "Unknown"
-
-            # Extract album info
             album_data = track_data.get("album", {})
             album_images = album_data.get("images", [])
 
-            history = ListeningHistory(
+            new_entries.append(ListeningHistory(
                 user_id=user_id,
                 track=HistoryTrackRef(
                     spotify_id=spotify_id,
@@ -62,12 +76,20 @@ async def sync_recently_played(client: SpotifyClient, user_id: str) -> int:
                 source="api",
                 context_type=item.get("context", {}).get("type", "") if item.get("context") else "",
                 context_uri=item.get("context", {}).get("uri", "") if item.get("context") else "",
-            )
-            await history.insert()
-            count += 1
+            ))
 
-            # Upsert track
-            await _upsert_track(track_data)
+            # Collect unique tracks for batch upsert
+            if spotify_id not in tracks_to_upsert:
+                tracks_to_upsert[spotify_id] = track_data
+
+        # Bulk insert new history entries
+        if new_entries:
+            await ListeningHistory.insert_many(new_entries)
+            count = len(new_entries)
+
+        # Batch upsert tracks
+        if tracks_to_upsert:
+            await _bulk_upsert_tracks(list(tracks_to_upsert.values()))
 
     except Exception as e:
         logger.error("Failed to sync recently played", error=str(e), user_id=user_id)
@@ -231,13 +253,15 @@ async def enrich_audio_features(client: SpotifyClient, batch_size: int = 100) ->
             data = await client.get_audio_features(track_ids)
             features_list = data.get("audio_features", [])
 
+            # Build bulk update operations
+            ops = []
             for features in features_list:
                 if not features:
                     continue
                 track_id = features.get("id", "")
                 track = next((t for t in batch if t.spotify_id == track_id), None)
-                if track:
-                    track.audio_features = AudioFeatures(
+                if track and track.id:
+                    af = AudioFeatures(
                         danceability=features.get("danceability", 0),
                         energy=features.get("energy", 0),
                         key=features.get("key", 0),
@@ -252,9 +276,18 @@ async def enrich_audio_features(client: SpotifyClient, batch_size: int = 100) ->
                         duration_ms=features.get("duration_ms", 0),
                         time_signature=features.get("time_signature", 4),
                     )
-                    track.updated_at = datetime.utcnow()
-                    await track.save()
-                    count += 1
+                    ops.append(UpdateOne(
+                        {"_id": track.id},
+                        {"$set": {
+                            "audio_features": af.model_dump(),
+                            "updated_at": datetime.utcnow(),
+                        }},
+                    ))
+
+            if ops:
+                collection = Track.get_motor_collection()
+                result = await collection.bulk_write(ops, ordered=False)
+                count += result.modified_count
 
         except Exception as e:
             logger.error("Failed to fetch audio features", error=str(e))
@@ -296,6 +329,78 @@ async def run_initial_sync(client: SpotifyClient, user_id: str) -> SyncJob:
 
 
 # ── Internal helpers ─────────────────────────────────────────────────────────
+
+
+async def _bulk_upsert_tracks(data_list: list[dict[str, Any]]) -> None:
+    """Batch upsert tracks using bulk_write to avoid N+1 queries."""
+    if not data_list:
+        return
+
+    spotify_ids = [d.get("id", "") for d in data_list if d.get("id")]
+    existing_tracks = await Track.find({"spotify_id": {"$in": spotify_ids}}).to_list()
+    existing_ids = {t.spotify_id for t in existing_tracks}
+
+    # Bulk update existing tracks
+    update_ops = []
+    for data in data_list:
+        sid = data.get("id", "")
+        if sid in existing_ids:
+            update_ops.append(UpdateOne(
+                {"spotify_id": sid},
+                {"$set": {
+                    "name": data.get("name", ""),
+                    "popularity": data.get("popularity", 0),
+                    "updated_at": datetime.utcnow(),
+                }},
+            ))
+
+    if update_ops:
+        collection = Track.get_motor_collection()
+        await collection.bulk_write(update_ops, ordered=False)
+
+    # Bulk insert new tracks
+    new_tracks = []
+    new_artist_data: dict[str, dict] = {}
+    for data in data_list:
+        sid = data.get("id", "")
+        if not sid or sid in existing_ids:
+            continue
+
+        artists = data.get("artists", [])
+        album_data = data.get("album", {})
+        album_images = album_data.get("images", []) if album_data else []
+
+        new_tracks.append(Track(
+            spotify_id=sid,
+            name=data.get("name", ""),
+            artists=[
+                TrackArtistRef(spotify_id=a.get("id", ""), name=a.get("name", ""))
+                for a in artists
+            ],
+            album=TrackAlbumRef(
+                spotify_id=album_data.get("id", ""),
+                name=album_data.get("name", ""),
+                image_url=album_images[0]["url"] if album_images else "",
+                release_date=album_data.get("release_date", ""),
+            ) if album_data else None,
+            duration_ms=data.get("duration_ms", 0),
+            popularity=data.get("popularity", 0),
+            explicit=data.get("explicit", False),
+            preview_url=data.get("preview_url"),
+            external_url=data.get("external_urls", {}).get("spotify", ""),
+        ))
+
+        for artist_data in artists:
+            aid = artist_data.get("id")
+            if aid and aid not in new_artist_data:
+                new_artist_data[aid] = artist_data
+
+    if new_tracks:
+        await Track.insert_many(new_tracks)
+
+    # Batch upsert associated artists
+    if new_artist_data:
+        await _bulk_upsert_artists_minimal(list(new_artist_data.values()))
 
 
 async def _upsert_track(data: dict[str, Any]) -> Track:
@@ -392,3 +497,27 @@ async def _upsert_artist_minimal(data: dict[str, Any]) -> None:
             external_url=data.get("external_urls", {}).get("spotify", ""),
         )
         await artist.insert()
+
+
+async def _bulk_upsert_artists_minimal(data_list: list[dict[str, Any]]) -> None:
+    """Batch create minimal artist records for artists that don't exist."""
+    if not data_list:
+        return
+
+    spotify_ids = [d.get("id", "") for d in data_list if d.get("id")]
+    existing = await Artist.find({"spotify_id": {"$in": spotify_ids}}).to_list()
+    existing_ids = {a.spotify_id for a in existing}
+
+    new_artists = []
+    for data in data_list:
+        sid = data.get("id", "")
+        if sid and sid not in existing_ids:
+            new_artists.append(Artist(
+                spotify_id=sid,
+                name=data.get("name", ""),
+                external_url=data.get("external_urls", {}).get("spotify", ""),
+            ))
+            existing_ids.add(sid)  # Prevent duplicates within the batch
+
+    if new_artists:
+        await Artist.insert_many(new_artists)

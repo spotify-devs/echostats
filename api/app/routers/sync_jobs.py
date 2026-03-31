@@ -1,6 +1,6 @@
 """Sync job tracking endpoints."""
 
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from typing import Annotated
 
 import structlog
@@ -82,51 +82,46 @@ async def get_sync_stats(
     """Get sync job statistics."""
     user_id = str(user.id)
 
-    # Reap stale jobs (stuck in running/pending for >30 min)
-    cutoff = datetime.now(tz=UTC) - timedelta(minutes=30)
-    stale_jobs = await SyncJob.find(
-        {"user_id": user_id, "status": {"$in": ["running", "pending"]}, "created_at": {"$lt": cutoff}},
-    ).to_list()
-    for job in stale_jobs:
-        job.status = "failed"
-        job.error_message = "Job timed out — stuck for >30 minutes (likely due to a worker restart)"
-        job.completed_at = datetime.now(tz=UTC)
-        await job.save()
+    # Use aggregation instead of loading all completed jobs into memory
+    stats_pipeline = [
+        {"$match": {"user_id": user_id}},
+        {"$facet": {
+            "by_status": [
+                {"$group": {
+                    "_id": "$status",
+                    "count": {"$sum": 1},
+                    "items": {"$sum": "$items_processed"},
+                }},
+            ],
+            "total": [{"$count": "n"}],
+            "last_completed": [
+                {"$match": {"status": "completed"}},
+                {"$sort": {"completed_at": -1}},
+                {"$limit": 1},
+                {"$project": {"completed_at": 1}},
+            ],
+        }},
+    ]
 
-    total = await SyncJob.find(SyncJob.user_id == user_id).count()
-    completed = await SyncJob.find(
-        SyncJob.user_id == user_id, SyncJob.status == "completed"
-    ).count()
-    failed = await SyncJob.find(
-        SyncJob.user_id == user_id, SyncJob.status == "failed"
-    ).count()
-    running = await SyncJob.find(
-        SyncJob.user_id == user_id, SyncJob.status == "running"
-    ).count()
+    results = await SyncJob.aggregate(stats_pipeline).to_list()
+    facets = results[0] if results else {}
 
-    # Last successful sync
-    last_completed = await (
-        SyncJob.find(SyncJob.user_id == user_id, SyncJob.status == "completed")
-        .sort("-completed_at")
-        .limit(1)
-        .to_list()
-    )
+    status_map = {r["_id"]: r for r in facets.get("by_status", [])}
+    total_count = facets.get("total", [{}])
+    total = total_count[0]["n"] if total_count else 0
 
-    # Total items synced
-    all_completed = await SyncJob.find(
-        SyncJob.user_id == user_id, SyncJob.status == "completed"
-    ).to_list()
-    total_items = sum(job.items_processed for job in all_completed)
+    completed_info = status_map.get("completed", {})
+    last_completed = facets.get("last_completed", [])
 
     return {
         "total_jobs": total,
-        "completed": completed,
-        "failed": failed,
-        "running": running,
-        "total_items_synced": total_items,
+        "completed": completed_info.get("count", 0),
+        "failed": status_map.get("failed", {}).get("count", 0),
+        "running": status_map.get("running", {}).get("count", 0),
+        "total_items_synced": completed_info.get("items", 0),
         "last_sync_at": (
-            last_completed[0].completed_at.isoformat()
-            if last_completed
+            last_completed[0]["completed_at"].isoformat()
+            if last_completed and last_completed[0].get("completed_at")
             else None
         ),
     }

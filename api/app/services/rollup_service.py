@@ -51,8 +51,8 @@ async def build_rollups(
         return {"$ifNull": ["$ms_played", {"$ifNull": ["$track.duration_ms", 0]}]}
 
     try:
-        totals_res, hourly_res, artist_res, track_res, album_res = await asyncio.gather(
-            # Daily totals
+        # Batch 1: lightweight aggregations
+        totals_res, hourly_res = await asyncio.gather(
             ListeningHistory.aggregate([
                 _match(),
                 {"$group": {
@@ -61,7 +61,6 @@ async def build_rollups(
                     "ms": {"$sum": _dur()},
                 }},
             ], **agg_opts).to_list(),
-            # Hourly breakdown per day
             ListeningHistory.aggregate([
                 _match(),
                 {"$group": {
@@ -73,7 +72,10 @@ async def build_rollups(
                     "ms": {"$sum": _dur()},
                 }},
             ], **agg_opts).to_list(),
-            # Per-day artist play counts
+        )
+
+        # Batch 2: per-day breakdowns (heavier)
+        artist_res, track_res, album_res = await asyncio.gather(
             ListeningHistory.aggregate([
                 _match(),
                 {"$group": {
@@ -84,7 +86,6 @@ async def build_rollups(
                     "c": {"$sum": 1},
                 }},
             ], **agg_opts).to_list(),
-            # Per-day track play counts
             ListeningHistory.aggregate([
                 _match(),
                 {"$group": {
@@ -97,7 +98,6 @@ async def build_rollups(
                     "c": {"$sum": 1},
                 }},
             ], **agg_opts).to_list(),
-            # Per-day album play counts
             ListeningHistory.aggregate([
                 _match(),
                 {"$group": {

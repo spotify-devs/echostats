@@ -23,7 +23,15 @@ async def init_db() -> None:
 
     for attempt in range(1, MAX_RETRIES + 1):
         try:
-            client = AsyncMongoClient(settings.mongo_uri)
+            client = AsyncMongoClient(
+                settings.mongo_uri,
+                maxPoolSize=10,
+                minPoolSize=2,
+                maxIdleTimeMS=30000,
+                serverSelectionTimeoutMS=5000,
+                connectTimeoutMS=5000,
+                socketTimeoutMS=30000,
+            )
             db = client[settings.mongo_db]
             await init_beanie(database=db, document_models=ALL_MODELS)
             if attempt > 1:

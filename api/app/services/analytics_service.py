@@ -93,46 +93,42 @@ async def compute_analytics_snapshot(user_id: str, period: str = "all_time") -> 
     agg_opts: dict[str, Any] = {"allowDiskUse": True}
 
     try:
-        (
-            stats_res,
-            n_artists_res, n_albums_res, n_tracks_res,
-            artist_res, album_res, track_res,
-            hourly_res, daily_res,
-            dates_res, sample_tracks_res,
-        ) = await asyncio.gather(
-            # Total plays + ms (sum over rollups)
+        # Batch 1: lightweight aggregations (simple $group, no $unwind)
+        stats_res, hourly_res, daily_res, dates_res = await asyncio.gather(
             DailyRollup.aggregate([
                 _match(),
                 {"$group": {"_id": None, "plays": {"$sum": "$total_plays"}, "ms": {"$sum": "$total_ms"}}},
             ], **agg_opts).to_list(),
-
-            # Unique artist count
             DailyRollup.aggregate([
                 _match(),
-                {"$project": {"a": {"$objectToArray": "$artist_plays"}}},
-                {"$unwind": "$a"},
-                {"$group": {"_id": "$a.k"}},
-                {"$count": "n"},
+                {"$unwind": "$hourly"},
+                {"$group": {
+                    "_id": "$hourly.hour",
+                    "c": {"$sum": "$hourly.count"},
+                    "ms": {"$sum": "$hourly.ms"},
+                }},
+                {"$sort": {"_id": 1}},
             ], **agg_opts).to_list(),
-
-            # Unique album count
             DailyRollup.aggregate([
                 _match(),
-                {"$project": {"a": {"$objectToArray": "$album_plays"}}},
-                {"$unwind": "$a"},
-                {"$group": {"_id": "$a.k"}},
-                {"$count": "n"},
+                {"$group": {
+                    "_id": "$day_of_week",
+                    "c": {"$sum": "$total_plays"},
+                    "ms": {"$sum": "$total_ms"},
+                }},
+                {"$sort": {"_id": 1}},
             ], **agg_opts).to_list(),
-
-            # Unique track count
             DailyRollup.aggregate([
                 _match(),
-                {"$unwind": "$track_plays"},
-                {"$group": {"_id": "$track_plays.spotify_id"}},
-                {"$count": "n"},
+                {"$match": {"total_plays": {"$gt": 0}}},
+                {"$sort": {"date": -1}},
+                {"$limit": 1000},
+                {"$project": {"_id": 0, "date": 1}},
             ], **agg_opts).to_list(),
+        )
 
-            # Top artists (merge across days)
+        # Batch 2: heavier $objectToArray + $unwind pipelines (top items + counts)
+        artist_res, album_res, n_artists_res, n_albums_res = await asyncio.gather(
             DailyRollup.aggregate([
                 _match(),
                 {"$project": {"a": {"$objectToArray": "$artist_plays"}}},
@@ -141,8 +137,6 @@ async def compute_analytics_snapshot(user_id: str, period: str = "all_time") -> 
                 {"$sort": {"c": -1}},
                 {"$limit": 50},
             ], **agg_opts).to_list(),
-
-            # Top albums (merge across days)
             DailyRollup.aggregate([
                 _match(),
                 {"$project": {"a": {"$objectToArray": "$album_plays"}}},
@@ -151,8 +145,24 @@ async def compute_analytics_snapshot(user_id: str, period: str = "all_time") -> 
                 {"$sort": {"c": -1}},
                 {"$limit": 50},
             ], **agg_opts).to_list(),
+            DailyRollup.aggregate([
+                _match(),
+                {"$project": {"a": {"$objectToArray": "$artist_plays"}}},
+                {"$unwind": "$a"},
+                {"$group": {"_id": "$a.k"}},
+                {"$count": "n"},
+            ], **agg_opts).to_list(),
+            DailyRollup.aggregate([
+                _match(),
+                {"$project": {"a": {"$objectToArray": "$album_plays"}}},
+                {"$unwind": "$a"},
+                {"$group": {"_id": "$a.k"}},
+                {"$count": "n"},
+            ], **agg_opts).to_list(),
+        )
 
-            # Top tracks (merge across days)
+        # Batch 3: track_plays $unwind pipelines (heaviest — large embedded arrays)
+        track_res, n_tracks_res, sample_tracks_res = await asyncio.gather(
             DailyRollup.aggregate([
                 _match(),
                 {"$unwind": "$track_plays"},
@@ -167,40 +177,12 @@ async def compute_analytics_snapshot(user_id: str, period: str = "all_time") -> 
                 {"$sort": {"c": -1}},
                 {"$limit": 50},
             ], **agg_opts).to_list(),
-
-            # Hourly distribution (merge across days)
             DailyRollup.aggregate([
                 _match(),
-                {"$unwind": "$hourly"},
-                {"$group": {
-                    "_id": "$hourly.hour",
-                    "c": {"$sum": "$hourly.count"},
-                    "ms": {"$sum": "$hourly.ms"},
-                }},
-                {"$sort": {"_id": 1}},
+                {"$unwind": "$track_plays"},
+                {"$group": {"_id": "$track_plays.spotify_id"}},
+                {"$count": "n"},
             ], **agg_opts).to_list(),
-
-            # Day-of-week distribution (sum by stored day_of_week)
-            DailyRollup.aggregate([
-                _match(),
-                {"$group": {
-                    "_id": "$day_of_week",
-                    "c": {"$sum": "$total_plays"},
-                    "ms": {"$sum": "$total_ms"},
-                }},
-                {"$sort": {"_id": 1}},
-            ], **agg_opts).to_list(),
-
-            # Dates with activity (for streak calculation)
-            DailyRollup.aggregate([
-                _match(),
-                {"$match": {"total_plays": {"$gt": 0}}},
-                {"$sort": {"date": -1}},
-                {"$limit": 1000},
-                {"$project": {"_id": 0, "date": 1}},
-            ], **agg_opts).to_list(),
-
-            # Sample track IDs for audio feature averaging
             DailyRollup.aggregate([
                 _match(),
                 {"$unwind": "$track_plays"},

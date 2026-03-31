@@ -5,12 +5,17 @@ services:
   mongodb:
     image: mongo:7
     restart: unless-stopped
+    command: ["mongod", "--wiredTigerCacheSizeGB", "0.25", "--quiet"]
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-echostats}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-changeme}
       MONGO_INITDB_DATABASE: ${MONGO_DB:-echostats}
     volumes:
       - mongo_data:/data/db
+    deploy:
+      resources:
+        limits:
+          memory: 512m
     healthcheck:
       test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')", "--quiet"]
       interval: 10s

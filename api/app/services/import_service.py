@@ -34,32 +34,60 @@ async def import_streaming_history(
         job.items_total = len(data)
         count = 0
 
+        # Parse all entries first
+        parsed: list[ListeningHistory] = []
         for entry in data:
             try:
                 history = await _parse_history_entry(user_id, entry, filename)
                 if history:
-                    # Dedup: check both old format (played_at=end_time) and
-                    # new format (played_at=start_time) to avoid duplicates
-                    # across re-imports.
-                    end_time = history.played_at + timedelta(
-                        milliseconds=history.ms_played or 0
-                    )
-                    existing = await ListeningHistory.find_one(
-                        {
-                            "user_id": user_id,
-                            "track.spotify_id": history.track.spotify_id,
-                            "$or": [
-                                {"played_at": history.played_at},
-                                {"played_at": end_time},
-                            ],
-                        }
-                    )
-                    if not existing:
-                        await history.insert()
-                        count += 1
+                    parsed.append(history)
             except Exception as e:
                 logger.debug("Skipping entry", error=str(e))
                 continue
+
+        # Batch dedup and insert in chunks of 1000
+        chunk_size = 1000
+        for i in range(0, len(parsed), chunk_size):
+            chunk = parsed[i : i + chunk_size]
+
+            # Build dedup queries for the chunk
+            dedup_filters = []
+            for h in chunk:
+                end_time = h.played_at + timedelta(
+                    milliseconds=h.ms_played or 0
+                )
+                dedup_filters.append({
+                    "user_id": user_id,
+                    "track.spotify_id": h.track.spotify_id,
+                    "$or": [
+                        {"played_at": h.played_at},
+                        {"played_at": end_time},
+                    ],
+                })
+
+            # Batch check existing — query in sub-batches to avoid huge $or
+            existing_keys: set[tuple[str, str]] = set()
+            sub_batch = 100
+            for j in range(0, len(dedup_filters), sub_batch):
+                sub = dedup_filters[j : j + sub_batch]
+                existing_docs = await ListeningHistory.find(
+                    {"$or": sub}
+                ).to_list()
+                for doc in existing_docs:
+                    existing_keys.add((doc.track.spotify_id, doc.played_at.isoformat()))
+
+            # Filter to only new entries
+            new_entries = []
+            for h in chunk:
+                key = (h.track.spotify_id, h.played_at.isoformat())
+                end_time = h.played_at + timedelta(milliseconds=h.ms_played or 0)
+                key2 = (h.track.spotify_id, end_time.isoformat())
+                if key not in existing_keys and key2 not in existing_keys:
+                    new_entries.append(h)
+
+            if new_entries:
+                await ListeningHistory.insert_many(new_entries)
+                count += len(new_entries)
 
         job.status = "completed"
         job.items_processed = count
