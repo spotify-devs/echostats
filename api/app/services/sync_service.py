@@ -285,7 +285,7 @@ async def enrich_audio_features(client: SpotifyClient, batch_size: int = 100) ->
                     ))
 
             if ops:
-                collection = Track.get_motor_collection()
+                collection = await Track.get_pymongo_collection()
                 result = await collection.bulk_write(ops, ordered=False)
                 count += result.modified_count
 
@@ -355,7 +355,7 @@ async def _bulk_upsert_tracks(data_list: list[dict[str, Any]]) -> None:
             ))
 
     if update_ops:
-        collection = Track.get_motor_collection()
+        collection = await Track.get_pymongo_collection()
         await collection.bulk_write(update_ops, ordered=False)
 
     # Bulk insert new tracks
