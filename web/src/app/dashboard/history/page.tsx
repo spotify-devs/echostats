@@ -90,18 +90,20 @@ export default function HistoryPage() {
           <StaggerContainer className="glass-card divide-y divide-current/[0.08]">
             {items.map((item: any, idx: number) => (
               <StaggerItem key={idx}>
-                <div className="flex items-center justify-between">
-                  <TrackCard
-                    name={item.track?.name || "Unknown"}
-                    artist={item.track?.artist_name || "Unknown"}
-                    albumImageUrl={item.track?.album_image_url}
-                    duration={
-                      item.track?.duration_ms
-                        ? `${Math.floor(item.track.duration_ms / 60000)}:${String(Math.floor((item.track.duration_ms % 60000) / 1000)).padStart(2, "0")}`
-                        : undefined
-                    }
-                  />
-                  <span className="text-xs text-theme-tertiary pr-4 whitespace-nowrap">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <TrackCard
+                      name={item.track?.name || "Unknown"}
+                      artist={item.track?.artist_name || "Unknown"}
+                      albumImageUrl={item.track?.album_image_url}
+                      duration={
+                        item.track?.duration_ms
+                          ? `${Math.floor(item.track.duration_ms / 60000)}:${String(Math.floor((item.track.duration_ms % 60000) / 1000)).padStart(2, "0")}`
+                          : undefined
+                      }
+                    />
+                  </div>
+                  <span className="text-xs text-theme-tertiary pr-4 whitespace-nowrap flex-shrink-0">
                     {new Date(item.played_at).toLocaleDateString()}{" "}
                     {new Date(item.played_at).toLocaleTimeString([], {
                       hour: "2-digit",
