@@ -19,7 +19,15 @@ async def sync_recently_played(client: SpotifyClient, user_id: str) -> int:
     """Sync recently played tracks for a user. Returns count of new entries."""
     count = 0
     try:
-        data = await client.get_recently_played(limit=50)
+        # Use cursor: only fetch tracks played after the most recent one we have
+        after_ts: int | None = None
+        latest = await ListeningHistory.find(
+            {"user_id": user_id, "source": "api"}
+        ).sort([("played_at", -1)]).limit(1).to_list()
+        if latest:
+            after_ts = int(latest[0].played_at.timestamp() * 1000)
+
+        data = await client.get_recently_played(limit=50, after=after_ts)
         items = data.get("items", [])
 
         if not items:
@@ -38,23 +46,27 @@ async def sync_recently_played(client: SpotifyClient, user_id: str) -> int:
             candidate_keys.append({"user_id": user_id, "track.spotify_id": spotify_id, "played_at": played_at})
             valid_items.append((item, track_data, played_at, spotify_id))
 
-        # Batch check for existing entries
-        existing_set: set[tuple[str, str]] = set()
+        # Batch check for existing entries — use timestamp (ms) for comparison
+        # to avoid tz-aware vs tz-naive isoformat mismatches
+        existing_set: set[tuple[str, int]] = set()
         if candidate_keys:
             existing_docs = await ListeningHistory.find(
                 {"$or": candidate_keys}
             ).to_list()
             for doc in existing_docs:
-                existing_set.add((doc.track.spotify_id, doc.played_at.isoformat()))
+                ts_ms = int(doc.played_at.timestamp() * 1000)
+                existing_set.add((doc.track.spotify_id, ts_ms))
 
         # Build new entries and collect tracks to upsert
         new_entries: list[ListeningHistory] = []
         tracks_to_upsert: dict[str, dict] = {}
 
         for item, track_data, played_at, spotify_id in valid_items:
-            key = (spotify_id, played_at.isoformat())
+            key = (spotify_id, int(played_at.timestamp() * 1000))
             if key in existing_set:
                 continue
+            # Prevent duplicates within the same batch
+            existing_set.add(key)
 
             artists = track_data.get("artists", [])
             artist_name = artists[0]["name"] if artists else "Unknown"
@@ -81,9 +93,21 @@ async def sync_recently_played(client: SpotifyClient, user_id: str) -> int:
             if spotify_id not in tracks_to_upsert:
                 tracks_to_upsert[spotify_id] = track_data
 
-        # Bulk insert new history entries
+        # Bulk insert new history entries (ordered=False to skip dupes caught by unique index)
         if new_entries:
-            await ListeningHistory.insert_many(new_entries)
+            try:
+                await ListeningHistory.insert_many(new_entries, ordered=False)
+            except Exception as bulk_err:
+                # BulkWriteError with duplicate key errors is expected; count successes
+                err_str = str(bulk_err)
+                if "E11000" in err_str or "duplicate key" in err_str.lower():
+                    logger.warning(
+                        "Some duplicates skipped during insert",
+                        user_id=user_id,
+                        error=err_str[:200],
+                    )
+                else:
+                    raise
             count = len(new_entries)
 
         # Batch upsert tracks
