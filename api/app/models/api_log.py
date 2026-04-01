@@ -23,5 +23,4 @@ class ApiLog(Document):
         indexes = [
             [("user_id", 1), ("timestamp", -1)],
             [("service", 1), ("status_code", 1)],
-            [("timestamp", 1), {"expireAfterSeconds": 2592000}],  # TTL: 30 days
         ]

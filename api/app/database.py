@@ -34,6 +34,15 @@ async def init_db() -> None:
             )
             db = client[settings.mongo_db]
             await init_beanie(database=db, document_models=ALL_MODELS)
+
+            # Create TTL index on api_logs (Beanie doesn't support TTL index syntax)
+            try:
+                await db["api_logs"].create_index(
+                    "timestamp", expireAfterSeconds=2592000, background=True
+                )
+            except Exception:
+                pass  # Index may already exist
+
             if attempt > 1:
                 logger.info("Database connected after retry", attempt=attempt)
             return
