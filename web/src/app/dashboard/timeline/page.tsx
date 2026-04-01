@@ -6,11 +6,11 @@ import Image from "next/image";
 import { useState } from "react";
 import { LineChart } from "@/components/charts/line-chart";
 import { ChartSkeleton } from "@/components/ui/loading-skeleton";
-import { TimeRangeSelector } from "@/components/ui/time-range-selector";
+import { DEFAULT_PERIOD, TimeRangeSelector } from "@/components/ui/time-range-selector";
 import { api } from "@/lib/api";
 
 export default function TimelinePage() {
-  const [period, setPeriod] = useState("all_time");
+  const [period, setPeriod] = useState(DEFAULT_PERIOD);
 
   const { data, isLoading } = useQuery({
     queryKey: ["analytics-overview", period],

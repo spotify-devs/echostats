@@ -7,7 +7,7 @@ import { BarChart } from "@/components/charts/bar-chart";
 import { PieChart } from "@/components/charts/pie-chart";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/ui/animations";
 import { ChartSkeleton } from "@/components/ui/loading-skeleton";
-import { TimeRangeSelector } from "@/components/ui/time-range-selector";
+import { DEFAULT_PERIOD, TimeRangeSelector } from "@/components/ui/time-range-selector";
 import { api } from "@/lib/api";
 
 const GENRE_EMOJIS: Record<string, string> = {
@@ -41,7 +41,7 @@ function getEmoji(genre: string): string {
 }
 
 export default function MusicDnaPage() {
-  const [period, setPeriod] = useState("all_time");
+  const [period, setPeriod] = useState(DEFAULT_PERIOD);
 
   const { data, isLoading } = useQuery({
     queryKey: ["genre-distribution-dna", period],
