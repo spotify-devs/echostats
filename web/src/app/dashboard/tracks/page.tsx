@@ -7,14 +7,14 @@ import { useState } from "react";
 import { TrackCard } from "@/components/music/track-card";
 import { DateRangeFilter } from "@/components/ui/date-range-filter";
 import { ListSkeleton } from "@/components/ui/loading-skeleton";
-import { TimeRangeSelector } from "@/components/ui/time-range-selector";
+import { DEFAULT_PERIOD, TimeRangeSelector } from "@/components/ui/time-range-selector";
 import { api } from "@/lib/api";
 import { exportTopItems } from "@/lib/export";
 
 type ViewMode = "list" | "grid" | "compact";
 
 export default function TopTracksPage() {
-  const [period, setPeriod] = useState("all_time");
+  const [period, setPeriod] = useState(DEFAULT_PERIOD);
   const [view, setView] = useState<ViewMode>("list");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");

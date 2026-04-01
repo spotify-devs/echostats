@@ -7,7 +7,7 @@ import { LineChart } from "@/components/charts/line-chart";
 import { RadarChart } from "@/components/charts/radar-chart";
 import { DateRangeFilter } from "@/components/ui/date-range-filter";
 import { ChartSkeleton } from "@/components/ui/loading-skeleton";
-import { TimeRangeSelector } from "@/components/ui/time-range-selector";
+import { DEFAULT_PERIOD, TimeRangeSelector } from "@/components/ui/time-range-selector";
 import { api } from "@/lib/api";
 
 const MOOD_EMOJIS: Record<string, { emoji: string; label: string; color: string }> = {
@@ -27,7 +27,7 @@ function getMoodLabel(valence: number): string {
 }
 
 export default function MoodPage() {
-  const [period, setPeriod] = useState("all_time");
+  const [period, setPeriod] = useState(DEFAULT_PERIOD);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 

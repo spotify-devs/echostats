@@ -8,14 +8,14 @@ import { Heatmap } from "@/components/charts/heatmap";
 import { ListeningClock } from "@/components/charts/listening-clock";
 import { DateRangeFilter } from "@/components/ui/date-range-filter";
 import { ChartSkeleton } from "@/components/ui/loading-skeleton";
-import { TimeRangeSelector } from "@/components/ui/time-range-selector";
+import { DEFAULT_PERIOD, TimeRangeSelector } from "@/components/ui/time-range-selector";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { api } from "@/lib/api";
 
 const DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
 export default function PatternsPage() {
-  const [period, setPeriod] = useState("all_time");
+  const [period, setPeriod] = useState(DEFAULT_PERIOD);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const isMobile = useIsMobile();

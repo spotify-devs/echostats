@@ -8,6 +8,8 @@ const TIME_RANGES = [
   { value: "all_time", label: "All Time" },
 ];
 
+export const DEFAULT_PERIOD = "week";
+
 interface TimeRangeSelectorProps {
   value: string;
   onChange: (value: string) => void;

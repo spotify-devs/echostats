@@ -16,7 +16,7 @@ import { BarChart } from "@/components/charts/bar-chart";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/ui/animations";
 import { DateRangeFilter } from "@/components/ui/date-range-filter";
 import { CardSkeleton, ChartSkeleton } from "@/components/ui/loading-skeleton";
-import { TimeRangeSelector } from "@/components/ui/time-range-selector";
+import { DEFAULT_PERIOD, TimeRangeSelector } from "@/components/ui/time-range-selector";
 import { api } from "@/lib/api";
 
 function StatRow({
@@ -46,7 +46,7 @@ function StatRow({
 }
 
 export default function DeepStatsPage() {
-  const [period, setPeriod] = useState("all_time");
+  const [period, setPeriod] = useState(DEFAULT_PERIOD);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 

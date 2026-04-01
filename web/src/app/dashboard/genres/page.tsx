@@ -8,11 +8,11 @@ import { PieChart } from "@/components/charts/pie-chart";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/ui/animations";
 import { DateRangeFilter } from "@/components/ui/date-range-filter";
 import { ChartSkeleton } from "@/components/ui/loading-skeleton";
-import { TimeRangeSelector } from "@/components/ui/time-range-selector";
+import { DEFAULT_PERIOD, TimeRangeSelector } from "@/components/ui/time-range-selector";
 import { api } from "@/lib/api";
 
 export default function GenresPage() {
-  const [period, setPeriod] = useState("all_time");
+  const [period, setPeriod] = useState(DEFAULT_PERIOD);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 

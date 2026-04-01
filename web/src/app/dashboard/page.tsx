@@ -15,7 +15,7 @@ import { AnimatedCard, FadeIn, StaggerContainer, StaggerItem } from "@/component
 import { DateRangeFilter } from "@/components/ui/date-range-filter";
 import { CardSkeleton, ChartSkeleton } from "@/components/ui/loading-skeleton";
 import { MetricCard } from "@/components/ui/metric-card";
-import { TimeRangeSelector } from "@/components/ui/time-range-selector";
+import { DEFAULT_PERIOD, TimeRangeSelector } from "@/components/ui/time-range-selector";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { api } from "@/lib/api";
 
@@ -26,7 +26,7 @@ function formatDuration(ms: number): string {
 }
 
 export default function DashboardPage() {
-  const [period, setPeriod] = useState("all_time");
+  const [period, setPeriod] = useState(DEFAULT_PERIOD);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const isMobile = useIsMobile();

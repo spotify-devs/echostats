@@ -7,7 +7,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { StaggerContainer, StaggerItem } from "@/components/ui/animations";
 import { ListSkeleton } from "@/components/ui/loading-skeleton";
-import { TimeRangeSelector } from "@/components/ui/time-range-selector";
+import { DEFAULT_PERIOD, TimeRangeSelector } from "@/components/ui/time-range-selector";
 import { api } from "@/lib/api";
 
 const RANK_COLORS: Record<number, string> = {
@@ -23,7 +23,7 @@ const RANK_ICONS: Record<number, any> = {
 };
 
 export default function Top50Page() {
-  const [period, setPeriod] = useState("all_time");
+  const [period, setPeriod] = useState(DEFAULT_PERIOD);
   const [expanded, setExpanded] = useState<number | null>(null);
 
   const { data, isLoading } = useQuery({
