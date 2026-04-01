@@ -4,7 +4,6 @@ from datetime import datetime
 from typing import Any
 
 import structlog
-from pymongo import UpdateOne
 
 from app.models.artist import Artist, ArtistImage
 from app.models.listening_history import HistoryTrackRef, ListeningHistory
@@ -253,15 +252,13 @@ async def enrich_audio_features(client: SpotifyClient, batch_size: int = 100) ->
             data = await client.get_audio_features(track_ids)
             features_list = data.get("audio_features", [])
 
-            # Build bulk update operations
-            ops = []
             for features in features_list:
                 if not features:
                     continue
                 track_id = features.get("id", "")
                 track = next((t for t in batch if t.spotify_id == track_id), None)
-                if track and track.id:
-                    af = AudioFeatures(
+                if track:
+                    track.audio_features = AudioFeatures(
                         danceability=features.get("danceability", 0),
                         energy=features.get("energy", 0),
                         key=features.get("key", 0),
@@ -276,18 +273,9 @@ async def enrich_audio_features(client: SpotifyClient, batch_size: int = 100) ->
                         duration_ms=features.get("duration_ms", 0),
                         time_signature=features.get("time_signature", 4),
                     )
-                    ops.append(UpdateOne(
-                        {"_id": track.id},
-                        {"$set": {
-                            "audio_features": af.model_dump(),
-                            "updated_at": datetime.utcnow(),
-                        }},
-                    ))
-
-            if ops:
-                collection = await Track.get_pymongo_collection()
-                result = await collection.bulk_write(ops, ordered=False)
-                count += result.modified_count
+                    track.updated_at = datetime.utcnow()
+                    await track.save()
+                    count += 1
 
         except Exception as e:
             logger.error("Failed to fetch audio features", error=str(e))
@@ -332,38 +320,30 @@ async def run_initial_sync(client: SpotifyClient, user_id: str) -> SyncJob:
 
 
 async def _bulk_upsert_tracks(data_list: list[dict[str, Any]]) -> None:
-    """Batch upsert tracks using bulk_write to avoid N+1 queries."""
+    """Batch upsert tracks to avoid N+1 queries."""
     if not data_list:
         return
 
     spotify_ids = [d.get("id", "") for d in data_list if d.get("id")]
     existing_tracks = await Track.find({"spotify_id": {"$in": spotify_ids}}).to_list()
-    existing_ids = {t.spotify_id for t in existing_tracks}
+    existing_map = {t.spotify_id: t for t in existing_tracks}
 
-    # Bulk update existing tracks
-    update_ops = []
+    # Update existing tracks via Beanie save()
     for data in data_list:
         sid = data.get("id", "")
-        if sid in existing_ids:
-            update_ops.append(UpdateOne(
-                {"spotify_id": sid},
-                {"$set": {
-                    "name": data.get("name", ""),
-                    "popularity": data.get("popularity", 0),
-                    "updated_at": datetime.utcnow(),
-                }},
-            ))
-
-    if update_ops:
-        collection = await Track.get_pymongo_collection()
-        await collection.bulk_write(update_ops, ordered=False)
+        if sid in existing_map:
+            t = existing_map[sid]
+            t.name = data.get("name", t.name)
+            t.popularity = data.get("popularity", t.popularity)
+            t.updated_at = datetime.utcnow()
+            await t.save()
 
     # Bulk insert new tracks
     new_tracks = []
     new_artist_data: dict[str, dict] = {}
     for data in data_list:
         sid = data.get("id", "")
-        if not sid or sid in existing_ids:
+        if not sid or sid in existing_map:
             continue
 
         artists = data.get("artists", [])
