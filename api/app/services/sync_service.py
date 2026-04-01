@@ -44,7 +44,7 @@ async def sync_recently_played(client: SpotifyClient, user_id: str) -> int:
         if candidate_keys:
             existing_docs = await ListeningHistory.find(
                 {"$or": candidate_keys}
-            ).project_model(ListeningHistory).to_list()
+            ).to_list()
             for doc in existing_docs:
                 existing_set.add((doc.track.spotify_id, doc.played_at.isoformat()))
 
