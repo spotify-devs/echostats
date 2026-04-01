@@ -33,6 +33,16 @@ async def init_db() -> None:
                 socketTimeoutMS=30000,
             )
             db = client[settings.mongo_db]
+
+            # Drop the old non-unique compound index that conflicts with the
+            # new unique index (same key pattern, different options).
+            try:
+                await db["listening_history"].drop_index(
+                    "user_id_1_track.spotify_id_1_played_at_1"
+                )
+            except Exception:
+                pass  # Index may not exist or already dropped
+
             await init_beanie(database=db, document_models=ALL_MODELS)
 
             # Create TTL index on api_logs (Beanie doesn't support TTL index syntax)
