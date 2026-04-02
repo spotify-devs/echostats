@@ -25,7 +25,8 @@ function timeAgo(dateStr: string): string {
 export function RecentFeed() {
   const { data, isLoading, refetch, isFetching } = useQuery({
     queryKey: ["recent-feed"],
-    queryFn: () => api.get<PaginatedResponse<ListeningHistoryItem>>("/api/v1/history?page=1&limit=10"),
+    queryFn: () =>
+      api.get<PaginatedResponse<ListeningHistoryItem>>("/api/v1/history?page=1&limit=10"),
     refetchInterval: 60000, // Auto-refresh every minute
   });
 

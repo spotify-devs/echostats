@@ -184,6 +184,8 @@ export interface AuthStatus {
   user?: {
     display_name?: string;
     image_url?: string;
+    spotify_id?: string;
+    product?: string;
   };
 }
 
@@ -350,17 +352,22 @@ export interface RechartsTooltipProps {
 // Rollup status
 
 export interface RollupStatus {
-  last_rollup_at: string | null;
-  next_rollup_at: string | null;
-  status: string;
+  rollup_days: number;
+  history_days: number;
+  is_building: boolean;
+  started_at: string | null;
+  last_built_at: string | null;
+  items_processed: number;
 }
 
 // Sync job stats
 
 export interface SyncJobStats {
-  total_syncs: number;
-  successful_syncs: number;
-  failed_syncs: number;
+  total_jobs: number;
+  completed: number;
+  failed: number;
+  running: number;
+  total_items_synced: number;
   last_sync_at: string | null;
   avg_duration_ms: number;
 }

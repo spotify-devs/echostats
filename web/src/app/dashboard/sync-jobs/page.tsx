@@ -19,8 +19,19 @@ import { useEffect, useState } from "react";
 import { StaggerContainer, StaggerItem } from "@/components/ui/animations";
 import { CardSkeleton } from "@/components/ui/loading-skeleton";
 import { api } from "@/lib/api";
+import type {
+  LucideIcon,
+  PaginatedResponse,
+  RollupStatus,
+  SyncJob,
+  SyncJobStats,
+  SyncStep,
+} from "@/lib/types";
 
-const STATUS_CONFIG: Record<string, { icon: any; color: string; bg: string; label: string }> = {
+const STATUS_CONFIG: Record<
+  string,
+  { icon: LucideIcon; color: string; bg: string; label: string }
+> = {
   completed: {
     icon: CheckCircle,
     color: "text-emerald-400",
@@ -119,7 +130,7 @@ export default function SyncJobsPage() {
 
   const { data: stats, isLoading: loadingStats } = useQuery({
     queryKey: ["sync-stats"],
-    queryFn: () => api.get<any>("/api/v1/sync-jobs/stats"),
+    queryFn: () => api.get<SyncJobStats>("/api/v1/sync-jobs/stats"),
     refetchInterval: 10000,
   });
 
@@ -128,13 +139,13 @@ export default function SyncJobsPage() {
     queryFn: () => {
       let url = `/api/v1/sync-jobs?page=${page}&limit=10`;
       if (statusFilter !== "all") url += `&status=${statusFilter}`;
-      return api.get<any>(url);
+      return api.get<PaginatedResponse<SyncJob>>(url);
     },
     refetchInterval: 5000,
   });
 
   const syncMutation = useMutation({
-    mutationFn: () => api.post<any>("/api/v1/sync-jobs/trigger"),
+    mutationFn: () => api.post<SyncJob>("/api/v1/sync-jobs/trigger"),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["sync-jobs"] });
       queryClient.invalidateQueries({ queryKey: ["sync-stats"] });
@@ -143,7 +154,7 @@ export default function SyncJobsPage() {
 
   const { data: rollupStatus } = useQuery({
     queryKey: ["rollup-status"],
-    queryFn: () => api.get<any>("/api/v1/analytics/rollup-status"),
+    queryFn: () => api.get<RollupStatus>("/api/v1/analytics/rollup-status"),
     refetchInterval: 10000,
   });
 
@@ -439,7 +450,7 @@ export default function SyncJobsPage() {
         </div>
       ) : items.length > 0 ? (
         <StaggerContainer className="space-y-3">
-          {items.map((job: any) => {
+          {items.map((job: SyncJob) => {
             const cfg = STATUS_CONFIG[job.status] || STATUS_CONFIG.pending;
             const StatusIcon = cfg.icon;
             return (
@@ -514,7 +525,7 @@ export default function SyncJobsPage() {
                       {expandedJob === job.id && (
                         <div className="mt-3 pt-3 border-t border-current/[0.08] space-y-2">
                           {job.steps && job.steps.length > 0 ? (
-                            job.steps.map((step: any, idx: number) => {
+                            job.steps.map((step: SyncStep, idx: number) => {
                               const stepOk = step.status === "completed";
                               return (
                                 <div

@@ -14,10 +14,11 @@ import {
   Users,
 } from "lucide-react";
 import { api } from "@/lib/api";
+import type { AnalyticsOverview, LucideIcon } from "@/lib/types";
 
 interface Achievement {
   id: string;
-  icon: any;
+  icon: LucideIcon;
   title: string;
   description: string;
   threshold: number;
@@ -29,7 +30,7 @@ interface Achievement {
 export default function AchievementsPage() {
   const { data } = useQuery({
     queryKey: ["analytics-overview", "all_time"],
-    queryFn: () => api.get<any>("/api/v1/analytics/overview?period=all_time"),
+    queryFn: () => api.get<AnalyticsOverview>("/api/v1/analytics/overview?period=all_time"),
   });
 
   const totalPlays = data?.total_tracks_played || 0;

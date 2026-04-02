@@ -1,6 +1,5 @@
 "use client";
 
-import type { LucideIcon } from "@/lib/types";
 import {
   Activity,
   BarChart3,
@@ -48,6 +47,7 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import type { LucideIcon } from "@/lib/types";
 
 interface NavSection {
   title: string;

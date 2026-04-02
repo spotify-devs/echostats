@@ -4,6 +4,14 @@ import { CheckCircle, Download, FileJson, FileSpreadsheet, Loader2 } from "lucid
 import { useState } from "react";
 import { api } from "@/lib/api";
 import { exportToCSV } from "@/lib/export";
+import type {
+  AnalyticsOverview,
+  GenreDistributionItem,
+  GenreDistributionResponse,
+  ListeningHistoryItem,
+  PaginatedResponse,
+  TopItem,
+} from "@/lib/types";
 
 const EXPORT_TYPES = [
   {
@@ -38,7 +46,7 @@ export default function ExportPage() {
     setSelectedTypes((prev) => (prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]));
   };
 
-  const downloadJson = (data: any, filename: string) => {
+  const downloadJson = (data: unknown, filename: string) => {
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -54,20 +62,24 @@ export default function ExportPage() {
 
     for (const type of selectedTypes) {
       try {
-        let data: any;
+        let data: unknown;
         switch (type) {
           case "history":
-            data = await api.get<any>("/api/v1/history?page=1&limit=1000");
+            data = await api.get<PaginatedResponse<ListeningHistoryItem>>(
+              "/api/v1/history?page=1&limit=1000",
+            );
             if (format === "csv") {
               exportToCSV(
-                (data.items || []).map((i: any) => ({
-                  track: i.track?.name,
-                  artist: i.track?.artist_name,
-                  album: i.track?.album_name,
-                  played_at: i.played_at,
-                  duration_ms: i.track?.duration_ms,
-                  source: i.source,
-                })),
+                ((data as PaginatedResponse<ListeningHistoryItem>).items || []).map(
+                  (i: ListeningHistoryItem) => ({
+                    track: i.track?.name,
+                    artist: i.track?.artist_name,
+                    album: i.track?.album_name,
+                    played_at: i.played_at,
+                    duration_ms: i.track?.duration_ms,
+                    source: i.source,
+                  }),
+                ),
                 [
                   { key: "track", header: "Track" },
                   { key: "artist", header: "Artist" },
@@ -79,14 +91,19 @@ export default function ExportPage() {
                 "echostats-history",
               );
             } else {
-              downloadJson(data.items, "echostats-history");
+              downloadJson(
+                (data as PaginatedResponse<ListeningHistoryItem>).items,
+                "echostats-history",
+              );
             }
             break;
           case "top-tracks":
-            data = await api.get<any>("/api/v1/tracks/top?period=all_time&limit=50");
+            data = await api.get<PaginatedResponse<TopItem>>(
+              "/api/v1/tracks/top?period=all_time&limit=50",
+            );
             if (format === "csv") {
               exportToCSV(
-                (data.items || []).map((i: any) => ({
+                ((data as PaginatedResponse<TopItem>).items || []).map((i: TopItem) => ({
                   rank: i.rank,
                   name: i.name,
                   plays: i.play_count,
@@ -101,14 +118,16 @@ export default function ExportPage() {
                 "echostats-top-tracks",
               );
             } else {
-              downloadJson(data.items, "echostats-top-tracks");
+              downloadJson((data as PaginatedResponse<TopItem>).items, "echostats-top-tracks");
             }
             break;
           case "top-artists":
-            data = await api.get<any>("/api/v1/artists/top?period=all_time&limit=50");
+            data = await api.get<PaginatedResponse<TopItem>>(
+              "/api/v1/artists/top?period=all_time&limit=50",
+            );
             if (format === "csv") {
               exportToCSV(
-                (data.items || []).map((i: any) => ({
+                ((data as PaginatedResponse<TopItem>).items || []).map((i: TopItem) => ({
                   rank: i.rank,
                   name: i.name,
                   plays: i.play_count,
@@ -123,14 +142,18 @@ export default function ExportPage() {
                 "echostats-top-artists",
               );
             } else {
-              downloadJson(data.items, "echostats-top-artists");
+              downloadJson((data as PaginatedResponse<TopItem>).items, "echostats-top-artists");
             }
             break;
           case "genres":
-            data = await api.get<any>("/api/v1/genres/distribution?period=all_time");
+            data = await api.get<GenreDistributionResponse>(
+              "/api/v1/genres/distribution?period=all_time",
+            );
             if (format === "csv") {
               exportToCSV(
-                (data.genres || []).map((g: any) => ({ name: g.name, plays: g.play_count })),
+                ((data as GenreDistributionResponse).genres || []).map(
+                  (g: GenreDistributionItem) => ({ name: g.name, plays: g.play_count }),
+                ),
                 [
                   { key: "name", header: "Genre" },
                   { key: "plays", header: "Play Count" },
@@ -138,11 +161,11 @@ export default function ExportPage() {
                 "echostats-genres",
               );
             } else {
-              downloadJson(data.genres, "echostats-genres");
+              downloadJson((data as GenreDistributionResponse).genres, "echostats-genres");
             }
             break;
           case "analytics":
-            data = await api.get<any>("/api/v1/analytics/overview?period=all_time");
+            data = await api.get<AnalyticsOverview>("/api/v1/analytics/overview?period=all_time");
             downloadJson(data, "echostats-analytics");
             break;
         }

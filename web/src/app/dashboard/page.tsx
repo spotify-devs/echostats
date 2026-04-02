@@ -18,7 +18,13 @@ import { MetricCard } from "@/components/ui/metric-card";
 import { DEFAULT_PERIOD, TimeRangeSelector } from "@/components/ui/time-range-selector";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { api } from "@/lib/api";
-import type { AnalyticsOverview, GenrePlay, HourlyDistribution, ArtistPlay, TrackPlay } from "@/lib/types";
+import type {
+  AnalyticsOverview,
+  ArtistPlay,
+  GenrePlay,
+  HourlyDistribution,
+  TrackPlay,
+} from "@/lib/types";
 
 function formatDuration(ms: number): string {
   const hours = Math.floor(ms / 3600000);

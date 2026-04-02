@@ -6,7 +6,7 @@ import Image from "next/image";
 import { useState } from "react";
 import { ListSkeleton } from "@/components/ui/loading-skeleton";
 import { api } from "@/lib/api";
-import type { RecommendationTrack, RecommendationsResponse } from "@/lib/types";
+import type { RecommendationsResponse, RecommendationTrack } from "@/lib/types";
 
 type SeedType = "mixed" | "artists" | "tracks" | "genres";
 
@@ -21,7 +21,8 @@ export default function RecommendationsPage() {
 
   const { data, isLoading, refetch, isFetching } = useQuery({
     queryKey: ["recommendations", seedType],
-    queryFn: () => api.get<RecommendationsResponse>(`/api/v1/recommendations?limit=20&seed_type=${seedType}`),
+    queryFn: () =>
+      api.get<RecommendationsResponse>(`/api/v1/recommendations?limit=20&seed_type=${seedType}`),
     retry: false,
   });
 

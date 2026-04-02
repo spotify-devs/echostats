@@ -10,7 +10,7 @@ import {
 } from "recharts";
 import type { RechartsTooltipProps } from "@/lib/types";
 
-const COLORS= [
+const COLORS = [
   "#a855f7",
   "#ec4899",
   "#06b6d4",

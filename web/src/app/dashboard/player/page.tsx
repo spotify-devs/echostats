@@ -19,7 +19,13 @@ import {
 import Image from "next/image";
 import { ChartSkeleton } from "@/components/ui/loading-skeleton";
 import { api } from "@/lib/api";
-import type { LucideIcon, NowPlayingResponse, PlayerDevice, QueueTrack, QueueResponse } from "@/lib/types";
+import type {
+  LucideIcon,
+  NowPlayingResponse,
+  PlayerDevice,
+  QueueResponse,
+  QueueTrack,
+} from "@/lib/types";
 
 const DEVICE_ICONS: Record<string, LucideIcon> = {
   Computer: Monitor,

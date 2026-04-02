@@ -64,7 +64,9 @@ export default function PlaylistGeneratorPage() {
     mutationFn: async () => {
       // In production, this would call the recommendations API
       // For now, use top tracks as seed data
-      const data = await api.get<{ items: TopItem[] }>("/api/v1/tracks/top?period=all_time&limit=50");
+      const data = await api.get<{ items: TopItem[] }>(
+        "/api/v1/tracks/top?period=all_time&limit=50",
+      );
       const tracks = data?.items || [];
       // Shuffle and take requested count
       const shuffled = [...tracks].sort(() => Math.random() - 0.5);

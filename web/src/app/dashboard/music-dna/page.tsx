@@ -46,13 +46,19 @@ export default function MusicDnaPage() {
 
   const { data, isLoading } = useQuery({
     queryKey: ["genre-distribution-dna", period],
-    queryFn: () => api.get<GenreDistributionResponse>(`/api/v1/genres/distribution?period=${period}`),
+    queryFn: () =>
+      api.get<GenreDistributionResponse>(`/api/v1/genres/distribution?period=${period}`),
   });
 
   const genres = data?.genres || [];
-  const totalPlays = genres.reduce((sum: number, g: GenreDistributionItem) => sum + (g.play_count || 0), 0);
+  const totalPlays = genres.reduce(
+    (sum: number, g: GenreDistributionItem) => sum + (g.play_count || 0),
+    0,
+  );
 
-  const pieData = genres.slice(0, 8).map((g: GenreDistributionItem) => ({ name: g.name, value: g.play_count }));
+  const pieData = genres
+    .slice(0, 8)
+    .map((g: GenreDistributionItem) => ({ name: g.name, value: g.play_count }));
   const barData = genres.slice(0, 15).map((g: GenreDistributionItem) => ({
     name: g.name.length > 12 ? `${g.name.slice(0, 12)}…` : g.name,
     plays: g.play_count,

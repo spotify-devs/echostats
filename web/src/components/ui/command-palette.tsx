@@ -1,6 +1,5 @@
 "use client";
 
-import type { LucideIcon } from "@/lib/types";
 import {
   Activity,
   ArrowRight,
@@ -39,6 +38,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { LucideIcon } from "@/lib/types";
 
 interface CommandItem {
   id: string;

@@ -6,18 +6,22 @@ import Image from "next/image";
 import { ArtistMonogram } from "@/components/music/artist-monogram";
 import { ListSkeleton } from "@/components/ui/loading-skeleton";
 import { api } from "@/lib/api";
-import type { LibraryArtist, LibraryAlbum } from "@/lib/types";
+import type { LibraryAlbum, LibraryArtist } from "@/lib/types";
 
 export default function LibraryPage() {
   const { data: followedArtists, isLoading: loadingArtists } = useQuery({
     queryKey: ["library-followed-artists"],
-    queryFn: () => api.get<{ items: LibraryArtist[]; total: number }>("/api/v1/library/followed-artists?limit=50"),
+    queryFn: () =>
+      api.get<{ items: LibraryArtist[]; total: number }>(
+        "/api/v1/library/followed-artists?limit=50",
+      ),
     retry: false,
   });
 
   const { data: savedAlbums, isLoading: loadingAlbums } = useQuery({
     queryKey: ["library-saved-albums"],
-    queryFn: () => api.get<{ items: LibraryAlbum[]; total: number }>("/api/v1/library/saved-albums?limit=50"),
+    queryFn: () =>
+      api.get<{ items: LibraryAlbum[]; total: number }>("/api/v1/library/saved-albums?limit=50"),
     retry: false,
   });
 

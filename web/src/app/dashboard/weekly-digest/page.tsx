@@ -19,6 +19,7 @@ import { BarChart } from "@/components/charts/bar-chart";
 import { ArtistMonogram } from "@/components/music/artist-monogram";
 import { CardSkeleton, ChartSkeleton } from "@/components/ui/loading-skeleton";
 import { api } from "@/lib/api";
+import type { AnalyticsOverview, ArtistPlay, DailyDistribution, TrackPlay } from "@/lib/types";
 
 function Trend({ current, previous }: { current: number; previous: number }) {
   if (previous === 0) return <span className="text-theme-tertiary text-xs">—</span>;
@@ -47,15 +48,15 @@ function Trend({ current, previous }: { current: number; previous: number }) {
 export default function WeeklyDigestPage() {
   const { data: thisWeek, isLoading } = useQuery({
     queryKey: ["analytics-overview", "week"],
-    queryFn: () => api.get<any>("/api/v1/analytics/overview?period=week"),
+    queryFn: () => api.get<AnalyticsOverview>("/api/v1/analytics/overview?period=week"),
   });
 
   const { data: lastMonth } = useQuery({
     queryKey: ["analytics-overview", "month"],
-    queryFn: () => api.get<any>("/api/v1/analytics/overview?period=month"),
+    queryFn: () => api.get<AnalyticsOverview>("/api/v1/analytics/overview?period=month"),
   });
 
-  const dailyData = (thisWeek?.daily_distribution || []).map((d: any) => ({
+  const dailyData = (thisWeek?.daily_distribution || []).map((d: DailyDistribution) => ({
     day: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][d.day] || "",
     plays: d.count,
     hours: Math.round((d.total_ms / 3600000) * 10) / 10,
@@ -208,7 +209,7 @@ export default function WeeklyDigestPage() {
                 <Star className="w-4 h-4 text-accent-amber" /> Top 5 Tracks
               </h3>
               <div className="space-y-2">
-                {(thisWeek?.top_tracks || []).slice(0, 5).map((t: any, i: number) => (
+                {(thisWeek?.top_tracks || []).slice(0, 5).map((t: TrackPlay, i: number) => (
                   <div key={i} className="flex items-center gap-2 text-sm">
                     <span className="w-5 text-center text-accent-dynamic font-bold text-xs">
                       {i + 1}
@@ -226,7 +227,7 @@ export default function WeeklyDigestPage() {
                 <Users className="w-4 h-4 text-spotify-green" /> Top 5 Artists
               </h3>
               <div className="space-y-2">
-                {(thisWeek?.top_artists || []).slice(0, 5).map((a: any, i: number) => (
+                {(thisWeek?.top_artists || []).slice(0, 5).map((a: ArtistPlay, i: number) => (
                   <div key={i} className="flex items-center gap-2 text-sm">
                     <span className="w-5 text-center text-spotify-green font-bold text-xs">
                       {i + 1}

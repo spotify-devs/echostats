@@ -6,11 +6,12 @@ import Image from "next/image";
 import { ArtistMonogram } from "@/components/music/artist-monogram";
 import { ChartSkeleton } from "@/components/ui/loading-skeleton";
 import { api } from "@/lib/api";
+import type { AnalyticsOverview } from "@/lib/types";
 
 export default function WrappedPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["analytics-overview", "all_time"],
-    queryFn: () => api.get<any>("/api/v1/analytics/overview?period=all_time"),
+    queryFn: () => api.get<AnalyticsOverview>("/api/v1/analytics/overview?period=all_time"),
   });
 
   const topArtist = data?.top_artists?.[0];

@@ -17,6 +17,7 @@ import { useState } from "react";
 import { BarChart } from "@/components/charts/bar-chart";
 import { CardSkeleton } from "@/components/ui/loading-skeleton";
 import { api } from "@/lib/api";
+import type { ApiLogEntry, ApiLogStats, PaginatedResponse } from "@/lib/types";
 
 export default function ApiLogsPage() {
   const [page, setPage] = useState(1);
@@ -25,7 +26,7 @@ export default function ApiLogsPage() {
 
   const { data: stats, isLoading: loadingStats } = useQuery({
     queryKey: ["api-log-stats"],
-    queryFn: () => api.get<any>("/api/v1/api-logs/stats"),
+    queryFn: () => api.get<ApiLogStats>("/api/v1/api-logs/stats"),
     refetchInterval: 30000,
   });
 
@@ -43,7 +44,7 @@ export default function ApiLogsPage() {
       if (statusFilter === "success") url += "&status_max=299";
       if (statusFilter === "rate-limited") url += "&status_min=429&status_max=429";
       if (methodFilter !== "all") url += `&method=${methodFilter}`;
-      return api.get<any>(url);
+      return api.get<PaginatedResponse<ApiLogEntry>>(url);
     },
     refetchInterval: 15000,
   });
@@ -73,10 +74,12 @@ export default function ApiLogsPage() {
   };
 
   // Chart data for top endpoints
-  const endpointBarData = (stats?.top_endpoints || []).slice(0, 8).map((ep: any) => ({
-    name: ep.endpoint.replace("GET ", "").replace("POST ", "").slice(0, 25),
-    calls: ep.count,
-  }));
+  const endpointBarData = (stats?.top_endpoints || [])
+    .slice(0, 8)
+    .map((ep: { endpoint: string; count: number }) => ({
+      name: ep.endpoint.replace("GET ", "").replace("POST ", "").slice(0, 25),
+      calls: ep.count,
+    }));
 
   return (
     <div className="space-y-6">
@@ -286,7 +289,7 @@ export default function ApiLogsPage() {
                 </thead>
                 <tbody>
                   {items.length > 0 ? (
-                    items.map((log: any, i: number) => (
+                    items.map((log: ApiLogEntry, i: number) => (
                       <tr
                         key={log.id || i}
                         className="border-b border-current/[0.08] hover:bg-current/[0.03] transition-colors"

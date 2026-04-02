@@ -28,8 +28,12 @@ export default function GenresPage() {
   });
 
   const genres = data?.genres || [];
-  const pieData = genres.slice(0, 10).map((g: GenreDistributionItem) => ({ name: g.name, value: g.play_count }));
-  const barData = genres.slice(0, 15).map((g: GenreDistributionItem) => ({ name: g.name, plays: g.play_count }));
+  const pieData = genres
+    .slice(0, 10)
+    .map((g: GenreDistributionItem) => ({ name: g.name, value: g.play_count }));
+  const barData = genres
+    .slice(0, 15)
+    .map((g: GenreDistributionItem) => ({ name: g.name, plays: g.play_count }));
 
   return (
     <div className="space-y-6">

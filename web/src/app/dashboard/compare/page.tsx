@@ -5,6 +5,7 @@ import { GitCompare, Minus, TrendingDown, TrendingUp } from "lucide-react";
 import { useState } from "react";
 import { ChartSkeleton } from "@/components/ui/loading-skeleton";
 import { api } from "@/lib/api";
+import type { AnalyticsOverview } from "@/lib/types";
 
 const PERIODS = [
   { value: "week", label: "This Week" },
@@ -62,12 +63,12 @@ export default function ComparePage() {
 
   const { data: dataA, isLoading: loadingA } = useQuery({
     queryKey: ["analytics-overview", periodA],
-    queryFn: () => api.get<any>(`/api/v1/analytics/overview?period=${periodA}`),
+    queryFn: () => api.get<AnalyticsOverview>(`/api/v1/analytics/overview?period=${periodA}`),
   });
 
   const { data: dataB, isLoading: loadingB } = useQuery({
     queryKey: ["analytics-overview", periodB],
-    queryFn: () => api.get<any>(`/api/v1/analytics/overview?period=${periodB}`),
+    queryFn: () => api.get<AnalyticsOverview>(`/api/v1/analytics/overview?period=${periodB}`),
   });
 
   const isLoading = loadingA || loadingB;
