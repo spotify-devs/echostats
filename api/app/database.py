@@ -91,12 +91,13 @@ async def init_db() -> None:
 
             # Deduplicate listening_history before Beanie tries to create
             # the unique index — otherwise index build fails on dirty data.
+            dedup_removed = 0
             try:
-                removed = await _deduplicate_listening_history(db)
-                if removed:
+                dedup_removed = await _deduplicate_listening_history(db)
+                if dedup_removed:
                     logger.info(
                         "Deduplicated listening_history on startup",
-                        duplicates_removed=removed,
+                        duplicates_removed=dedup_removed,
                     )
             except Exception as dedup_err:
                 logger.warning(
@@ -105,6 +106,27 @@ async def init_db() -> None:
                 )
 
             await init_beanie(database=db, document_models=ALL_MODELS)
+
+            # Rebuild rollups if duplicates were removed so dashboard
+            # stats reflect the cleaned data.
+            if dedup_removed:
+                try:
+                    from app.models.user import User
+                    from app.services.rollup_service import build_rollups
+
+                    users = await User.find_all().to_list()
+                    for user in users:
+                        days = await build_rollups(str(user.id))
+                        logger.info(
+                            "Rebuilt rollups after dedup",
+                            user_id=str(user.id),
+                            days=days,
+                        )
+                except Exception as rollup_err:
+                    logger.warning(
+                        "Rollup rebuild after dedup failed",
+                        error=str(rollup_err)[:200],
+                    )
 
             # Create TTL index on api_logs (Beanie doesn't support TTL index syntax)
             try:
