@@ -219,3 +219,11 @@ pdb:
   web:
     enabled: false
     minAvailable: 1
+
+# MongoDB Backup CronJob
+backup:
+  enabled: false
+  schedule: "0 2 * * *"  # Daily at 2 AM UTC
+  image: "mongo:7"
+  retentionDays: 7
+  pvcName: ""  # Defaults to {fullname}-backup

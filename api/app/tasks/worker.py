@@ -357,3 +357,6 @@ class WorkerSettings:
     ]
     max_jobs = 5
     job_timeout = 600  # 10 minutes (rollup builds can be large)
+    max_tries = 3  # Retry failed jobs up to 3 times
+    retry_jobs = True
+    health_check_interval = 30  # Seconds between health checks

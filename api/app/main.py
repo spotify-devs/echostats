@@ -44,6 +44,10 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     await init_db()
     logger.info("Database connected")
     yield
+    # Graceful shutdown: allow in-flight requests to drain
+    logger.info("Shutting down EchoStats API — draining requests")
+    import asyncio
+    await asyncio.sleep(2)  # Brief grace period for in-flight requests
     await close_db()
     logger.info("EchoStats API shut down")
 
