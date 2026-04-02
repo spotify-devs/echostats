@@ -39,7 +39,8 @@ async def _deduplicate_listening_history(db: Any) -> int:
         {"$match": {"count": {"$gt": 1}}},
     ]
 
-    dup_groups = await coll.aggregate(pipeline, allowDiskUse=True).to_list()
+    cursor = await coll.aggregate(pipeline, allowDiskUse=True)
+    dup_groups = await cursor.to_list()
     if not dup_groups:
         return 0
 
