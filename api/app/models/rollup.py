@@ -29,8 +29,8 @@ class TrackPlayEntry(BaseModel):
 class DailyRollup(Document):
     """Pre-aggregated listening stats for one user-day."""
 
-    user_id: str = Field(index=True)
-    date: str = Field(index=True)  # "YYYY-MM-DD"
+    user_id: str = Field(index=True)  # type: ignore[call-overload]
+    date: str = Field(index=True)  # type: ignore[call-overload]
     day_of_week: int = 0  # 0=Mon..6=Sun (Python convention)
 
     total_plays: int = 0

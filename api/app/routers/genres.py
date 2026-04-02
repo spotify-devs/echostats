@@ -1,6 +1,6 @@
 """Genre analytics API endpoints."""
 
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, Query
 
@@ -15,7 +15,7 @@ router = APIRouter()
 async def get_genre_distribution(
     user: Annotated[User, Depends(get_current_user)],
     period: str = Query("all_time", pattern="^(week|month|quarter|year|all_time)$"),
-) -> dict:
+) -> dict[str, Any]:
     """Get genre distribution for a time period."""
     snapshot = await get_or_compute_snapshot(str(user.id), period)
 

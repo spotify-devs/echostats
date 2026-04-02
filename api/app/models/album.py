@@ -21,9 +21,7 @@ class AlbumImage(BaseModel):
 
 class Album(Document):
     """A Spotify album with metadata."""
-    spotify_id: str = Field(index=True, unique=True)
-    name: str
-    album_type: str = ""  # "album", "single", "compilation"
+    spotify_id: str = Field(index=True, unique=True)  # type: ignore[call-overload]
     artists: list[AlbumArtistRef] = []
     images: list[AlbumImage] = []
     release_date: str = ""

@@ -25,8 +25,8 @@ class PlaylistImage(BaseModel):
 
 class Playlist(Document):
     """A Spotify playlist (user-owned or followed)."""
-    spotify_id: str = Field(index=True)
-    user_id: str = Field(index=True)
+    spotify_id: str = Field(index=True)  # type: ignore[call-overload]
+    user_id: str = Field(index=True)  # type: ignore[call-overload]
     name: str
     description: str = ""
     public: bool = True

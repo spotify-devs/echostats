@@ -2,6 +2,7 @@
 
 import secrets
 from datetime import UTC, datetime, timedelta
+from typing import Any
 from urllib.parse import urlencode
 
 import structlog
@@ -39,11 +40,11 @@ def _create_jwt(user_id: str, spotify_id: str) -> str:
         "iat": datetime.now(tz=UTC),
         "exp": datetime.now(tz=UTC) + timedelta(days=30),
     }
-    return jwt.encode(payload, settings.jwt_secret, algorithm="HS256")
+    return jwt.encode(payload, settings.jwt_secret, algorithm="HS256")  # type: ignore[no-any-return]
 
 
-@router.get("/login")
-async def login(request: Request) -> dict[str, str]:
+@router.get("/login", response_model=None)
+async def login(request: Request) -> dict[str, str] | RedirectResponse:
     """Generate Spotify authorization URL. Redirects browsers, returns JSON for JS clients."""
     state = secrets.token_urlsafe(32)
     _oauth_states[state] = datetime.now(tz=UTC)
@@ -72,14 +73,14 @@ async def login(request: Request) -> dict[str, str]:
     return {"url": auth_url, "state": state}
 
 
-@router.get("/callback")
+@router.get("/callback", response_model=None)
 async def callback(
     background_tasks: BackgroundTasks,
     response: Response,
     code: str | None = None,
     state: str | None = None,
     error: str | None = None,
-) -> dict:
+) -> dict[str, Any] | RedirectResponse:
     """Handle Spotify OAuth callback."""
     if error:
         raise HTTPException(status_code=400, detail=f"Spotify auth error: {error}")
@@ -206,7 +207,7 @@ async def refresh_token(request: Request) -> dict[str, str]:
 
 
 @router.get("/status")
-async def auth_status(request: Request, response: Response) -> dict:
+async def auth_status(request: Request, response: Response) -> dict[str, Any]:
     """Check authentication status. Auto-authenticates if single user exists."""
     user = await _get_current_user(request)
 
@@ -257,7 +258,7 @@ async def logout(response: Response) -> dict[str, str]:
 
 
 @router.get("/dev-login")
-async def dev_login(response: Response) -> dict:
+async def dev_login(response: Response) -> dict[str, Any]:
     """DEV ONLY — Log in as the demo seed user without Spotify OAuth."""
     user = await User.find_one(User.spotify_id == "demo_user")
     if not user:

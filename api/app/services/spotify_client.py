@@ -375,7 +375,7 @@ class SpotifyClient:
 
     async def start_playback(
         self, device_id: str | None = None, context_uri: str | None = None,
-        uris: list[str] | None = None, offset: dict | None = None
+        uris: list[str] | None = None, offset: dict[str, Any] | None = None
     ) -> dict[str, Any]:
         """Start or resume playback."""
         body: dict[str, Any] = {}
@@ -503,7 +503,7 @@ async def exchange_code_for_tokens(code: str) -> dict[str, Any]:
             },
         )
         response.raise_for_status()
-        return response.json()
+        return dict(response.json())
 
 
 async def refresh_access_token(refresh_token: str) -> dict[str, Any]:
@@ -519,4 +519,4 @@ async def refresh_access_token(refresh_token: str) -> dict[str, Any]:
             },
         )
         response.raise_for_status()
-        return response.json()
+        return dict(response.json())

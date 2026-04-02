@@ -87,7 +87,7 @@ async def compute_analytics_snapshot(user_id: str, period: str = "all_time") -> 
     if date_filter:
         match_filter["date"] = date_filter
 
-    def _match() -> dict:
+    def _match() -> dict[str, Any]:
         return {"$match": copy.deepcopy(match_filter)}
 
     agg_opts: dict[str, Any] = {"allowDiskUse": True}

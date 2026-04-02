@@ -15,11 +15,7 @@ class ArtistImage(BaseModel):
 
 class Artist(Document):
     """A Spotify artist with metadata."""
-    spotify_id: str = Field(index=True, unique=True)
-    name: str
-    genres: list[str] = []
-    popularity: int = 0
-    followers: int = 0
+    spotify_id: str = Field(index=True, unique=True)  # type: ignore[call-overload]
     images: list[ArtistImage] = []
     external_url: str = ""
     fetched_at: datetime = Field(default_factory=datetime.utcnow)

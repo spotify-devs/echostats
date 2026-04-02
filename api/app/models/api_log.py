@@ -8,7 +8,7 @@ from pydantic import Field
 
 class ApiLog(Document):
     """Log of external API calls (primarily Spotify API)."""
-    user_id: str = Field(index=True, default="")
+    user_id: str = Field(index=True, default="")  # type: ignore[call-overload]
     service: str = "spotify"  # "spotify", "internal"
     method: str = ""  # "GET", "POST", etc.
     endpoint: str = ""
@@ -16,7 +16,7 @@ class ApiLog(Document):
     latency_ms: float = 0.0
     error: str = ""
     request_id: str = ""
-    timestamp: datetime = Field(default_factory=datetime.utcnow, index=True)
+    timestamp: datetime = Field(default_factory=datetime.utcnow, index=True)  # type: ignore[call-overload]
 
     class Settings:
         name = "api_logs"

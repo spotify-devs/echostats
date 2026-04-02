@@ -19,8 +19,7 @@ class SyncStep(BaseModel):
 
 class SyncJob(Document):
     """Tracks background data sync jobs."""
-    user_id: str = Field(index=True)
-    job_type: str  # "initial", "periodic", "import", "enrichment"
+    user_id: str = Field(index=True)  # type: ignore[call-overload]
     status: str = "pending"  # "pending", "running", "completed", "failed"
     started_at: datetime | None = None
     completed_at: datetime | None = None

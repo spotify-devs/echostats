@@ -1,11 +1,12 @@
 """Timeout middleware — enforces request deadlines."""
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 
 import structlog
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.types import ASGIApp
 
 logger = structlog.get_logger()
 
@@ -16,12 +17,12 @@ _SLOW_PREFIXES = ("/api/v1/sync", "/api/v1/analytics", "/api/v1/history/import")
 class TimeoutMiddleware(BaseHTTPMiddleware):
     """Abort requests that exceed a deadline."""
 
-    def __init__(self, app, default_timeout: float = 30.0, slow_timeout: float = 120.0):
+    def __init__(self, app: ASGIApp, default_timeout: float = 30.0, slow_timeout: float = 120.0) -> None:
         super().__init__(app)
         self.default_timeout = default_timeout
         self.slow_timeout = slow_timeout
 
-    async def dispatch(self, request: Request, call_next: Callable) -> Response:
+    async def dispatch(self, request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
         # Skip health/metrics
         if request.url.path in ("/api/health", "/api/health/ready", "/metrics"):
             return await call_next(request)

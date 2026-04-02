@@ -1,7 +1,7 @@
 """Sync job tracking endpoints."""
 
 from datetime import UTC, datetime
-from typing import Annotated
+from typing import Annotated, Any
 
 import structlog
 from beanie import PydanticObjectId
@@ -25,7 +25,7 @@ async def get_sync_jobs(
     limit: int = Query(20, ge=1, le=100),
     status: str | None = None,
     job_type: str | None = None,
-) -> dict:
+) -> dict[str, Any]:
     """Get paginated sync jobs for the current user."""
     query_filters = [SyncJob.user_id == str(user.id)]
 
@@ -78,7 +78,7 @@ async def get_sync_jobs(
 @router.get("/stats")
 async def get_sync_stats(
     user: Annotated[User, Depends(get_current_user)],
-) -> dict:
+) -> dict[str, Any]:
     """Get sync job statistics."""
     user_id = str(user.id)
 
@@ -131,7 +131,7 @@ async def get_sync_stats(
 async def trigger_sync(
     user: Annotated[User, Depends(get_current_user)],
     background_tasks: BackgroundTasks,
-) -> dict:
+) -> dict[str, Any]:
     """Trigger a manual data sync."""
     # Check if a sync is already running
     running = await SyncJob.find(

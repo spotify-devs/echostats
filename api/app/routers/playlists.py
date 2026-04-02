@@ -1,6 +1,6 @@
 """Playlist API endpoints."""
 
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, Query
 
@@ -16,7 +16,7 @@ async def get_playlists(
     user: Annotated[User, Depends(get_current_user)],
     page: int = Query(1, ge=1),
     limit: int = Query(50, ge=1, le=100),
-) -> dict:
+) -> dict[str, Any]:
     """Get user's playlists."""
     total = await Playlist.find(Playlist.user_id == str(user.id)).count()
     skip = (page - 1) * limit

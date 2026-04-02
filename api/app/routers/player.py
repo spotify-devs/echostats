@@ -1,6 +1,6 @@
 """Player/Playback control endpoints."""
 
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
@@ -21,7 +21,7 @@ async def _get_client(user: User) -> SpotifyClient:
 
 
 @router.get("/current")
-async def get_currently_playing(user: Annotated[User, Depends(get_current_user)]) -> dict:
+async def get_currently_playing(user: Annotated[User, Depends(get_current_user)]) -> dict[str, Any]:
     """Get currently playing track."""
     client = await _get_client(user)
     try:
@@ -54,7 +54,7 @@ async def get_currently_playing(user: Annotated[User, Depends(get_current_user)]
 
 
 @router.get("/devices")
-async def get_devices(user: Annotated[User, Depends(get_current_user)]) -> dict:
+async def get_devices(user: Annotated[User, Depends(get_current_user)]) -> dict[str, Any]:
     """Get available playback devices."""
     client = await _get_client(user)
     try:
@@ -78,7 +78,7 @@ async def get_devices(user: Annotated[User, Depends(get_current_user)]) -> dict:
 
 
 @router.get("/queue")
-async def get_queue(user: Annotated[User, Depends(get_current_user)]) -> dict:
+async def get_queue(user: Annotated[User, Depends(get_current_user)]) -> dict[str, Any]:
     """Get playback queue."""
     client = await _get_client(user)
     try:
@@ -86,7 +86,7 @@ async def get_queue(user: Annotated[User, Depends(get_current_user)]) -> dict:
         currently_playing = data.get("currently_playing")
         queue = data.get("queue", [])
 
-        def format_track(t: dict) -> dict:
+        def format_track(t: dict[str, Any]) -> dict[str, Any]:
             artists = t.get("artists", [])
             album = t.get("album", {})
             images = album.get("images", [])
@@ -116,7 +116,7 @@ class PlayRequest(BaseModel):
 
 
 @router.post("/play")
-async def play(user: Annotated[User, Depends(get_current_user)], body: PlayRequest | None = None) -> dict:
+async def play(user: Annotated[User, Depends(get_current_user)], body: PlayRequest | None = None) -> dict[str, Any]:
     """Start or resume playback."""
     client = await _get_client(user)
     try:
@@ -131,7 +131,7 @@ async def play(user: Annotated[User, Depends(get_current_user)], body: PlayReque
 
 
 @router.post("/pause")
-async def pause(user: Annotated[User, Depends(get_current_user)]) -> dict:
+async def pause(user: Annotated[User, Depends(get_current_user)]) -> dict[str, Any]:
     """Pause playback."""
     client = await _get_client(user)
     try:
@@ -142,7 +142,7 @@ async def pause(user: Annotated[User, Depends(get_current_user)]) -> dict:
 
 
 @router.post("/next")
-async def next_track(user: Annotated[User, Depends(get_current_user)]) -> dict:
+async def next_track(user: Annotated[User, Depends(get_current_user)]) -> dict[str, Any]:
     """Skip to next track."""
     client = await _get_client(user)
     try:
@@ -153,7 +153,7 @@ async def next_track(user: Annotated[User, Depends(get_current_user)]) -> dict:
 
 
 @router.post("/previous")
-async def previous_track(user: Annotated[User, Depends(get_current_user)]) -> dict:
+async def previous_track(user: Annotated[User, Depends(get_current_user)]) -> dict[str, Any]:
     """Skip to previous track."""
     client = await _get_client(user)
     try:

@@ -64,7 +64,7 @@ async def get_valid_access_token(user: User) -> str | None:
         for attempt in range(MAX_REFRESH_RETRIES):
             try:
                 token_data = await refresh_access_token(refresh_tok)
-                new_access = token_data["access_token"]
+                new_access: str = token_data["access_token"]
                 new_refresh = token_data.get("refresh_token", refresh_tok)
                 expires_in = token_data.get("expires_in", 3600)
 

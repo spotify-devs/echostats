@@ -1,6 +1,7 @@
 """ARQ background worker configuration."""
 
 from datetime import UTC, datetime, timedelta
+from typing import Any
 
 from arq import cron
 from arq.connections import RedisSettings
@@ -8,7 +9,7 @@ from arq.connections import RedisSettings
 from app.config import settings
 
 
-async def startup(ctx: dict) -> None:
+async def startup(ctx: dict[str, Any]) -> None:
     """Worker startup — initialize database and clean up stale jobs."""
     import structlog
 
@@ -25,14 +26,14 @@ async def startup(ctx: dict) -> None:
         logger.info("Cleaned up stale jobs on startup", count=cleaned)
 
 
-async def shutdown(ctx: dict) -> None:
+async def shutdown(ctx: dict[str, Any]) -> None:
     """Worker shutdown — close connections."""
     from app.database import close_db
 
     await close_db()
 
 
-async def sync_all_users(ctx: dict) -> None:
+async def sync_all_users(ctx: dict[str, Any]) -> None:
     """Periodic task: sync recently played for all users."""
     import structlog
 
@@ -163,7 +164,7 @@ async def sync_all_users(ctx: dict) -> None:
         await job.save()
 
 
-async def refresh_analytics(ctx: dict) -> None:
+async def refresh_analytics(ctx: dict[str, Any]) -> None:
     """Periodic task: update rollups and recompute analytics snapshots."""
     import structlog
 
@@ -185,7 +186,7 @@ async def refresh_analytics(ctx: dict) -> None:
             logger.error("Analytics refresh failed", user_id=str(user.id), error=str(e))
 
 
-async def build_user_rollups(ctx: dict, user_id: str, job_id: str) -> None:
+async def build_user_rollups(ctx: dict[str, Any], user_id: str, job_id: str) -> None:
     """Background task: build DailyRollup documents for a user."""
     import structlog
 
@@ -218,7 +219,7 @@ async def build_user_rollups(ctx: dict, user_id: str, job_id: str) -> None:
     await job.save()
 
 
-async def periodic_rollup_build(ctx: dict) -> None:
+async def periodic_rollup_build(ctx: dict[str, Any]) -> None:
     """Periodic task: build missing rollups for all users.
 
     Compares rollup day count vs listening history day count and rebuilds
@@ -327,7 +328,7 @@ async def _reap_stale_jobs() -> int:
     return len(stale_jobs)
 
 
-async def cleanup_stale_jobs(ctx: dict) -> None:
+async def cleanup_stale_jobs(ctx: dict[str, Any]) -> None:
     """Periodic task: reap jobs stuck in running/pending state."""
     import structlog
 

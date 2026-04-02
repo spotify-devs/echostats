@@ -3,22 +3,24 @@
 import time
 import uuid
 from collections import defaultdict
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
+from typing import Any
 
 import structlog
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.types import ASGIApp
 
 from app.config import settings
 
 logger = structlog.get_logger()
 
 # Try to set up a Redis connection pool at import time
-_redis_pool = None
+_redis_pool: Any = None
 try:
     import redis.asyncio as aioredis
 
-    _redis_pool = aioredis.from_url(settings.redis_url, decode_responses=True)
+    _redis_pool = aioredis.from_url(settings.redis_url, decode_responses=True)  # type: ignore[no-untyped-call]
 except Exception:
     logger.warning("Redis unavailable for rate limiting — falling back to in-memory")
 
@@ -26,7 +28,7 @@ except Exception:
 class RateLimitMiddleware(BaseHTTPMiddleware):
     """Rate limit requests per client IP using Redis sliding window."""
 
-    def __init__(self, app, max_requests: int = 100, window_seconds: int = 60):
+    def __init__(self, app: ASGIApp, max_requests: int = 100, window_seconds: int = 60) -> None:
         super().__init__(app)
         self.max_requests = max_requests
         self.window_seconds = window_seconds
@@ -55,12 +57,12 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             pipe.zcard(key)
             pipe.expire(key, self.window_seconds)
             results = await pipe.execute()
-            return results[2]  # ZCARD result
+            return int(results[2])  # ZCARD result
         except Exception:
             logger.warning("Redis rate-limit check failed — falling back to in-memory")
             return None
 
-    async def dispatch(self, request: Request, call_next: Callable) -> Response:
+    async def dispatch(self, request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
         # Skip health/metrics endpoints
         if request.url.path in ("/api/health", "/api/health/ready", "/metrics"):
             return await call_next(request)

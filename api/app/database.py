@@ -1,6 +1,7 @@
 """MongoDB connection management using Beanie ODM."""
 
 import asyncio
+from typing import Any
 
 import structlog
 from beanie import init_beanie
@@ -10,7 +11,7 @@ from app.config import settings
 
 logger = structlog.get_logger()
 
-client: AsyncMongoClient | None = None
+client: AsyncMongoClient[Any] | None = None
 
 MAX_RETRIES = 10
 RETRY_DELAY = 3  # seconds

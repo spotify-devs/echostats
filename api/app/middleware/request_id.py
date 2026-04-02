@@ -1,7 +1,7 @@
 """Request ID middleware — adds correlation ID to every request."""
 
 import uuid
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 
 import structlog
 from fastapi import Request, Response
@@ -13,7 +13,7 @@ logger = structlog.get_logger()
 class RequestIDMiddleware(BaseHTTPMiddleware):
     """Attach a unique request ID to every request for tracing."""
 
-    async def dispatch(self, request: Request, call_next: Callable) -> Response:
+    async def dispatch(self, request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
         request_id = request.headers.get("X-Request-ID", str(uuid.uuid4()))
         # Store on request state so handlers can access it
         request.state.request_id = request_id

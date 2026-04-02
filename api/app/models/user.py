@@ -8,8 +8,7 @@ from pydantic import Field
 
 class SpotifyTokens(Document):
     """Encrypted Spotify OAuth tokens stored per user."""
-    user_id: str = Field(index=True)
-    access_token_encrypted: str
+    user_id: str = Field(index=True)  # type: ignore[call-overload]
     refresh_token_encrypted: str
     expires_at: datetime
     scope: str = ""
@@ -20,9 +19,7 @@ class SpotifyTokens(Document):
 
 class User(Document):
     """EchoStats user linked to a Spotify account."""
-    spotify_id: str = Field(index=True, unique=True)
-    display_name: str = ""
-    email: str = ""
+    spotify_id: str = Field(index=True, unique=True)  # type: ignore[call-overload]
     image_url: str = ""
     country: str = ""
     product: str = ""  # "premium", "free", etc.
