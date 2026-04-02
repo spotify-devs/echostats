@@ -37,5 +37,6 @@ class ListeningHistory(Document):
             IndexModel(
                 [("user_id", 1), ("track.spotify_id", 1), ("played_at", 1)],
                 unique=True,
+                name="uniq_user_track_played_at",
             ),
         ]
