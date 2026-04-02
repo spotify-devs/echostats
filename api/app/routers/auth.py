@@ -158,7 +158,7 @@ async def callback(
         key="session",
         value=session_token,
         httponly=True,
-        secure=False,  # Set True in production with HTTPS
+        secure=settings.cookie_secure,
         samesite="lax",
         max_age=30 * 24 * 3600,  # 30 days
         path="/",

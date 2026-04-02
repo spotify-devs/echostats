@@ -1,6 +1,6 @@
 """Application configuration with Pydantic Settings."""
 
-from pydantic import Field
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -21,7 +21,7 @@ class Settings(BaseSettings):
 
     # MongoDB
     mongo_uri: str = Field(
-        default="mongodb://echostats:changeme@localhost:27017/echostats?authSource=admin",
+        default="mongodb://localhost:27017/echostats",
         description="MongoDB connection URI",
     )
     mongo_db: str = Field(default="echostats", description="MongoDB database name")
@@ -41,6 +41,10 @@ class Settings(BaseSettings):
         default="http://localhost:3000",
         description="Comma-separated CORS origins",
     )
+    cookie_secure: bool = Field(
+        default=False,
+        description="Set True in production (HTTPS). Controls Secure flag on session cookie.",
+    )
 
     # Security
     jwt_secret: str = Field(description="JWT signing secret")
@@ -53,6 +57,21 @@ class Settings(BaseSettings):
     analytics_refresh_hours: int = Field(
         default=6, description="Analytics recomputation interval in hours"
     )
+
+    @model_validator(mode="after")
+    def _validate_secrets(self) -> "Settings":
+        if len(self.encryption_key) != 64:
+            msg = "ENCRYPTION_KEY must be exactly 64 hex characters"
+            raise ValueError(msg)
+        try:
+            bytes.fromhex(self.encryption_key)
+        except ValueError:
+            msg = "ENCRYPTION_KEY must be valid hexadecimal"
+            raise ValueError(msg) from None
+        if len(self.jwt_secret) < 16:
+            msg = "JWT_SECRET must be at least 16 characters"
+            raise ValueError(msg)
+        return self
 
     @property
     def cors_origin_list(self) -> list[str]:

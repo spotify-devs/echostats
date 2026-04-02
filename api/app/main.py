@@ -4,14 +4,18 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 import structlog
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
+from fastapi.responses import JSONResponse
 from prometheus_fastapi_instrumentator import Instrumentator
 
 from app.config import settings
 from app.database import close_db, init_db
 from app.middleware.rate_limit import RateLimitMiddleware
+from app.middleware.request_id import RequestIDMiddleware
 from app.middleware.security import RequestLoggingMiddleware, SecurityHeadersMiddleware
+from app.middleware.timeout import TimeoutMiddleware
 from app.routers import (
     albums,
     analytics,
@@ -54,6 +58,32 @@ app = FastAPI(
     openapi_url="/api/openapi.json",
 )
 
+
+# ── Global exception handler ────────────────────────────────────────────────
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    """Catch-all for unhandled exceptions — never leak stack traces."""
+    request_id = getattr(request.state, "request_id", "unknown")
+    logger.exception(
+        "Unhandled exception",
+        path=request.url.path,
+        method=request.method,
+        request_id=request_id,
+        error=str(exc),
+    )
+    return JSONResponse(
+        status_code=500,
+        content={
+            "detail": "Internal server error",
+            "request_id": request_id,
+        },
+    )
+
+
+# ── Middleware (order matters: first added = outermost) ──────────────────────
+
 # CORS
 app.add_middleware(
     CORSMiddleware,
@@ -63,10 +93,23 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Security middleware
+# Compression
+app.add_middleware(GZipMiddleware, minimum_size=1000)
+
+# Security headers
 app.add_middleware(SecurityHeadersMiddleware)
+
+# Request logging
 app.add_middleware(RequestLoggingMiddleware)
+
+# Rate limiting
 app.add_middleware(RateLimitMiddleware, max_requests=100, window_seconds=60)
+
+# Request timeout
+app.add_middleware(TimeoutMiddleware, default_timeout=30.0, slow_timeout=120.0)
+
+# Request ID (outermost — runs first)
+app.add_middleware(RequestIDMiddleware)
 
 # Prometheus metrics
 Instrumentator().instrument(app).expose(app, endpoint="/metrics")
