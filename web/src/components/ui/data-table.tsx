@@ -23,7 +23,7 @@ import { useState } from "react";
 
 interface DataTableProps<T> {
   data: T[];
-  columns: ColumnDef<T, any>[];
+  columns: ColumnDef<T, unknown>[];
   pageSize?: number;
   searchable?: boolean;
   searchPlaceholder?: string;

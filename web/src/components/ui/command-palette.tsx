@@ -1,5 +1,6 @@
 "use client";
 
+import type { LucideIcon } from "@/lib/types";
 import {
   Activity,
   ArrowRight,
@@ -43,7 +44,7 @@ interface CommandItem {
   id: string;
   label: string;
   section: string;
-  icon: any;
+  icon: LucideIcon;
   action: () => void;
   keywords?: string;
 }

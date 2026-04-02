@@ -7,6 +7,7 @@ import { useState } from "react";
 import { DateRangeFilter } from "@/components/ui/date-range-filter";
 import { ListSkeleton } from "@/components/ui/loading-skeleton";
 import { api } from "@/lib/api";
+import type { SpotifyPlaylist } from "@/lib/types";
 
 export default function PlaylistsPage() {
   const [startDate, setStartDate] = useState("");
@@ -14,7 +15,7 @@ export default function PlaylistsPage() {
 
   const { data, isLoading } = useQuery({
     queryKey: ["playlists", startDate, endDate],
-    queryFn: () => api.get<any>("/api/v1/playlists"),
+    queryFn: () => api.get<{ items: SpotifyPlaylist[]; total: number }>("/api/v1/playlists"),
   });
 
   return (
@@ -42,7 +43,7 @@ export default function PlaylistsPage() {
         <ListSkeleton rows={8} />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {(data?.items || []).map((playlist: any) => (
+          {(data?.items || []).map((playlist: SpotifyPlaylist) => (
             <div key={playlist.spotify_id} className="glass-card-hover p-4 space-y-3">
               <div className="relative w-full aspect-square rounded-xl overflow-hidden bg-surface-3">
                 {playlist.images?.[0]?.url ? (

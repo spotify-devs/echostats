@@ -6,8 +6,9 @@ import { BarChart } from "@/components/charts/bar-chart";
 import { RadarChart } from "@/components/charts/radar-chart";
 import { ChartSkeleton } from "@/components/ui/loading-skeleton";
 import { api } from "@/lib/api";
+import type { AnalyticsOverview, LucideIcon } from "@/lib/types";
 
-const FEATURE_INFO: Record<string, { icon: any; color: string; desc: string }> = {
+const FEATURE_INFO: Record<string, { icon: LucideIcon; color: string; desc: string }> = {
   danceability: {
     icon: Music2,
     color: "#a855f7",
@@ -43,7 +44,7 @@ const FEATURE_INFO: Record<string, { icon: any; color: string; desc: string }> =
 export default function AudioLabPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["analytics-overview", "all_time"],
-    queryFn: () => api.get<any>("/api/v1/analytics/overview?period=all_time"),
+    queryFn: () => api.get<AnalyticsOverview>("/api/v1/analytics/overview?period=all_time"),
   });
 
   const af = data?.avg_audio_features;
@@ -62,7 +63,7 @@ export default function AudioLabPage() {
   const barData = af
     ? Object.entries(FEATURE_INFO).map(([key, _info]) => ({
         name: key.charAt(0).toUpperCase() + key.slice(1),
-        value: Math.round((af[key] || 0) * 100),
+        value: Math.round((af[key as keyof typeof af] || 0) * 100),
       }))
     : [];
 
@@ -106,7 +107,7 @@ export default function AudioLabPage() {
           {/* Feature Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {Object.entries(FEATURE_INFO).map(([key, info]) => {
-              const value = af[key] || 0;
+              const value = af[key as keyof typeof af] || 0;
               const Icon = info.icon;
               return (
                 <div key={key} className="glass-card p-5 space-y-3">

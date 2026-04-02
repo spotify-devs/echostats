@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { BarChart3, CalendarDays, ChevronLeft, ChevronRight, Music, Star } from "lucide-react";
 import { useMemo, useState } from "react";
 import { api } from "@/lib/api";
+import type { AnalyticsOverview } from "@/lib/types";
 
 const MONTHS = [
   "January",
@@ -39,7 +40,7 @@ export default function CalendarPage() {
 
   const { data: analytics } = useQuery({
     queryKey: ["analytics-overview", "all_time"],
-    queryFn: () => api.get<any>("/api/v1/analytics/overview?period=all_time"),
+    queryFn: () => api.get<AnalyticsOverview>("/api/v1/analytics/overview?period=all_time"),
   });
 
   // Simulate daily play counts from analytics

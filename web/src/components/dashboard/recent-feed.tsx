@@ -5,6 +5,7 @@ import { Clock, Music, RefreshCw } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { api } from "@/lib/api";
+import type { ListeningHistoryItem, PaginatedResponse } from "@/lib/types";
 
 function timeAgo(dateStr: string): string {
   const date = new Date(dateStr);
@@ -24,7 +25,7 @@ function timeAgo(dateStr: string): string {
 export function RecentFeed() {
   const { data, isLoading, refetch, isFetching } = useQuery({
     queryKey: ["recent-feed"],
-    queryFn: () => api.get<any>("/api/v1/history?page=1&limit=10"),
+    queryFn: () => api.get<PaginatedResponse<ListeningHistoryItem>>("/api/v1/history?page=1&limit=10"),
     refetchInterval: 60000, // Auto-refresh every minute
   });
 
@@ -59,7 +60,7 @@ export function RecentFeed() {
         </div>
       ) : (
         <div className="divide-y divide-current/[0.08] max-h-[400px] overflow-y-auto">
-          {items.map((item: any, i: number) => (
+          {items.map((item: ListeningHistoryItem, i: number) => (
             <Link
               key={i}
               href={item.track?.spotify_id ? `/dashboard/tracks/${item.track.spotify_id}` : "#"}

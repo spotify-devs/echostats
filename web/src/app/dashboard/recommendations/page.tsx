@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useState } from "react";
 import { ListSkeleton } from "@/components/ui/loading-skeleton";
 import { api } from "@/lib/api";
+import type { RecommendationTrack, RecommendationsResponse } from "@/lib/types";
 
 type SeedType = "mixed" | "artists" | "tracks" | "genres";
 
@@ -20,12 +21,12 @@ export default function RecommendationsPage() {
 
   const { data, isLoading, refetch, isFetching } = useQuery({
     queryKey: ["recommendations", seedType],
-    queryFn: () => api.get<any>(`/api/v1/recommendations?limit=20&seed_type=${seedType}`),
+    queryFn: () => api.get<RecommendationsResponse>(`/api/v1/recommendations?limit=20&seed_type=${seedType}`),
     retry: false,
   });
 
   const items = data?.items || [];
-  const seedInfo = data?.seed_info || {};
+  const seedInfo = data?.seed_info;
 
   return (
     <div className="space-y-6">
@@ -37,7 +38,7 @@ export default function RecommendationsPage() {
           </h1>
           <p className="text-theme-secondary mt-1">
             Personalized tracks based on your listening
-            {seedInfo.top_artist && (
+            {seedInfo?.top_artist && (
               <span>
                 {" "}
                 · seeded from <strong>{seedInfo.top_artist}</strong>
@@ -89,7 +90,7 @@ export default function RecommendationsPage() {
       {/* Track list */}
       {items.length > 0 && (
         <div className="space-y-2">
-          {items.map((track: any, idx: number) => (
+          {items.map((track: RecommendationTrack, idx: number) => (
             <div key={track.id} className="glass-card-hover p-3 flex items-center gap-4 group">
               {/* Index */}
               <span className="w-6 text-right text-xs text-theme-tertiary font-mono">
@@ -159,10 +160,10 @@ export default function RecommendationsPage() {
       )}
 
       {/* Summary */}
-      {data?.total > 0 && (
+      {data && data.total > 0 && (
         <p className="text-center text-xs text-theme-tertiary">
           {data.total} recommendations
-          {seedInfo.top_genre && <span> · top genre: {seedInfo.top_genre}</span>}
+          {seedInfo?.top_genre && <span> · top genre: {seedInfo.top_genre}</span>}
         </p>
       )}
     </div>

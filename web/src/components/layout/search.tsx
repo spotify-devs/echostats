@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api";
+import type { TopItem } from "@/lib/types";
 
 interface SearchResult {
   type: "track" | "artist";
@@ -62,8 +63,8 @@ export function GlobalSearch() {
     try {
       // Search local database
       const [tracksRes, artistsRes] = await Promise.allSettled([
-        api.get<any>(`/api/v1/tracks/top?period=all_time&limit=50`),
-        api.get<any>(`/api/v1/artists/top?period=all_time&limit=50`),
+        api.get<{ items: TopItem[] }>(`/api/v1/tracks/top?period=all_time&limit=50`),
+        api.get<{ items: TopItem[] }>(`/api/v1/artists/top?period=all_time&limit=50`),
       ]);
 
       const searchResults: SearchResult[] = [];

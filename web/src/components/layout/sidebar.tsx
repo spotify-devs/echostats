@@ -1,5 +1,6 @@
 "use client";
 
+import type { LucideIcon } from "@/lib/types";
 import {
   Activity,
   BarChart3,
@@ -50,7 +51,7 @@ import { useState } from "react";
 
 interface NavSection {
   title: string;
-  items: { href: string; icon: any; label: string }[];
+  items: { href: string; icon: LucideIcon; label: string }[];
 }
 
 const navSections: NavSection[] = [

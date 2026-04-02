@@ -18,6 +18,7 @@ import { DateRangeFilter } from "@/components/ui/date-range-filter";
 import { CardSkeleton, ChartSkeleton } from "@/components/ui/loading-skeleton";
 import { DEFAULT_PERIOD, TimeRangeSelector } from "@/components/ui/time-range-selector";
 import { api } from "@/lib/api";
+import type { AnalyticsOverview, DailyDistribution, LucideIcon } from "@/lib/types";
 
 function StatRow({
   label,
@@ -27,7 +28,7 @@ function StatRow({
 }: {
   label: string;
   value: string | number;
-  icon: any;
+  icon: LucideIcon;
   color: string;
 }) {
   return (
@@ -56,7 +57,7 @@ export default function DeepStatsPage() {
       let url = `/api/v1/analytics/overview?period=${period}`;
       if (startDate) url += `&start_date=${startDate}`;
       if (endDate) url += `&end_date=${endDate}`;
-      return api.get<any>(url);
+      return api.get<AnalyticsOverview>(url);
     },
   });
 
@@ -79,7 +80,7 @@ export default function DeepStatsPage() {
       ).toFixed(0)
     : "0";
 
-  const dailyData = (data?.daily_distribution || []).map((d: any) => ({
+  const dailyData = (data?.daily_distribution || []).map((d: DailyDistribution) => ({
     day: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][d.day] || `Day ${d.day}`,
     hours: Math.round((d.total_ms / 3600000) * 10) / 10,
     plays: d.count,

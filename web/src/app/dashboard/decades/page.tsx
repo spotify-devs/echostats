@@ -5,6 +5,7 @@ import { Globe } from "lucide-react";
 import { BarChart } from "@/components/charts/bar-chart";
 import { ChartSkeleton } from "@/components/ui/loading-skeleton";
 import { api } from "@/lib/api";
+import type { TopItem } from "@/lib/types";
 
 const DECADE_COLORS: Record<string, string> = {
   "2020s": "#a855f7",
@@ -19,7 +20,7 @@ const DECADE_COLORS: Record<string, string> = {
 export default function DecadesPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["top-tracks-for-decades", "all_time"],
-    queryFn: () => api.get<any>("/api/v1/tracks/top?period=all_time&limit=50"),
+    queryFn: () => api.get<{ items: TopItem[] }>("/api/v1/tracks/top?period=all_time&limit=50"),
   });
 
   // We don't have release_date in the top tracks API response directly,

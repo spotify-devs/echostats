@@ -18,6 +18,7 @@ import { MetricCard } from "@/components/ui/metric-card";
 import { DEFAULT_PERIOD, TimeRangeSelector } from "@/components/ui/time-range-selector";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { api } from "@/lib/api";
+import type { AnalyticsOverview, GenrePlay, HourlyDistribution, ArtistPlay, TrackPlay } from "@/lib/types";
 
 function formatDuration(ms: number): string {
   const hours = Math.floor(ms / 3600000);
@@ -37,16 +38,16 @@ export default function DashboardPage() {
       let url = `/api/v1/analytics/overview?period=${period}`;
       if (startDate) url += `&start_date=${startDate}`;
       if (endDate) url += `&end_date=${endDate}`;
-      return api.get<any>(url);
+      return api.get<AnalyticsOverview>(url);
     },
   });
 
-  const genrePieData = (data?.top_genres || []).slice(0, 8).map((g: any) => ({
+  const genrePieData = (data?.top_genres || []).slice(0, 8).map((g: GenrePlay) => ({
     name: g.name,
-    value: g.play_count,
+    value: g.play_count ?? g.count,
   }));
 
-  const hourlyData = (data?.hourly_distribution || []).map((h: any) => ({
+  const hourlyData = (data?.hourly_distribution || []).map((h: HourlyDistribution) => ({
     hour: `${h.hour.toString().padStart(2, "0")}:00`,
     plays: h.count,
   }));
@@ -202,7 +203,7 @@ export default function DashboardPage() {
                 <h2 className="text-lg font-semibold text-theme">Top Tracks</h2>
               </div>
               <div className="divide-y divide-current/[0.08]">
-                {(data?.top_tracks || []).slice(0, 5).map((track: any, i: number) => (
+                {(data?.top_tracks || []).slice(0, 5).map((track: TrackPlay, i: number) => (
                   <TrackCard
                     key={i}
                     rank={track.rank}
@@ -224,7 +225,7 @@ export default function DashboardPage() {
                 <h2 className="text-lg font-semibold text-theme">Top Artists</h2>
               </div>
               <div className="divide-y divide-current/[0.08]">
-                {(data?.top_artists || []).slice(0, 5).map((artist: any, i: number) => (
+                {(data?.top_artists || []).slice(0, 5).map((artist: ArtistPlay, i: number) => (
                   <ArtistCard
                     key={i}
                     rank={artist.rank}

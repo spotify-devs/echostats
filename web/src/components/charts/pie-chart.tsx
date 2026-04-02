@@ -8,8 +8,9 @@ import {
   ResponsiveContainer,
   Tooltip,
 } from "recharts";
+import type { RechartsTooltipProps } from "@/lib/types";
 
-const COLORS = [
+const COLORS= [
   "#a855f7",
   "#ec4899",
   "#06b6d4",
@@ -34,7 +35,7 @@ interface PieChartProps {
   showLegend?: boolean;
 }
 
-const CustomTooltip = ({ active, payload }: any) => {
+const CustomTooltip = ({ active, payload }: RechartsTooltipProps) => {
   if (!active || !payload?.length) return null;
   const entry = payload[0];
   return (

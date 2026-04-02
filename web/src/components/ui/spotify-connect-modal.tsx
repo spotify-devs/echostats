@@ -144,9 +144,9 @@ export function SpotifyConnectModal({ isOpen, onClose, onConnected }: SpotifyCon
 
       setStatus("waiting");
       startPolling();
-    } catch (err: any) {
+    } catch (err: unknown) {
       setStatus("error");
-      setError(err.message || "Failed to connect");
+      setError(err instanceof Error ? err.message : "Failed to connect");
     }
   };
 
@@ -166,9 +166,9 @@ export function SpotifyConnectModal({ isOpen, onClose, onConnected }: SpotifyCon
       setTimeout(() => {
         window.location.href = "/dashboard";
       }, 1000);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setStatus("error");
-      setError(err.message || "Demo login failed");
+      setError(err instanceof Error ? err.message : "Demo login failed");
     }
   };
 

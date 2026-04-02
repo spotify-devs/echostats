@@ -19,8 +19,9 @@ import {
 import Image from "next/image";
 import { ChartSkeleton } from "@/components/ui/loading-skeleton";
 import { api } from "@/lib/api";
+import type { LucideIcon, NowPlayingResponse, PlayerDevice, QueueTrack, QueueResponse } from "@/lib/types";
 
-const DEVICE_ICONS: Record<string, any> = {
+const DEVICE_ICONS: Record<string, LucideIcon> = {
   Computer: Monitor,
   Smartphone: Smartphone,
   Speaker: Speaker,
@@ -36,21 +37,21 @@ export default function PlayerPage() {
     isError,
   } = useQuery({
     queryKey: ["player-current"],
-    queryFn: () => api.get<any>("/api/v1/player/current"),
+    queryFn: () => api.get<NowPlayingResponse>("/api/v1/player/current"),
     refetchInterval: 10000,
     retry: false,
   });
 
   const { data: devices } = useQuery({
     queryKey: ["player-devices"],
-    queryFn: () => api.get<any>("/api/v1/player/devices"),
+    queryFn: () => api.get<{ devices: PlayerDevice[] }>("/api/v1/player/devices"),
     refetchInterval: 30000,
     retry: false,
   });
 
   const { data: queue } = useQuery({
     queryKey: ["player-queue"],
-    queryFn: () => api.get<any>("/api/v1/player/queue"),
+    queryFn: () => api.get<QueueResponse>("/api/v1/player/queue"),
     refetchInterval: 10000,
     retry: false,
   });
@@ -189,7 +190,7 @@ export default function PlayerPage() {
               {/* Device */}
               {playback.device && (
                 <p className="text-xs text-theme-tertiary flex items-center gap-1 justify-center lg:justify-start">
-                  <Volume2 className="w-3.5 h-3.5" /> Playing on {playback.device}
+                  <Volume2 className="w-3.5 h-3.5" /> Playing on {playback.device.name}
                 </p>
               )}
             </div>
@@ -221,7 +222,7 @@ export default function PlayerPage() {
           </h2>
           {(devices?.devices || []).length > 0 ? (
             <div className="space-y-2">
-              {devices.devices.map((device: any) => {
+              {devices!.devices.map((device: PlayerDevice) => {
                 const DevIcon = DEVICE_ICONS[device.type] || DEVICE_ICONS.default;
                 return (
                   <div
@@ -260,7 +261,7 @@ export default function PlayerPage() {
           </h2>
           {(queue?.queue || []).length > 0 ? (
             <div className="space-y-1 max-h-[300px] overflow-y-auto">
-              {queue.queue.map((track: any, i: number) => (
+              {queue!.queue.map((track: QueueTrack, i: number) => (
                 <div
                   key={`${track.id}-${i}`}
                   className="flex items-center gap-3 p-2 rounded-lg hover:bg-current/[0.04]"

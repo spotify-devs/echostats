@@ -8,6 +8,14 @@ import { DateRangeFilter } from "@/components/ui/date-range-filter";
 import { ListSkeleton } from "@/components/ui/loading-skeleton";
 import { DEFAULT_PERIOD, TimeRangeSelector } from "@/components/ui/time-range-selector";
 import { api } from "@/lib/api";
+import type { TopItem } from "@/lib/types";
+
+interface AlbumDisplay {
+  name: string;
+  imageUrl: string;
+  artist: string;
+  plays: number;
+}
 
 export default function AlbumsPage() {
   const [period, setPeriod] = useState(DEFAULT_PERIOD);
@@ -20,11 +28,11 @@ export default function AlbumsPage() {
       let url = `/api/v1/albums/top?period=${period}&limit=50`;
       if (startDate) url += `&start_date=${startDate}`;
       if (endDate) url += `&end_date=${endDate}`;
-      return api.get<any>(url);
+      return api.get<{ items: TopItem[]; total: number }>(url);
     },
   });
 
-  const albums = (data?.items || []).map((item: any) => {
+  const albums = (data?.items || []).map((item: TopItem) => {
     const parts = (item.name || "").split(" — ");
     return {
       name: parts[0] || "Unknown Album",
@@ -64,7 +72,7 @@ export default function AlbumsPage() {
         <ListSkeleton rows={8} />
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-          {albums.map((album: any, i: number) => (
+          {albums.map((album: AlbumDisplay, i: number) => (
             <div key={i} className="glass-card-hover p-3 space-y-3 group">
               <div className="relative aspect-square rounded-xl overflow-hidden bg-theme-surface-3">
                 {album.imageUrl ? (

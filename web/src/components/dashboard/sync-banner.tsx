@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { AlertCircle, ArrowUpCircle, Clock, RefreshCw, Shield, X } from "lucide-react";
 import { useState } from "react";
 import { api } from "@/lib/api";
+import type { AuthStatus, UpdateInfo } from "@/lib/types";
 
 function timeUntil(date: Date): string {
   const diffMs = date.getTime() - Date.now();
@@ -20,14 +21,14 @@ export function SyncBanner() {
 
   const { data: authStatus } = useQuery({
     queryKey: ["auth-status"],
-    queryFn: () => api.get<any>("/api/v1/auth/status"),
+    queryFn: () => api.get<AuthStatus>("/api/v1/auth/status"),
     refetchInterval: 30000,
     retry: false,
   });
 
   const { data: updateInfo } = useQuery({
     queryKey: ["update-check"],
-    queryFn: () => api.get<any>("/api/health/update"),
+    queryFn: () => api.get<UpdateInfo>("/api/health/update"),
     refetchInterval: 3600000, // check every hour
     retry: false,
     staleTime: 3600000,
