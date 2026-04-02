@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { ErrorBoundary } from "@/components/error-boundary";
 import { Providers } from "@/components/providers";
 import "./globals.css";
 
@@ -30,7 +31,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
       </head>
       <body>
-        <Providers>{children}</Providers>
+        <ErrorBoundary>
+          <Providers>{children}</Providers>
+        </ErrorBoundary>
       </body>
     </html>
   );
