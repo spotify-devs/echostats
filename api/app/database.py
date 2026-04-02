@@ -1,6 +1,7 @@
 """MongoDB connection management using Beanie ODM."""
 
 import asyncio
+from typing import Any
 
 import structlog
 from beanie import init_beanie
@@ -14,6 +15,50 @@ client: AsyncMongoClient | None = None
 
 MAX_RETRIES = 10
 RETRY_DELAY = 3  # seconds
+
+
+async def _deduplicate_listening_history(db: Any) -> int:
+    """Remove duplicate listening_history records using raw motor operations.
+
+    Must run BEFORE init_beanie so the unique index can be built.
+    Returns count of deleted duplicates.
+    """
+    coll = db["listening_history"]
+
+    # Find duplicate groups by (user_id, track.spotify_id, played_at)
+    pipeline = [
+        {"$group": {
+            "_id": {
+                "user_id": "$user_id",
+                "spotify_id": "$track.spotify_id",
+                "played_at": "$played_at",
+            },
+            "count": {"$sum": 1},
+            "ids": {"$push": "$_id"},
+        }},
+        {"$match": {"count": {"$gt": 1}}},
+    ]
+
+    dup_groups = await coll.aggregate(pipeline, allowDiskUse=True).to_list()
+    if not dup_groups:
+        return 0
+
+    # Keep the first document in each group, delete the rest
+    ids_to_delete = []
+    for group in dup_groups:
+        ids_to_delete.extend(group["ids"][1:])
+
+    if not ids_to_delete:
+        return 0
+
+    # Delete in batches of 5000
+    total_deleted = 0
+    for i in range(0, len(ids_to_delete), 5000):
+        batch = ids_to_delete[i : i + 5000]
+        result = await coll.delete_many({"_id": {"$in": batch}})
+        total_deleted += result.deleted_count
+
+    return total_deleted
 
 
 async def init_db() -> None:
@@ -42,6 +87,21 @@ async def init_db() -> None:
                 )
             except Exception:
                 pass  # Index may not exist or already dropped
+
+            # Deduplicate listening_history before Beanie tries to create
+            # the unique index — otherwise index build fails on dirty data.
+            try:
+                removed = await _deduplicate_listening_history(db)
+                if removed:
+                    logger.info(
+                        "Deduplicated listening_history on startup",
+                        duplicates_removed=removed,
+                    )
+            except Exception as dedup_err:
+                logger.warning(
+                    "Dedup check failed, continuing",
+                    error=str(dedup_err)[:200],
+                )
 
             await init_beanie(database=db, document_models=ALL_MODELS)
 
