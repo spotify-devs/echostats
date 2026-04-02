@@ -1,0 +1,107 @@
+---
+title: Backup & Recovery
+description: MongoDB backup procedures and data recovery
+---
+
+# Backup & Recovery
+
+## Automated Backups
+
+### Docker Compose
+
+Add a backup service to your `docker-compose.yml`:
+
+```yaml
+backup:
+  image: mongo:7
+  entrypoint: /bin/bash
+  command: >
+    -c 'while true; do
+      mongodump --uri="$$MONGO_URI" --out=/backup/$$(date +%Y-%m-%d_%H%M)
+      find /backup -maxdepth 1 -mtime +7 -exec rm -rf {} \;
+      sleep 86400
+    done'
+  environment:
+    MONGO_URI: mongodb://echostats:password@mongodb:27017/echostats?authSource=admin
+  volumes:
+    - ./backups:/backup
+```
+
+### Kubernetes CronJob
+
+```yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: echostats-backup
+spec:
+  schedule: "0 2 * * *"  # Daily at 2 AM
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: backup
+              image: mongo:7
+              command:
+                - /bin/bash
+                - -c
+                - |
+                  mongodump --uri="$MONGO_URI" --out=/backup/$(date +%Y-%m-%d)
+                  # Clean backups older than 7 days
+                  find /backup -maxdepth 1 -mtime +7 -exec rm -rf {} \;
+              env:
+                - name: MONGO_URI
+                  valueFrom:
+                    secretKeyRef:
+                      name: echostats
+                      key: MONGO_URI
+              volumeMounts:
+                - name: backup-storage
+                  mountPath: /backup
+          volumes:
+            - name: backup-storage
+              persistentVolumeClaim:
+                claimName: echostats-backup
+          restartPolicy: OnFailure
+```
+
+## Manual Backup
+
+```bash
+# Full database dump
+mongodump --uri="mongodb://user:pass@host:27017/echostats?authSource=admin" \
+  --out=./backup-$(date +%Y%m%d)
+
+# Specific collections only
+mongodump --uri="..." --collection=listening_history --out=./backup
+mongodump --uri="..." --collection=daily_rollups --out=./backup
+```
+
+## Restore
+
+```bash
+# Full restore (replaces existing data)
+mongorestore --uri="mongodb://user:pass@host:27017/echostats?authSource=admin" \
+  --drop ./backup-20260401/
+
+# Restore specific collection
+mongorestore --uri="..." --collection=listening_history \
+  --drop ./backup/echostats/listening_history.bson
+```
+
+After restoring, rebuild rollups:
+1. Go to Settings → Data Rollups → **Rebuild Rollups**
+2. Or run: `cd api && python -c "import asyncio; from app.database import init_db; from app.services.rollup_service import build_rollups; asyncio.run(init_db()); asyncio.run(build_rollups('USER_ID'))"`
+
+## What to Back Up
+
+| Collection | Priority | Notes |
+|------------|----------|-------|
+| `listening_history` | **Critical** | Cannot be re-fetched (Spotify only keeps last 50) |
+| `users` | **Critical** | User accounts |
+| `spotify_tokens` | **High** | Encrypted tokens — user must re-login if lost |
+| `tracks`, `artists` | Medium | Can be re-fetched from Spotify API |
+| `daily_rollups` | Low | Can be rebuilt from listening_history |
+| `analytics_snapshots` | Low | Can be recomputed |
+| `sync_jobs`, `api_logs` | Low | Operational data, auto-cleaned |
