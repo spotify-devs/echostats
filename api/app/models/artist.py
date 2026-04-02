@@ -36,4 +36,5 @@ class Artist(Document):
         name = "artists"
         indexes = [
             "genres",
+            "name",
         ]

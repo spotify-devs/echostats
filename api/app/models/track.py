@@ -57,4 +57,5 @@ class Track(Document):
         name = "tracks"
         indexes = [
             "artists.spotify_id",
+            "name",
         ]
