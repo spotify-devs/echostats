@@ -26,7 +26,7 @@ async def init_db() -> None:
         try:
             client = AsyncMongoClient(
                 settings.mongo_uri,
-                maxPoolSize=10,
+                maxPoolSize=settings.mongo_max_pool_size,
                 minPoolSize=2,
                 maxIdleTimeMS=30000,
                 serverSelectionTimeoutMS=5000,

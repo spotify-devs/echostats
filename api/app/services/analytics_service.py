@@ -2,12 +2,16 @@
 
 import asyncio
 import copy
+import json
+import time
 from collections import Counter
 from datetime import datetime, timedelta
 from typing import Any
 
+import redis.asyncio as aioredis
 import structlog
 
+from app.config import settings
 from app.models.analytics import (
     AnalyticsSnapshot,
     AudioFeatureAvg,
@@ -22,6 +26,16 @@ from app.models.track import Track
 from app.services.rollup_service import ensure_rollups_exist
 
 logger = structlog.get_logger()
+
+
+async def _get_redis():
+    """Get a Redis connection, or None if unavailable."""
+    try:
+        r = aioredis.from_url(settings.redis_url, socket_connect_timeout=1)
+        await r.ping()
+        return r
+    except Exception:
+        return None
 
 
 def _get_period_range(period: str) -> tuple[datetime | None, datetime | None]:
@@ -42,6 +56,18 @@ def _get_period_range(period: str) -> tuple[datetime | None, datetime | None]:
 
 async def get_or_compute_snapshot(user_id: str, period: str = "all_time") -> AnalyticsSnapshot:
     """Return cached snapshot if data hasn't changed, otherwise recompute."""
+    # Check Redis cache first
+    cache_key = f"analytics:{user_id}:{period}"
+    r = await _get_redis()
+    if r:
+        try:
+            cached = await r.get(cache_key)
+            if cached:
+                await r.aclose()
+                return AnalyticsSnapshot(**json.loads(cached))
+        except Exception:
+            pass
+
     snapshot = await AnalyticsSnapshot.find_one(
         AnalyticsSnapshot.user_id == user_id,
         AnalyticsSnapshot.period == period,
@@ -61,9 +87,26 @@ async def get_or_compute_snapshot(user_id: str, period: str = "all_time") -> Ana
             )
         )
         if all_time_snap and all_time_snap.total_tracks_played == total:
+            # Cache the DB-fetched snapshot in Redis
+            if r:
+                try:
+                    await r.set(cache_key, snapshot.model_dump_json(), ex=300)
+                    await r.aclose()
+                except Exception:
+                    pass
             return snapshot
 
-    return await compute_analytics_snapshot(user_id, period)
+    result = await compute_analytics_snapshot(user_id, period)
+
+    # Cache the computed snapshot in Redis
+    if r:
+        try:
+            await r.set(cache_key, result.model_dump_json(), ex=300)
+            await r.aclose()
+        except Exception:
+            pass
+
+    return result
 
 
 async def compute_analytics_snapshot(user_id: str, period: str = "all_time") -> AnalyticsSnapshot:
@@ -74,6 +117,8 @@ async def compute_analytics_snapshot(user_id: str, period: str = "all_time") -> 
     """
     # Ensure rollups have been built for this user
     await ensure_rollups_exist(user_id)
+
+    snap_start = time.monotonic()
 
     period_start, period_end = _get_period_range(period)
 
@@ -317,6 +362,11 @@ async def compute_analytics_snapshot(user_id: str, period: str = "all_time") -> 
     )
 
     await _upsert_snapshot(snapshot)
+
+    snap_ms = (time.monotonic() - snap_start) * 1000
+    if snap_ms > 500:
+        logger.warning("Slow snapshot computation", user_id=user_id, period=period, duration_ms=round(snap_ms, 2))
+
     logger.info("Analytics snapshot computed from rollups", user_id=user_id, period=period, tracks=s["plays"])
     return snapshot
 

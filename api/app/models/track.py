@@ -4,6 +4,7 @@ from datetime import datetime
 
 from beanie import Document
 from pydantic import BaseModel, Field
+from pymongo import TEXT, IndexModel
 
 
 class AudioFeatures(BaseModel):
@@ -55,5 +56,5 @@ class Track(Document):
         name = "tracks"
         indexes = [
             "artists.spotify_id",
-            "name",
+            IndexModel([("name", TEXT), ("artists.name", TEXT)], name="track_text_search"),
         ]

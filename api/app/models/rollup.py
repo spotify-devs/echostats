@@ -7,6 +7,7 @@ instant analytics across any time window.
 
 from beanie import Document
 from pydantic import BaseModel, Field
+from pymongo import IndexModel
 
 
 class HourlyBucket(BaseModel):
@@ -44,6 +45,6 @@ class DailyRollup(Document):
     class Settings:
         name = "daily_rollups"
         indexes = [
-            [("user_id", 1), ("date", 1)],
+            IndexModel([("user_id", 1), ("date", 1)], unique=True, name="uniq_user_date"),
             [("user_id", 1), ("date", -1)],
         ]

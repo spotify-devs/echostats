@@ -21,7 +21,14 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
         if request.url.path.startswith("/api/"):
-            response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
+            # Allow short caching on read-only analytics endpoints
+            if request.method == "GET" and any(
+                request.url.path.startswith(p)
+                for p in ("/api/v1/analytics/", "/api/v1/genres/", "/api/v1/artists/top")
+            ):
+                response.headers["Cache-Control"] = "private, max-age=300"  # 5 min
+            else:
+                response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
         else:
             response.headers["Content-Security-Policy"] = (
                 "default-src 'self'; "

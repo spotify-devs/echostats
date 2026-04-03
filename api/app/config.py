@@ -25,6 +25,7 @@ class Settings(BaseSettings):
         description="MongoDB connection URI",
     )
     mongo_db: str = Field(default="echostats", description="MongoDB database name")
+    mongo_max_pool_size: int = Field(default=10, description="MongoDB max connection pool size")
 
     # Redis
     redis_url: str = Field(

@@ -6,6 +6,7 @@ per day, enabling instant analytics across arbitrarily large time windows.
 
 import asyncio
 import copy
+import time
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -49,6 +50,8 @@ async def build_rollups(
 
     def _dur() -> dict[str, Any]:
         return {"$ifNull": ["$ms_played", {"$ifNull": ["$track.duration_ms", 0]}]}
+
+    agg_start = time.monotonic()
 
     try:
         # Batch 1: lightweight aggregations
@@ -112,6 +115,10 @@ async def build_rollups(
     except Exception as e:
         logger.error("Rollup build pipelines failed", user_id=user_id, error=str(e))
         raise
+
+    agg_ms = (time.monotonic() - agg_start) * 1000
+    if agg_ms > 500:
+        logger.warning("Slow rollup aggregation", user_id=user_id, duration_ms=round(agg_ms, 2))
 
     # Merge pipeline results by date
     days: dict[str, dict[str, Any]] = {}
