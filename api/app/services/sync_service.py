@@ -109,6 +109,10 @@ async def sync_recently_played(client: SpotifyClient, user_id: str) -> int:
                 else:
                     raise
             count = len(new_entries)
+            if count > 0:
+                from app.metrics import tracks_synced_total
+
+                tracks_synced_total.labels(user_id=user_id).inc(count)
 
         # Batch upsert tracks
         if tracks_to_upsert:

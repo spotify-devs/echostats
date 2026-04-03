@@ -1,5 +1,6 @@
 """ARQ background worker configuration."""
 
+import time
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
@@ -7,6 +8,7 @@ from arq import cron
 from arq.connections import RedisSettings
 
 from app.config import settings
+from app.metrics import sync_duration_seconds, sync_failures_total
 
 
 async def startup(ctx: dict[str, Any]) -> None:
@@ -64,6 +66,7 @@ async def sync_all_users(ctx: dict[str, Any]) -> None:
         )
         await job.insert()
 
+        sync_start = time.monotonic()
         try:
             token = await get_valid_access_token(user)
             if not token:
@@ -134,6 +137,9 @@ async def sync_all_users(ctx: dict[str, Any]) -> None:
                 job.items_processed = count
                 job.completed_at = datetime.now(tz=UTC)
                 logger.info("Periodic sync complete", user_id=user_id, new_tracks=count)
+                sync_duration_seconds.labels(job_type="periodic").observe(
+                    time.monotonic() - sync_start
+                )
             finally:
                 await client.close()
 
@@ -157,6 +163,7 @@ async def sync_all_users(ctx: dict[str, Any]) -> None:
 
         except Exception as e:
             logger.error("Periodic sync failed for user", user_id=user_id, error=str(e))
+            sync_failures_total.labels(job_type="periodic").inc()
             job.status = "failed"
             job.error_message = str(e)[:500]
             job.completed_at = datetime.now(tz=UTC)

@@ -77,6 +77,9 @@ async def get_valid_access_token(user: User) -> str | None:
                 tokens.expires_at = datetime.utcnow() + timedelta(seconds=expires_in)
                 await tokens.save()
 
+                from app.metrics import token_refreshes_total
+
+                token_refreshes_total.labels(status="success").inc()
                 return new_access
             except Exception as e:
                 err_str = str(e).lower()
@@ -87,6 +90,9 @@ async def get_valid_access_token(user: User) -> str | None:
                         user_id=str(user.id),
                         error=str(e),
                     )
+                    from app.metrics import token_refreshes_total
+
+                    token_refreshes_total.labels(status="revoked").inc()
                     return None
 
                 if attempt < MAX_REFRESH_RETRIES - 1:
@@ -106,6 +112,9 @@ async def get_valid_access_token(user: User) -> str | None:
                         error=str(e),
                         user_id=str(user.id),
                     )
+                    from app.metrics import token_refreshes_total
+
+                    token_refreshes_total.labels(status="failed").inc()
                     return None
 
     return decrypt_token(tokens.access_token_encrypted, settings.encryption_key)
