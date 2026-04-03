@@ -139,7 +139,7 @@ jobs:
           SPOTIFY_CLIENT_SECRET: test
           JWT_SECRET: test-secret-key-for-ci
           ENCRYPTION_KEY: "0000000000000000000000000000000000000000000000000000000000000000"
-        run: uv run pytest -v --cov=app --cov-report=xml --cov-fail-under=43
+        run: uv run pytest -v --cov=app --cov-report=xml --cov-fail-under=60
 
       - name: Upload coverage
         uses: actions/upload-artifact@v4

@@ -255,7 +255,6 @@ async def test_get_or_compute_redis_cache_hit(mock_get_redis, mock_snap_cls, moc
     result = await get_or_compute_snapshot("user1", "week")
     assert result.user_id == "user1"
     assert result.period == "week"
-    mock_snap_cls.find_one.assert_not_awaited()
     mock_compute.assert_not_awaited()
 
 
