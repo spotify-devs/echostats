@@ -5,6 +5,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 from urllib.parse import urlencode
 
+import redis.asyncio as aioredis
 import structlog
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Request, Response
 from fastapi.responses import RedirectResponse
@@ -28,8 +29,13 @@ from app.services.token_service import get_valid_access_token, store_tokens
 logger = structlog.get_logger()
 router = APIRouter()
 
-# In-memory state store (for production, use Redis)
+# In-memory fallback state store (used when Redis is unavailable)
 _oauth_states: dict[str, datetime] = {}
+
+
+def _get_redis() -> aioredis.Redis:
+    """Create a Redis client from application settings."""
+    return aioredis.from_url(settings.redis_url, decode_responses=True)
 
 
 def _create_jwt(user_id: str, spotify_id: str) -> str:
@@ -47,9 +53,17 @@ def _create_jwt(user_id: str, spotify_id: str) -> str:
 async def login(request: Request) -> dict[str, str] | RedirectResponse:
     """Generate Spotify authorization URL. Redirects browsers, returns JSON for JS clients."""
     state = secrets.token_urlsafe(32)
-    _oauth_states[state] = datetime.now(tz=UTC)
 
-    # Clean expired states (older than 10 min)
+    # Store state in Redis with 10-min TTL; fall back to in-memory
+    try:
+        r = _get_redis()
+        await r.set(f"oauth_state:{state}", "1", ex=600)
+        await r.aclose()
+    except Exception:
+        logger.debug("Redis unavailable for OAuth state, using in-memory fallback")
+        _oauth_states[state] = datetime.now(tz=UTC)
+
+    # Clean expired in-memory states (older than 10 min)
     cutoff = datetime.now(tz=UTC) - timedelta(minutes=10)
     expired = [k for k, v in _oauth_states.items() if v < cutoff]
     for k in expired:
@@ -88,10 +102,24 @@ async def callback(
     if not code or not state:
         raise HTTPException(status_code=400, detail="Missing code or state parameter")
 
-    # Validate state
-    if state not in _oauth_states:
+    # Validate state: check Redis first, then in-memory fallback
+    state_valid = False
+    try:
+        r = _get_redis()
+        val = await r.get(f"oauth_state:{state}")
+        if val:
+            await r.delete(f"oauth_state:{state}")
+            state_valid = True
+        await r.aclose()
+    except Exception:
+        logger.debug("Redis unavailable for OAuth state validation, using in-memory fallback")
+
+    if not state_valid and state in _oauth_states:
+        del _oauth_states[state]
+        state_valid = True
+
+    if not state_valid:
         raise HTTPException(status_code=400, detail="Invalid or expired state")
-    del _oauth_states[state]
 
     # Exchange code for tokens
     try:
