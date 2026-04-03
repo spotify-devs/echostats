@@ -1,0 +1,588 @@
+---
+title: Production Deployment
+description: Deploy EchoStats to production with Docker Compose or Kubernetes.
+---
+
+import { Tabs, TabItem, Steps } from '@astrojs/starlight/components';
+
+This guide covers deploying EchoStats to a production environment using Docker Compose or Kubernetes (Helm).
+
+## Prerequisites
+
+Before deploying, ensure you have:
+
+- **Spotify Developer App** — client ID and secret from the [Spotify Developer Dashboard](https://developer.spotify.com/dashboard)
+- **Domain name** with DNS configured (e.g. `echostats.example.com`)
+- **TLS certificate** (or cert-manager for automated provisioning)
+- **Docker** ≥ 24.0 and **Docker Compose** ≥ 2.20 (for Docker deployments)
+- **Kubernetes** ≥ 1.27 and **Helm** ≥ 3.12 (for Kubernetes deployments)
+
+---
+
+## Generate Secrets
+
+EchoStats requires two cryptographic secrets. Generate them before deployment:
+
+```bash
+# JWT_SECRET — used to sign session tokens (min 16 characters)
+python -c "import secrets; print(secrets.token_hex(32))"
+
+# ENCRYPTION_KEY — used for AES-256 encryption of Spotify tokens (exactly 64 hex characters)
+python -c "import secrets; print(secrets.token_hex(32))"
+```
+
+:::danger
+Store these values securely. If `ENCRYPTION_KEY` is lost, all stored Spotify refresh tokens become unrecoverable and users must re-authenticate.
+:::
+
+---
+
+## Docker Compose
+
+<Steps>
+
+1. **Clone and configure**
+
+   ```bash
+   git clone https://github.com/spotify-devs/echostats.git
+   cd echostats
+   cp .env.example .env
+   ```
+
+   Edit `.env` with production values:
+
+   ```bash title=".env"
+   # Spotify OAuth (required)
+   SPOTIFY_CLIENT_ID=your_client_id
+   SPOTIFY_CLIENT_SECRET=your_client_secret
+   SPOTIFY_REDIRECT_URI=https://echostats.example.com/api/v1/auth/callback
+
+   # Security (required — generate with commands above)
+   JWT_SECRET=your_generated_jwt_secret
+   ENCRYPTION_KEY=your_generated_64_hex_encryption_key
+
+   # MongoDB
+   MONGO_URI=mongodb://echostats:strongpassword@mongodb:27017/echostats?authSource=admin
+   MONGO_DB=echostats
+   MONGO_USER=echostats
+   MONGO_PASSWORD=strongpassword
+
+   # Redis
+   REDIS_URL=redis://redis:6379/0
+
+   # API
+   API_HOST=0.0.0.0
+   API_PORT=8000
+   API_WORKERS=2
+   LOG_LEVEL=info
+   CORS_ORIGINS=https://echostats.example.com
+
+   # Web
+   NEXT_PUBLIC_API_URL=https://echostats.example.com
+   INTERNAL_API_URL=http://api:8000
+   NODE_ENV=production
+
+   # Sync
+   SYNC_INTERVAL_MINUTES=15
+   ANALYTICS_REFRESH_HOURS=6
+   ```
+
+2. **Build and start**
+
+   ```bash
+   docker compose build
+   docker compose up -d
+   ```
+
+   This starts five services:
+
+   | Service    | Image              | Port | Network            |
+   | ---------- | ------------------ | ---- | ------------------ |
+   | **mongodb** | `mongo:7`         | —    | internal           |
+   | **redis**   | `redis:7-alpine`  | —    | internal           |
+   | **api**     | Built from `api/`  | 8000 | internal, external |
+   | **worker**  | Built from `api/`  | —    | internal           |
+   | **web**     | Built from `web/`  | 3000 | internal, external |
+
+3. **Verify health**
+
+   ```bash
+   # All containers should be "healthy"
+   docker compose ps
+
+   # API health check
+   curl http://localhost:8000/api/health
+   # {"status":"healthy","service":"echostats-api","version":"0.1.0"}
+
+   # Readiness check (MongoDB + Redis)
+   curl http://localhost:8000/api/health/ready
+   # {"status":"ready"}
+
+   # Web frontend
+   curl -s -o /dev/null -w "%{http_code}" http://localhost:3000
+   # 200
+   ```
+
+4. **Set up a reverse proxy**
+
+   Place Nginx, Caddy, or Traefik in front to handle TLS and route traffic:
+
+   ```nginx title="nginx.conf"
+   server {
+       listen 443 ssl;
+       server_name echostats.example.com;
+
+       ssl_certificate     /etc/ssl/certs/echostats.pem;
+       ssl_certificate_key /etc/ssl/private/echostats.key;
+
+       location /api {
+           proxy_pass http://localhost:8000;
+           proxy_set_header Host $host;
+           proxy_set_header X-Real-IP $remote_addr;
+           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+           proxy_set_header X-Forwarded-Proto $scheme;
+       }
+
+       location / {
+           proxy_pass http://localhost:3000;
+           proxy_set_header Host $host;
+           proxy_set_header X-Real-IP $remote_addr;
+           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+           proxy_set_header X-Forwarded-Proto $scheme;
+       }
+   }
+   ```
+
+</Steps>
+
+### Resource Limits
+
+The Docker Compose production file enforces these limits:
+
+| Service  | Memory | Notes                         |
+| -------- | ------ | ----------------------------- |
+| MongoDB  | 512 MB | WiredTiger cache: 0.25 GB     |
+| Redis    | 128 MB | Eviction policy: `allkeys-lru` |
+| API      | —      | 2 Uvicorn workers by default  |
+| Worker   | —      | Single ARQ worker process     |
+
+---
+
+## Kubernetes (Helm)
+
+### Installation
+
+<Steps>
+
+1. **Create namespace**
+
+   ```bash
+   kubectl create namespace echostats
+   ```
+
+2. **Install from OCI registry**
+
+   ```bash
+   helm install echostats oci://ghcr.io/spotify-devs/charts/echostats:0.1.0 \
+     --namespace echostats \
+     --set spotify.clientId=YOUR_CLIENT_ID \
+     --set spotify.clientSecret=YOUR_CLIENT_SECRET \
+     --set spotify.redirectUri=https://echostats.example.com/api/v1/auth/callback \
+     --set security.jwtSecret="$(python -c 'import secrets; print(secrets.token_hex(32))')" \
+     --set security.encryptionKey="$(python -c 'import secrets; print(secrets.token_hex(32))')" \
+     --set api.corsOrigins=https://echostats.example.com \
+     --set web.apiUrl=https://echostats.example.com
+   ```
+
+   Or install from the local chart:
+
+   ```bash
+   helm install echostats helm/echostats \
+     --namespace echostats \
+     -f custom-values.yaml
+   ```
+
+3. **Verify pods**
+
+   ```bash
+   kubectl get pods -n echostats
+   # NAME                              READY   STATUS    RESTARTS
+   # echostats-api-xxx                 1/1     Running   0
+   # echostats-web-xxx                 1/1     Running   0
+   # echostats-worker-xxx              1/1     Running   0
+   # echostats-mongodb-0               1/1     Running   0
+   # echostats-redis-0                 1/1     Running   0
+   ```
+
+</Steps>
+
+### Custom Values File
+
+Create a `custom-values.yaml` for your environment:
+
+```yaml title="custom-values.yaml"
+spotify:
+  clientId: "your_client_id"
+  clientSecret: "your_client_secret"
+  redirectUri: "https://echostats.example.com/api/v1/auth/callback"
+
+security:
+  jwtSecret: "your_jwt_secret"
+  encryptionKey: "your_64_hex_encryption_key"
+
+api:
+  port: 8000
+  workers: 2
+  logLevel: info
+  corsOrigins: "https://echostats.example.com"
+  syncIntervalMinutes: 15
+  analyticsRefreshHours: 6
+  resources:
+    limits:
+      memory: 512Mi
+      cpu: 500m
+    requests:
+      memory: 256Mi
+      cpu: 100m
+
+web:
+  port: 3000
+  apiUrl: "https://echostats.example.com"
+  resources:
+    limits:
+      memory: 256Mi
+      cpu: 250m
+    requests:
+      memory: 128Mi
+      cpu: 50m
+
+worker:
+  resources:
+    limits:
+      memory: 512Mi
+      cpu: 500m
+    requests:
+      memory: 128Mi
+      cpu: 100m
+
+mongodb:
+  enabled: true
+  auth:
+    rootUsername: echostats
+    rootPassword: "strong-password"
+    database: echostats
+  persistence:
+    enabled: true
+    size: 10Gi
+
+redis:
+  enabled: true
+  persistence:
+    enabled: true
+    size: 1Gi
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+  hosts:
+    - host: echostats.example.com
+      paths:
+        - path: /api
+          pathType: Prefix
+          service: api
+        - path: /
+          pathType: Prefix
+          service: web
+  tls:
+    - secretName: echostats-tls
+      hosts:
+        - echostats.example.com
+```
+
+### Using External Databases
+
+To use managed MongoDB and Redis instances instead of the bundled ones:
+
+```yaml title="custom-values.yaml"
+mongodb:
+  enabled: false
+  external:
+    uri: "mongodb://user:pass@mongo.example.com:27017/echostats?authSource=admin"
+
+redis:
+  enabled: false
+  external:
+    url: "redis://redis.example.com:6379/0"
+```
+
+### TLS / Ingress
+
+The Helm chart supports both **Nginx Ingress** and **Traefik IngressRoute**.
+
+<Tabs>
+<TabItem label="Nginx Ingress">
+```yaml
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+  hosts:
+    - host: echostats.example.com
+      paths:
+        - path: /api
+          pathType: Prefix
+          service: api
+        - path: /
+          pathType: Prefix
+          service: web
+  tls:
+    - secretName: echostats-tls
+      hosts:
+        - echostats.example.com
+```
+</TabItem>
+<TabItem label="Traefik IngressRoute">
+```yaml
+ingress:
+  enabled: false
+
+ingressRoute:
+  enabled: true
+  spec:
+    entryPoints:
+      - websecure
+    routes:
+      - match: "Host(`echostats.example.com`) && PathPrefix(`/api`)"
+        kind: Rule
+        services:
+          - name: echostats-api
+            port: 8000
+      - match: "Host(`echostats.example.com`)"
+        kind: Rule
+        services:
+          - name: echostats-web
+            port: 3000
+    tls:
+      secretName: echostats-tls
+```
+</TabItem>
+</Tabs>
+
+### Autoscaling
+
+Enable Horizontal Pod Autoscaler for the API and web services:
+
+```yaml
+autoscaling:
+  api:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 80
+  web:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 80
+
+pdb:
+  api:
+    enabled: true
+    minAvailable: 1
+  web:
+    enabled: true
+    minAvailable: 1
+```
+
+---
+
+## Monitoring
+
+EchoStats includes pre-configured monitoring in `monitoring/`.
+
+### Prometheus
+
+The API exposes a `/metrics` endpoint for Prometheus scraping. Use the included scrape config:
+
+```yaml title="monitoring/prometheus/scrape.yml"
+scrape_configs:
+  - job_name: "echostats-api"
+    metrics_path: /metrics
+    scrape_interval: 15s
+    static_configs:
+      - targets: ["echostats-api:8000"]
+        labels:
+          service: echostats
+          component: api
+```
+
+For Kubernetes, use pod-based service discovery:
+
+```yaml
+kubernetes_sd_configs:
+  - role: pod
+    namespaces:
+      names: [echostats]
+relabel_configs:
+  - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_component]
+    regex: api
+    action: keep
+```
+
+### Alert Rules
+
+Pre-configured alerts in `monitoring/prometheus/alerts.yml`:
+
+| Alert            | Condition                       | Duration | Severity |
+| ---------------- | ------------------------------- | -------- | -------- |
+| `HighErrorRate`  | 5xx errors > 5% of total       | 5 min    | critical |
+| `HighLatency`    | p95 response time > 5 seconds  | 5 min    | warning  |
+| `SyncStalled`    | No successful sync > 1 hour    | 15 min   | warning  |
+| `APIDown`        | Prometheus scrape fails         | 2 min    | critical |
+
+### Grafana
+
+Import the dashboard from `monitoring/grafana/dashboards/api-overview.json`. Panels include:
+
+- **Request Rate** — requests/sec by status code
+- **Response Latency** — p50/p95/p99 percentiles
+- **Error Rate** — current 5xx error percentage
+- **Requests by Endpoint** — distribution across handlers
+- **Active Connections** — in-flight request count
+
+Metrics used: `http_requests_total`, `http_request_duration_seconds`, `http_requests_in_progress`.
+
+---
+
+## Backups
+
+### Helm Backup CronJob
+
+Enable automated MongoDB backups in the Helm chart:
+
+```yaml
+backup:
+  enabled: true
+  schedule: "0 2 * * *"         # Daily at 2 AM UTC
+  image: "mongo:7"
+  retentionDays: 7
+  pvcName: ""                   # Defaults to {fullname}-backup
+```
+
+### Manual Backup (Docker Compose)
+
+```bash
+# Dump the database
+docker compose exec mongodb mongodump \
+  --uri="mongodb://echostats:password@localhost:27017/echostats?authSource=admin" \
+  --out=/dump/$(date +%Y-%m-%d)
+
+# Copy dump to host
+docker compose cp mongodb:/dump ./backups/
+
+# Restore from backup
+docker compose exec mongodb mongorestore \
+  --uri="mongodb://echostats:password@localhost:27017/echostats?authSource=admin" \
+  /dump/2025-01-15/
+```
+
+---
+
+## Health Check Verification
+
+After deployment, verify all components:
+
+```bash
+# 1. API is healthy
+curl https://echostats.example.com/api/health
+# {"status":"healthy","service":"echostats-api","version":"0.1.0"}
+
+# 2. Database and cache are connected
+curl https://echostats.example.com/api/health/ready
+# {"status":"ready"}
+
+# 3. Web frontend loads
+curl -s -o /dev/null -w "%{http_code}" https://echostats.example.com
+# 200
+
+# 4. Auth flow works
+curl https://echostats.example.com/api/v1/auth/status
+# {"authenticated":false}
+
+# 5. Check for updates
+curl https://echostats.example.com/api/health/update
+```
+
+---
+
+## Common Issues
+
+### "status: not_ready" on health/ready
+
+**Cause:** MongoDB or Redis is not reachable.
+
+```bash
+# Docker Compose
+docker compose ps          # Check container health
+docker compose logs mongodb redis
+
+# Kubernetes
+kubectl get pods -n echostats
+kubectl logs -n echostats echostats-mongodb-0
+```
+
+### Spotify callback returns 400
+
+**Cause:** `SPOTIFY_REDIRECT_URI` doesn't match the URI registered in the Spotify Dashboard.
+
+- Verify the redirect URI in your `.env` or Helm values matches **exactly** what's configured at [developer.spotify.com](https://developer.spotify.com/dashboard).
+- The URI must include the full path: `https://echostats.example.com/api/v1/auth/callback`
+
+### CORS errors in the browser
+
+**Cause:** `CORS_ORIGINS` doesn't include the frontend URL.
+
+```bash
+# Must match the exact origin (protocol + host + port)
+CORS_ORIGINS=https://echostats.example.com
+```
+
+### Token decryption failures after redeployment
+
+**Cause:** `ENCRYPTION_KEY` changed between deployments.
+
+- The encryption key must remain constant. If it changes, all stored Spotify refresh tokens become invalid.
+- Users must re-authenticate via the login flow.
+
+### Worker not processing jobs
+
+```bash
+# Docker Compose
+docker compose logs worker
+
+# Kubernetes
+kubectl logs -n echostats -l app.kubernetes.io/component=worker
+```
+
+Verify that Redis is reachable and the worker can connect to it. The worker uses ARQ (async Redis queue) and requires a healthy Redis connection.
+
+### High memory usage on MongoDB
+
+The bundled MongoDB uses a 0.25 GB WiredTiger cache with a 512 MB memory limit. For larger datasets, increase these values:
+
+```yaml
+# Docker Compose: edit docker-compose.yml
+deploy:
+  resources:
+    limits:
+      memory: 1g
+
+# Helm: increase in values.yaml
+mongodb:
+  persistence:
+    size: 20Gi
+```

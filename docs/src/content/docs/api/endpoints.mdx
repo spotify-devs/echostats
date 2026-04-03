@@ -1,24 +1,21 @@
 ---
-title: Endpoints
+title: API Endpoints
 description: Complete API endpoint reference for EchoStats.
 ---
 
+All endpoints are relative to the base URL `http://localhost:8000`. Versioned endpoints require authentication via session cookie unless noted otherwise.
 
-All endpoints below are relative to the base URL `http://localhost:8000`. Versioned endpoints require JWT authentication via the `session` cookie unless noted otherwise.
+**Global middleware:** All requests pass through rate limiting (100 req/60s), request ID injection, 30s timeout (120s for slow endpoints), GZIP compression, CORS, and security headers.
 
 ---
 
 ## Health
 
-Health and readiness probes. **No authentication required.**
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/api/health` | Health check with service name and version |
-| `GET` | `/api/health/ready` | Readiness probe — verifies MongoDB and Redis connectivity |
-| `GET` | `/api/health/update` | Checks GitHub for newer releases |
-
 ### `GET /api/health`
+
+No auth required. Returns basic service status.
+
+**Response:**
 
 ```json
 {
@@ -28,14 +25,39 @@ Health and readiness probes. **No authentication required.**
 }
 ```
 
-### `GET /api/health/update`
+### `GET /api/health/ready`
+
+No auth required. Checks MongoDB and Redis connectivity.
+
+**Response (ready):**
+
+```json
+{ "status": "ready" }
+```
+
+**Response (not ready):**
 
 ```json
 {
-  "update_available": true,
+  "status": "not_ready",
+  "reason": "database not connected, cache unreachable"
+}
+```
+
+### `GET /api/health/update`
+
+No auth required. Checks for new releases on GitHub (cached for 1 hour).
+
+**Response:**
+
+```json
+{
   "current_version": "0.1.0",
   "latest_version": "0.2.0",
-  "release_url": "https://github.com/spotify-devs/echostats/releases/tag/v0.2.0"
+  "update_available": true,
+  "release_url": "https://github.com/spotify-devs/echostats/releases/tag/v0.2.0",
+  "release_notes": "Bug fixes and performance improvements...",
+  "published_at": "2025-01-15T12:00:00Z"
 }
 ```
 
@@ -43,28 +65,107 @@ Health and readiness probes. **No authentication required.**
 
 ## Authentication
 
-OAuth 2.0 flow with Spotify and JWT session management.
+All auth endpoints are prefixed with `/api/v1/auth`.
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/api/v1/auth/login` | Generate Spotify authorization URL and redirect |
-| `GET` | `/api/v1/auth/callback` | Spotify OAuth callback — exchanges code for tokens, sets session cookie |
-| `POST` | `/api/v1/auth/refresh` | Refresh the JWT session token |
-| `GET` | `/api/v1/auth/status` | Get current authentication status and user info |
-| `POST` | `/api/v1/auth/logout` | Clear session cookie and log out |
-| `GET` | `/api/v1/auth/dev-login` | Development-only: bypass OAuth for local testing |
+### `GET /api/v1/auth/login`
+
+No auth required. Initiates Spotify OAuth flow.
+
+- **Browser** (`Accept: text/html`): Redirects (302) to Spotify authorization page.
+- **API client**: Returns the authorization URL as JSON.
+
+**Response (API client):**
+
+```json
+{
+  "url": "https://accounts.spotify.com/authorize?client_id=...",
+  "state": "abc123"
+}
+```
+
+### `GET /api/v1/auth/callback`
+
+No auth required. Handles the Spotify OAuth callback.
+
+| Parameter | Type   | Required | Description                    |
+| --------- | ------ | -------- | ------------------------------ |
+| `code`    | string | yes      | Authorization code from Spotify |
+| `state`   | string | yes      | CSRF state token               |
+| `error`   | string | no       | Error returned by Spotify      |
+
+**Success:** Redirects to `{frontend_url}/auth/callback?status=success` and sets an `httpOnly` session cookie. Creates or updates the user document and stores encrypted Spotify tokens. Triggers a background sync.
+
+**Error:** Returns `400` (bad request) or `502` (Spotify API error).
 
 ### `GET /api/v1/auth/status`
+
+No auth required. Returns current authentication state.
+
+**Response (authenticated):**
 
 ```json
 {
   "authenticated": true,
   "user": {
-    "spotify_id": "user123",
-    "display_name": "John",
-    "email": "john@example.com",
-    "avatar_url": "https://i.scdn.co/image/..."
-  }
+    "id": "682a3b...",
+    "spotify_id": "atul123",
+    "display_name": "Atul",
+    "image_url": "https://i.scdn.co/image/...",
+    "product": "premium"
+  },
+  "token_expires_at": "2025-02-01T12:00:00Z"
+}
+```
+
+**Response (not authenticated):**
+
+```json
+{ "authenticated": false }
+```
+
+:::note
+In single-user self-hosted setups, this endpoint auto-authenticates the only user without requiring a login flow.
+:::
+
+### `POST /api/v1/auth/refresh`
+
+Refreshes the Spotify access token using the stored refresh token.
+
+**Response:**
+
+```json
+{ "status": "refreshed" }
+```
+
+**Error:** `401` if not authenticated or token refresh fails.
+
+### `POST /api/v1/auth/logout`
+
+No auth required. Clears the session cookie.
+
+**Response:**
+
+```json
+{ "status": "logged_out" }
+```
+
+### `GET /api/v1/auth/dev-login`
+
+:::caution
+Development only. Requires a seeded demo user (`python seed.py`).
+:::
+
+**Response:**
+
+```json
+{
+  "status": "authenticated",
+  "user": {
+    "id": "682a3b...",
+    "spotify_id": "demo_user",
+    "display_name": "Demo User"
+  },
+  "token": "eyJhbGciOi..."
 }
 ```
 
@@ -72,139 +173,394 @@ OAuth 2.0 flow with Spotify and JWT session management.
 
 ## Analytics
 
-Pre-computed analytics snapshots.
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/api/v1/analytics/overview` | Full analytics snapshot — top artists, tracks, genres, listening stats |
-| `POST` | `/api/v1/analytics/refresh` | Force-refresh analytics (normally runs on schedule) |
+All analytics endpoints are prefixed with `/api/v1/analytics`.
 
 ### `GET /api/v1/analytics/overview`
 
-**Query Parameters:**
+Returns pre-computed analytics for the given period.
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `period` | string | `month` | Time range: `week`, `month`, `quarter`, `year`, `all_time` |
+| Parameter | Type   | Default    | Description                                  |
+| --------- | ------ | ---------- | -------------------------------------------- |
+| `period`  | string | `all_time` | One of `week`, `month`, `quarter`, `year`, `all_time` |
+
+**Response:**
+
+```json
+{
+  "period": "week",
+  "total_tracks_played": 319,
+  "total_ms_played": 64140000,
+  "total_hours": 17.8,
+  "unique_tracks": 279,
+  "unique_artists": 81,
+  "unique_albums": 45,
+  "unique_genres": 11,
+  "listening_streak_days": 5,
+  "top_artists": [
+    { "name": "Radiohead", "play_count": 15, "spotify_id": "4Z8W4fKeB5YxbusRsdQVPb", "image_url": "https://...", "rank": 1 }
+  ],
+  "top_tracks": [
+    { "name": "Everything In Its Right Place", "play_count": 5, "spotify_id": "2kRFrWaLWifQkBFasAWgMo", "rank": 1 }
+  ],
+  "top_albums": [
+    { "name": "Kid A", "play_count": 12, "spotify_id": "6GjwtEZcfenmof6l18N7T7", "rank": 1 }
+  ],
+  "top_genres": [
+    { "name": "art rock", "play_count": 30, "rank": 1 }
+  ],
+  "hourly_distribution": [
+    { "hour": 0, "plays": 5 },
+    { "hour": 14, "plays": 42 }
+  ],
+  "daily_distribution": [
+    { "day": "Monday", "plays": 48 }
+  ],
+  "avg_audio_features": {
+    "danceability": 0.52,
+    "energy": 0.61,
+    "valence": 0.38,
+    "acousticness": 0.24,
+    "instrumentalness": 0.15,
+    "liveness": 0.12,
+    "speechiness": 0.05,
+    "tempo": 122.5
+  },
+  "computed_at": "2025-01-15T12:00:00Z"
+}
+```
+
+### `POST /api/v1/analytics/refresh`
+
+Recomputes analytics for the given period. If `period` is `all_time`, all periods are refreshed.
+
+| Parameter | Type   | Default    | Description                                  |
+| --------- | ------ | ---------- | -------------------------------------------- |
+| `period`  | string | `all_time` | One of `week`, `month`, `quarter`, `year`, `all_time` |
+
+**Response:**
+
+```json
+{
+  "status": "refreshed",
+  "periods": ["week", "month", "quarter", "year", "all_time"],
+  "computed_at": "2025-01-15T12:05:00Z"
+}
+```
+
+### `GET /api/v1/analytics/trend`
+
+Returns listening trend data points over the given period.
+
+| Parameter | Type   | Default    | Description                                  |
+| --------- | ------ | ---------- | -------------------------------------------- |
+| `period`  | string | `all_time` | One of `week`, `month`, `quarter`, `year`, `all_time` |
+
+**Granularity rules:**
+
+- `week` / `month` → daily points (`2025-01-15`)
+- `quarter` → weekly points (`2025-W03`)
+- `year` / `all_time` → monthly points (`2025-01`)
 
 **Response:**
 
 ```json
 {
   "period": "month",
-  "top_artists": [
-    { "name": "Taylor Swift", "play_count": 142, "total_minutes": 426, "image_url": "..." }
-  ],
-  "top_tracks": [
-    { "title": "Anti-Hero", "artist": "Taylor Swift", "play_count": 37, "image_url": "..." }
-  ],
-  "top_genres": ["pop", "indie rock", "r&b"],
-  "stats": {
-    "total_listening_hours": 86.4,
-    "unique_artists": 78,
-    "unique_tracks": 312,
-    "unique_genres": 24,
-    "streak_days": 14
-  },
-  "hourly_distribution": [0, 0, 0, 1, 2, 5, 12, 18, ...],
-  "daily_distribution": [42, 38, 45, 51, 48, 62, 58],
-  "audio_features": {
-    "danceability": 0.68,
-    "energy": 0.72,
-    "valence": 0.55,
-    "acousticness": 0.23,
-    "instrumentalness": 0.04,
-    "speechiness": 0.08
-  }
+  "granularity": "%Y-%m-%d",
+  "points": [
+    { "label": "2025-01-01", "plays": 42, "ms": 8400000, "hours": 2.3 },
+    { "label": "2025-01-02", "plays": 38, "ms": 7600000, "hours": 2.1 }
+  ]
 }
 ```
+
+### `GET /api/v1/analytics/rollup-status`
+
+Returns the status of daily rollup pre-aggregation.
+
+**Response:**
+
+```json
+{
+  "last_date": "2025-01-15",
+  "total_days": 90,
+  "complete": true,
+  "coverage": 100.0
+}
+```
+
+### `POST /api/v1/analytics/rollup-build`
+
+Triggers a background job to rebuild daily rollups.
+
+**Response:**
+
+```json
+{
+  "status": "started",
+  "job_id": "682a3b..."
+}
+```
+
+Returns `"status": "already_running"` if a rollup build is in progress.
+
+---
+
+## History
+
+All history endpoints are prefixed with `/api/v1/history`.
+
+### `GET /api/v1/history`
+
+Returns paginated listening history with optional filters.
+
+| Parameter    | Type   | Default | Description                      |
+| ------------ | ------ | ------- | -------------------------------- |
+| `page`       | int    | `1`     | Page number (min: 1)             |
+| `limit`      | int    | `50`    | Items per page (1–100)           |
+| `artist`     | string | —       | Filter by artist name            |
+| `track`      | string | —       | Filter by track name             |
+| `start_date` | string | —       | ISO 8601 start date              |
+| `end_date`   | string | —       | ISO 8601 end date                |
+
+**Response:**
+
+```json
+{
+  "items": [
+    {
+      "id": "682a3b...",
+      "user_id": "682a3a...",
+      "track": {
+        "spotify_id": "2kRFrWaLWifQkBFasAWgMo",
+        "name": "Everything In Its Right Place",
+        "artist_name": "Radiohead",
+        "album_name": "Kid A",
+        "album_image_url": "https://i.scdn.co/image/...",
+        "duration_ms": 250000
+      },
+      "played_at": "2025-01-15T14:32:00Z",
+      "ms_played": 245000,
+      "source": "api",
+      "context_type": "album",
+      "context_uri": "spotify:album:6GjwtEZcfenmof6l18N7T7"
+    }
+  ],
+  "total": 1520,
+  "page": 1,
+  "limit": 50,
+  "pages": 31
+}
+```
+
+### `POST /api/v1/history/import`
+
+Imports listening history from a Spotify privacy data export (JSON file).
+
+**Request:** Multipart file upload.
+
+| Field  | Type       | Description                              |
+| ------ | ---------- | ---------------------------------------- |
+| `file` | UploadFile | JSON file from Spotify extended streaming history export |
+
+**Response:**
+
+```json
+{
+  "job_id": "682a3b...",
+  "status": "pending",
+  "items_processed": 0,
+  "items_total": 12450
+}
+```
+
+The import runs as a background job. Use the [Sync Jobs](#sync-jobs) endpoints to track progress.
 
 ---
 
 ## Tracks
 
-Track analytics and details.
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/api/v1/tracks/top` | Top tracks ranked by play count |
-| `GET` | `/api/v1/tracks/{track_id}` | Detailed track info including audio features |
+All track endpoints are prefixed with `/api/v1/tracks`.
 
 ### `GET /api/v1/tracks/top`
 
-**Query Parameters:**
+Returns the user's top tracks by play count for the given period.
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `period` | string | `month` | Time range: `week`, `month`, `quarter`, `year`, `all_time` |
-| `limit` | int | `20` | Number of results (max: 100) |
-| `page` | int | `1` | Page number |
+| Parameter | Type   | Default    | Description                                  |
+| --------- | ------ | ---------- | -------------------------------------------- |
+| `period`  | string | `all_time` | One of `week`, `month`, `quarter`, `year`, `all_time` |
+| `limit`   | int    | `50`       | Number of tracks (1–100)                     |
 
 **Response:**
 
 ```json
 {
-  "tracks": [
+  "items": [
     {
-      "track_id": "spotify:track:abc123",
-      "title": "Anti-Hero",
-      "artist": "Taylor Swift",
-      "album": "Midnights",
-      "play_count": 87,
-      "total_minutes": 261,
-      "image_url": "https://i.scdn.co/image/...",
+      "id": "682a3b...",
+      "spotify_id": "2kRFrWaLWifQkBFasAWgMo",
+      "name": "Everything In Its Right Place",
+      "artists": [{ "spotify_id": "4Z8W4fKeB5YxbusRsdQVPb", "name": "Radiohead" }],
+      "album": {
+        "spotify_id": "6GjwtEZcfenmof6l18N7T7",
+        "name": "Kid A",
+        "image_url": "https://i.scdn.co/image/..."
+      },
+      "duration_ms": 250000,
+      "popularity": 72,
+      "external_url": "https://open.spotify.com/track/2kRFrWaLWifQkBFasAWgMo",
       "audio_features": {
-        "danceability": 0.637,
-        "energy": 0.535,
-        "valence": 0.533
+        "danceability": 0.45,
+        "energy": 0.63,
+        "valence": 0.22,
+        "tempo": 156.1
       }
     }
   ],
-  "total": 312,
-  "page": 1,
-  "limit": 20
+  "period": "all_time",
+  "total": 279
 }
 ```
+
+### `GET /api/v1/tracks/{track_id}`
+
+No auth required. Returns a single track by Spotify ID.
+
+| Parameter  | Type   | Description     |
+| ---------- | ------ | --------------- |
+| `track_id` | string | Spotify track ID |
+
+**Response:**
+
+```json
+{
+  "id": "682a3b...",
+  "spotify_id": "2kRFrWaLWifQkBFasAWgMo",
+  "name": "Everything In Its Right Place",
+  "artists": [{ "spotify_id": "4Z8W4fKeB5YxbusRsdQVPb", "name": "Radiohead" }],
+  "album": {
+    "spotify_id": "6GjwtEZcfenmof6l18N7T7",
+    "name": "Kid A",
+    "image_url": "https://i.scdn.co/image/...",
+    "release_date": "2000-10-02"
+  },
+  "duration_ms": 250000,
+  "popularity": 72,
+  "explicit": false,
+  "external_url": "https://open.spotify.com/track/2kRFrWaLWifQkBFasAWgMo",
+  "audio_features": {
+    "danceability": 0.45,
+    "energy": 0.63,
+    "valence": 0.22,
+    "acousticness": 0.04,
+    "instrumentalness": 0.73,
+    "liveness": 0.11,
+    "speechiness": 0.04,
+    "tempo": 156.1,
+    "key": 4,
+    "mode": 1,
+    "time_signature": 4
+  }
+}
+```
+
+**Error:** `404` if the track is not found.
 
 ---
 
 ## Artists
 
-Artist analytics and details.
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/api/v1/artists/top` | Top artists ranked by play count |
-| `GET` | `/api/v1/artists/{artist_id}` | Detailed artist info with top tracks and genres |
+All artist endpoints are prefixed with `/api/v1/artists`.
 
 ### `GET /api/v1/artists/top`
 
-**Query Parameters:**
+Returns the user's top artists by play count for the given period.
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `period` | string | `month` | Time range: `week`, `month`, `quarter`, `year`, `all_time` |
-| `limit` | int | `20` | Number of results (max: 100) |
-| `page` | int | `1` | Page number |
+| Parameter | Type   | Default    | Description                                  |
+| --------- | ------ | ---------- | -------------------------------------------- |
+| `period`  | string | `all_time` | One of `week`, `month`, `quarter`, `year`, `all_time` |
+| `limit`   | int    | `50`       | Number of artists (1–100)                    |
 
 **Response:**
 
 ```json
 {
-  "artists": [
+  "items": [
     {
-      "artist_id": "spotify:artist:xyz789",
-      "name": "Taylor Swift",
-      "genres": ["pop", "indie pop"],
-      "play_count": 342,
-      "total_minutes": 1026,
+      "id": "682a3b...",
+      "spotify_id": "4Z8W4fKeB5YxbusRsdQVPb",
+      "name": "Radiohead",
       "image_url": "https://i.scdn.co/image/...",
-      "unique_tracks": 45
+      "genres": ["art rock", "alternative rock", "experimental"],
+      "popularity": 78,
+      "followers": 8500000,
+      "external_url": "https://open.spotify.com/artist/4Z8W4fKeB5YxbusRsdQVPb"
     }
   ],
-  "total": 78,
-  "page": 1,
-  "limit": 20
+  "period": "all_time",
+  "total": 81
+}
+```
+
+### `GET /api/v1/artists/{artist_id}`
+
+No auth required. Returns a single artist by Spotify ID.
+
+| Parameter   | Type   | Description      |
+| ----------- | ------ | ---------------- |
+| `artist_id` | string | Spotify artist ID |
+
+**Response:**
+
+```json
+{
+  "id": "682a3b...",
+  "spotify_id": "4Z8W4fKeB5YxbusRsdQVPb",
+  "name": "Radiohead",
+  "image_url": "https://i.scdn.co/image/...",
+  "genres": ["art rock", "alternative rock", "experimental"],
+  "popularity": 78,
+  "followers": 8500000,
+  "external_url": "https://open.spotify.com/artist/4Z8W4fKeB5YxbusRsdQVPb"
+}
+```
+
+**Error:** `404` if the artist is not found.
+
+---
+
+## Albums
+
+All album endpoints are prefixed with `/api/v1/albums`.
+
+### `GET /api/v1/albums/top`
+
+Returns the user's top albums by play count for the given period.
+
+| Parameter | Type   | Default    | Description                                  |
+| --------- | ------ | ---------- | -------------------------------------------- |
+| `period`  | string | `all_time` | One of `week`, `month`, `quarter`, `year`, `all_time` |
+| `limit`   | int    | `50`       | Number of albums (1–100)                     |
+
+**Response:**
+
+```json
+{
+  "items": [
+    {
+      "id": "682a3b...",
+      "spotify_id": "6GjwtEZcfenmof6l18N7T7",
+      "name": "Kid A",
+      "artists": ["Radiohead"],
+      "image_url": "https://i.scdn.co/image/...",
+      "release_date": "2000-10-02",
+      "total_tracks": 10,
+      "type": "album",
+      "external_url": "https://open.spotify.com/album/6GjwtEZcfenmof6l18N7T7"
+    }
+  ],
+  "period": "all_time",
+  "total": 45
 }
 ```
 
@@ -212,131 +568,280 @@ Artist analytics and details.
 
 ## Genres
 
-Genre distribution analytics.
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/api/v1/genres/distribution` | Genre breakdown by play count |
+All genre endpoints are prefixed with `/api/v1/genres`.
 
 ### `GET /api/v1/genres/distribution`
 
-**Query Parameters:**
+Returns genre distribution for the user's listening history.
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `period` | string | `month` | Time range filter |
+| Parameter | Type   | Default    | Description                                  |
+| --------- | ------ | ---------- | -------------------------------------------- |
+| `period`  | string | `all_time` | One of `week`, `month`, `quarter`, `year`, `all_time` |
 
 **Response:**
 
 ```json
 {
   "genres": [
-    { "name": "pop", "play_count": 482, "percentage": 28.5 },
-    { "name": "indie rock", "play_count": 256, "percentage": 15.1 },
-    { "name": "r&b", "play_count": 198, "percentage": 11.7 }
-  ]
-}
-```
-
----
-
-## Listening History
-
-Raw listening history with pagination and import.
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/api/v1/history` | Paginated listening history |
-| `POST` | `/api/v1/history/import` | Import Spotify extended streaming history (JSON) |
-
-### `GET /api/v1/history`
-
-**Query Parameters:**
-
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `page` | int | `1` | Page number |
-| `limit` | int | `20` | Results per page (max: 100) |
-
-**Response:**
-
-```json
-{
-  "history": [
-    {
-      "track_name": "Blinding Lights",
-      "artist_name": "The Weeknd",
-      "album_name": "After Hours",
-      "played_at": "2024-01-15T14:32:00Z",
-      "duration_ms": 200040,
-      "image_url": "https://i.scdn.co/image/..."
-    }
+    { "name": "art rock", "play_count": 120, "percentage": 18.5 },
+    { "name": "alternative rock", "play_count": 95, "percentage": 14.6 },
+    { "name": "indie rock", "play_count": 72, "percentage": 11.1 }
   ],
-  "total": 15842,
-  "page": 1,
-  "limit": 20
+  "period": "all_time",
+  "total_genres": 11
 }
 ```
-
-### `POST /api/v1/history/import`
-
-Upload Spotify extended streaming history JSON files (from [Spotify Privacy Data Export](https://www.spotify.com/account/privacy/)).
-
-**Content-Type:** `multipart/form-data`
 
 ---
 
 ## Playlists
 
-User's Spotify playlists.
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/api/v1/playlists` | List user's playlists |
+All playlist endpoints are prefixed with `/api/v1/playlists`.
 
 ### `GET /api/v1/playlists`
 
-**Query Parameters:**
+Returns the user's synced playlists with pagination.
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `page` | int | `1` | Page number |
-| `limit` | int | `20` | Results per page (max: 100) |
+| Parameter | Type | Default | Description            |
+| --------- | ---- | ------- | ---------------------- |
+| `page`    | int  | `1`     | Page number (min: 1)   |
+| `limit`   | int  | `50`    | Items per page (1–100) |
+
+**Response:**
+
+```json
+{
+  "items": [
+    {
+      "id": "682a3b...",
+      "user_id": "682a3a...",
+      "spotify_id": "37i9dQZF1DXcBWIGoYBM5M",
+      "name": "Today's Top Hits",
+      "description": "The hottest tracks right now.",
+      "image_url": "https://i.scdn.co/image/...",
+      "tracks_total": 50,
+      "owner": "Spotify",
+      "public": true,
+      "collaborative": false,
+      "external_url": "https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M"
+    }
+  ],
+  "total": 24,
+  "page": 1,
+  "limit": 50
+}
+```
 
 ---
 
 ## Player
 
-Spotify playback control. Requires an active Spotify session on a device.
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/api/v1/player/current` | Currently playing track |
-| `GET` | `/api/v1/player/devices` | Available playback devices |
-| `GET` | `/api/v1/player/queue` | Player queue |
-| `POST` | `/api/v1/player/play` | Start or resume playback |
-| `POST` | `/api/v1/player/pause` | Pause playback |
-| `POST` | `/api/v1/player/next` | Skip to next track |
-| `POST` | `/api/v1/player/previous` | Go to previous track |
+All player endpoints are prefixed with `/api/v1/player`. These endpoints proxy directly to the Spotify Web API and require a valid Spotify access token.
 
 ### `GET /api/v1/player/current`
+
+Returns the currently playing track.
+
+**Response (playing):**
 
 ```json
 {
   "is_playing": true,
-  "track": {
-    "name": "Blinding Lights",
-    "artist": "The Weeknd",
-    "album": "After Hours",
-    "image_url": "https://i.scdn.co/image/...",
-    "progress_ms": 45000,
-    "duration_ms": 200040
+  "track_name": "Everything In Its Right Place",
+  "artist_name": "Radiohead",
+  "album_name": "Kid A",
+  "album_image": "https://i.scdn.co/image/...",
+  "track_id": "2kRFrWaLWifQkBFasAWgMo",
+  "duration_ms": 250000,
+  "progress_ms": 120000,
+  "device": "MacBook Pro",
+  "shuffle": false,
+  "repeat": "off"
+}
+```
+
+**Response (not playing):**
+
+```json
+{ "is_playing": false }
+```
+
+### `GET /api/v1/player/devices`
+
+Returns available Spotify Connect devices.
+
+**Response:**
+
+```json
+{
+  "devices": [
+    {
+      "id": "abc123",
+      "name": "MacBook Pro",
+      "type": "Computer",
+      "is_active": true,
+      "volume_percent": 65
+    }
+  ]
+}
+```
+
+### `GET /api/v1/player/queue`
+
+Returns the current playback queue (up to 20 items).
+
+**Response:**
+
+```json
+{
+  "currently_playing": {
+    "id": "2kRFrWaLWifQkBFasAWgMo",
+    "name": "Everything In Its Right Place",
+    "artist": "Radiohead",
+    "album": "Kid A",
+    "image": "https://i.scdn.co/image/...",
+    "duration_ms": 250000
   },
-  "device": {
-    "name": "MacBook Pro",
-    "type": "Computer",
-    "volume_percent": 65
-  }
+  "queue": [
+    {
+      "id": "6LgJvl0Xdtc73RJ1mZoUnj",
+      "name": "Kid A",
+      "artist": "Radiohead",
+      "album": "Kid A",
+      "image": "https://i.scdn.co/image/...",
+      "duration_ms": 280000
+    }
+  ]
+}
+```
+
+### `POST /api/v1/player/play`
+
+Start or resume playback.
+
+**Request body (all fields optional):**
+
+```json
+{
+  "context_uri": "spotify:album:6GjwtEZcfenmof6l18N7T7",
+  "uris": ["spotify:track:2kRFrWaLWifQkBFasAWgMo"],
+  "device_id": "abc123"
+}
+```
+
+**Response:**
+
+```json
+{ "status": "playing" }
+```
+
+### `POST /api/v1/player/pause`
+
+Pause playback.
+
+**Response:**
+
+```json
+{ "status": "paused" }
+```
+
+### `POST /api/v1/player/next`
+
+Skip to next track.
+
+**Response:**
+
+```json
+{ "status": "skipped" }
+```
+
+### `POST /api/v1/player/previous`
+
+Skip to previous track.
+
+**Response:**
+
+```json
+{ "status": "skipped_back" }
+```
+
+---
+
+## Browse
+
+All browse endpoints are prefixed with `/api/v1/browse`. These proxy to the Spotify Web API.
+
+### `GET /api/v1/browse/new-releases`
+
+Returns new album releases from Spotify.
+
+| Parameter | Type | Default | Description          |
+| --------- | ---- | ------- | -------------------- |
+| `limit`   | int  | `20`    | Number of results    |
+
+**Response:**
+
+```json
+{
+  "items": [
+    {
+      "id": "6GjwtEZcfenmof6l18N7T7",
+      "name": "Kid A Mnesia",
+      "artists": "Radiohead",
+      "image": "https://i.scdn.co/image/...",
+      "release_date": "2021-11-05",
+      "total_tracks": 34,
+      "type": "compilation"
+    }
+  ]
+}
+```
+
+### `GET /api/v1/browse/featured-playlists`
+
+Returns Spotify's featured playlists.
+
+| Parameter | Type | Default | Description          |
+| --------- | ---- | ------- | -------------------- |
+| `limit`   | int  | `20`    | Number of results    |
+
+**Response:**
+
+```json
+{
+  "message": "Good afternoon",
+  "items": [
+    {
+      "id": "37i9dQZF1DXcBWIGoYBM5M",
+      "name": "Today's Top Hits",
+      "description": "The hottest tracks right now.",
+      "image": "https://i.scdn.co/image/...",
+      "tracks_total": 50,
+      "owner": "Spotify"
+    }
+  ]
+}
+```
+
+### `GET /api/v1/browse/categories`
+
+Returns Spotify browse categories.
+
+| Parameter | Type | Default | Description          |
+| --------- | ---- | ------- | -------------------- |
+| `limit`   | int  | `50`    | Number of results    |
+
+**Response:**
+
+```json
+{
+  "items": [
+    {
+      "id": "toplists",
+      "name": "Top Lists",
+      "image": "https://t.scdn.co/media/..."
+    }
+  ]
 }
 ```
 
@@ -344,118 +849,310 @@ Spotify playback control. Requires an active Spotify session on a device.
 
 ## Library
 
-User's Spotify library.
+All library endpoints are prefixed with `/api/v1/library`. These proxy to the Spotify Web API.
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/api/v1/library/followed-artists` | Artists the user follows |
-| `GET` | `/api/v1/library/saved-albums` | User's saved albums |
+### `GET /api/v1/library/followed-artists`
 
----
+Returns artists the user follows on Spotify.
 
-## Recommendations
-
-Music recommendations based on listening history.
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/api/v1/recommendations` | Personalized track recommendations |
-
----
-
-## Browse
-
-Spotify's curated content.
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/api/v1/browse/new-releases` | New album releases |
-| `GET` | `/api/v1/browse/featured-playlists` | Spotify's featured playlists |
-| `GET` | `/api/v1/browse/categories` | Browse categories |
-
----
-
-## Sync Jobs
-
-Background data sync management.
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/api/v1/sync-jobs` | List sync jobs with status and timing |
-| `GET` | `/api/v1/sync-jobs/stats` | Sync job statistics (success rate, avg duration) |
-| `POST` | `/api/v1/sync-jobs/trigger` | Manually trigger a data sync |
-
-### `GET /api/v1/sync-jobs`
-
-**Query Parameters:**
-
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `page` | int | `1` | Page number |
-| `limit` | int | `20` | Results per page (max: 100) |
-| `status` | string | — | Filter by status: `pending`, `running`, `completed`, `failed` |
-| `job_type` | string | — | Filter by job type |
+| Parameter | Type | Default | Description              |
+| --------- | ---- | ------- | ------------------------ |
+| `limit`   | int  | `50`    | Number of artists (1–50) |
 
 **Response:**
 
 ```json
 {
-  "jobs": [
+  "items": [
     {
-      "id": "abc123",
-      "job_type": "spotify_sync",
-      "status": "completed",
-      "started_at": "2024-01-15T14:00:00Z",
-      "completed_at": "2024-01-15T14:00:12Z",
-      "duration_seconds": 12,
-      "items_synced": 47,
-      "api_calls": 8
+      "id": "4Z8W4fKeB5YxbusRsdQVPb",
+      "name": "Radiohead",
+      "image": "https://i.scdn.co/image/...",
+      "followers": 8500000,
+      "genres": ["art rock", "alternative rock"]
     }
   ],
-  "total": 284,
-  "page": 1,
-  "limit": 20
+  "total": 142
 }
 ```
 
-### `POST /api/v1/sync-jobs/trigger`
+### `GET /api/v1/library/saved-albums`
 
-Triggers an immediate sync outside the normal 15-minute schedule.
+Returns albums saved to the user's Spotify library.
+
+| Parameter | Type | Default | Description              |
+| --------- | ---- | ------- | ------------------------ |
+| `limit`   | int  | `50`    | Number of albums (1–50)  |
+| `offset`  | int  | `0`     | Pagination offset        |
+
+**Response:**
 
 ```json
 {
-  "job_id": "def456",
-  "status": "pending",
-  "message": "Sync job queued"
+  "items": [
+    {
+      "id": "6GjwtEZcfenmof6l18N7T7",
+      "name": "Kid A",
+      "artists": "Radiohead",
+      "image": "https://i.scdn.co/image/...",
+      "release_date": "2000-10-02",
+      "total_tracks": 10,
+      "added_at": "2024-06-15T10:30:00Z"
+    }
+  ],
+  "total": 85,
+  "limit": 50,
+  "offset": 0
 }
 ```
 
 ---
 
-## API Logs
+## Recommendations
 
-Monitoring dashboard data for Spotify API calls.
+### `GET /api/v1/recommendations`
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/api/v1/api-logs` | Paginated API request logs |
-| `GET` | `/api/v1/api-logs/stats` | Aggregated API log statistics (status distribution, latency) |
+Returns track recommendations based on the user's listening analytics.
 
-### `GET /api/v1/api-logs/stats`
+| Parameter   | Type   | Default | Description                                  |
+| ----------- | ------ | ------- | -------------------------------------------- |
+| `limit`     | int    | `20`    | Number of recommendations (1–50)             |
+| `seed_type` | string | `mixed` | One of `artists`, `tracks`, `genres`, `mixed` |
+
+Seeds are derived from the user's analytics snapshot (top artists, tracks, and genres).
+
+**Response:**
 
 ```json
 {
-  "total_requests": 4821,
-  "success_rate": 0.95,
-  "avg_latency_ms": 145,
+  "items": [
+    {
+      "id": "3EYHN9PZiFaz5tEspCPPDr",
+      "name": "Paranoid Android",
+      "artists": ["Radiohead"],
+      "artist": "Radiohead",
+      "album": "OK Computer",
+      "album_image": "https://i.scdn.co/image/...",
+      "duration_ms": 383000,
+      "popularity": 75,
+      "audio_features": {
+        "danceability": 0.38,
+        "energy": 0.72,
+        "valence": 0.19
+      },
+      "external_url": "https://open.spotify.com/track/3EYHN9PZiFaz5tEspCPPDr"
+    }
+  ],
+  "total": 20,
+  "seed_info": {
+    "type": "mixed",
+    "top_artist": "Radiohead",
+    "top_genre": "art rock"
+  }
+}
+```
+
+Returns `{"items": [], "seed_info": {}}` if no analytics snapshot is available.
+
+---
+
+## Sync Jobs
+
+All sync job endpoints are prefixed with `/api/v1/sync-jobs`.
+
+### `GET /api/v1/sync-jobs`
+
+Returns paginated list of sync jobs.
+
+| Parameter  | Type   | Default | Description                                         |
+| ---------- | ------ | ------- | --------------------------------------------------- |
+| `page`     | int    | `1`     | Page number (min: 1)                                |
+| `limit`    | int    | `20`    | Items per page (1–100)                              |
+| `status`   | string | —       | Filter: `pending`, `running`, `completed`, `failed` |
+| `job_type` | string | —       | Filter: `periodic`, `rollup_build`, `import`, `initial` |
+
+**Response:**
+
+```json
+{
+  "items": [
+    {
+      "id": "682a3b...",
+      "job_type": "periodic",
+      "status": "completed",
+      "items_processed": 50,
+      "items_total": 50,
+      "error_message": null,
+      "started_at": "2025-01-15T14:00:00Z",
+      "completed_at": "2025-01-15T14:00:12Z",
+      "created_at": "2025-01-15T14:00:00Z",
+      "steps": [
+        {
+          "action": "recently_played",
+          "status": "completed",
+          "detail": "Fetched 50 recent tracks",
+          "items": 50,
+          "error": null
+        },
+        {
+          "action": "audio_features",
+          "status": "completed",
+          "detail": "Updated audio features for 12 tracks",
+          "items": 12,
+          "error": null
+        }
+      ]
+    }
+  ],
+  "total": 145,
+  "page": 1,
+  "pages": 8
+}
+```
+
+### `GET /api/v1/sync-jobs/stats`
+
+Returns aggregate sync job statistics.
+
+**Response:**
+
+```json
+{
+  "total_jobs": 145,
+  "completed": 140,
+  "failed": 3,
+  "running": 1,
+  "total_items_synced": 15200,
+  "last_sync_at": "2025-01-15T14:00:12Z"
+}
+```
+
+### `POST /api/v1/sync-jobs/trigger`
+
+Manually triggers a data sync. Runs: recently played → audio features → playlists → top items → analytics refresh.
+
+**Response:**
+
+```json
+{
+  "status": "started",
+  "job_id": "682a3b...",
+  "message": "Sync job started"
+}
+```
+
+Returns `"status": "already_running"` if a sync is in progress.
+
+---
+
+## API Logs
+
+All API log endpoints are prefixed with `/api/v1/api-logs`. These track outbound calls to the Spotify API.
+
+### `GET /api/v1/api-logs`
+
+Returns paginated API call logs.
+
+| Parameter           | Type   | Default | Description                        |
+| ------------------- | ------ | ------- | ---------------------------------- |
+| `page`              | int    | `1`     | Page number (min: 1)               |
+| `limit`             | int    | `50`    | Items per page (1–200)             |
+| `service`           | string | —       | Filter by service (e.g. `spotify`) |
+| `status_min`        | int    | —       | Minimum HTTP status code           |
+| `status_max`        | int    | —       | Maximum HTTP status code           |
+| `method`            | string | —       | HTTP method (`GET`, `POST`, etc.)  |
+| `endpoint_contains` | string | —       | Filter by endpoint substring       |
+
+**Response:**
+
+```json
+{
+  "items": [
+    {
+      "id": "682a3b...",
+      "service": "spotify",
+      "method": "GET",
+      "endpoint": "/v1/me/player/recently-played",
+      "status_code": 200,
+      "latency_ms": 142.5,
+      "error": null,
+      "timestamp": "2025-01-15T14:00:01Z"
+    }
+  ],
+  "total": 3200,
+  "page": 1,
+  "limit": 50,
+  "pages": 64
+}
+```
+
+### `GET /api/v1/api-logs/stats`
+
+Returns aggregate API call statistics.
+
+**Response:**
+
+```json
+{
+  "total_calls": 3200,
+  "error_count": 15,
+  "rate_limit_count": 2,
+  "success_rate": 99.5,
+  "avg_latency_ms": 185.3,
   "status_distribution": {
-    "200": 4580,
-    "401": 12,
-    "429": 189,
-    "500": 40
+    "2xx": 3180,
+    "4xx": 12,
+    "5xx": 8
   },
-  "endpoints": [
-    { "endpoint": "/v1/me/player/recently-played", "count": 1204, "avg_latency_ms": 120 }
+  "top_endpoints": [
+    { "endpoint": "GET /v1/me/player/recently-played", "count": 1450 },
+    { "endpoint": "GET /v1/audio-features", "count": 820 }
   ]
 }
+```
+
+---
+
+## Error Responses
+
+All endpoints use consistent error shapes.
+
+### Validation Error (422)
+
+```json
+{
+  "detail": [
+    {
+      "loc": ["query", "limit"],
+      "msg": "ensure this value is less than or equal to 100",
+      "type": "value_error"
+    }
+  ]
+}
+```
+
+### Authentication Error (401)
+
+```json
+{ "detail": "Not authenticated" }
+```
+
+### Not Found (404)
+
+```json
+{ "detail": "Track not found" }
+```
+
+### Service Unavailable (503)
+
+Returned when MongoDB or Redis is unreachable. Includes a `Retry-After` header.
+
+```json
+{ "detail": "Service temporarily unavailable" }
+```
+
+### Internal Server Error (500)
+
+```json
+{ "detail": "Internal server error" }
 ```

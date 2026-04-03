@@ -1,0 +1,812 @@
+---
+title: MongoDB Schema
+description: Complete reference for all MongoDB collections used by EchoStats.
+---
+
+EchoStats uses MongoDB as its primary data store. This page documents every collection, its fields, indexes, and relationships.
+
+## Collection Overview
+
+| Collection             | Purpose                                               |
+| ---------------------- | ----------------------------------------------------- |
+| `users`                | User accounts linked to Spotify                       |
+| `spotify_tokens`       | Encrypted OAuth tokens per user                       |
+| `listening_history`    | Individual track play events                          |
+| `tracks`               | Spotify track metadata and audio features             |
+| `artists`              | Spotify artist metadata                               |
+| `albums`               | Spotify album metadata                                |
+| `playlists`            | Synced Spotify playlists with embedded tracks         |
+| `daily_rollups`        | Pre-aggregated daily listening statistics              |
+| `analytics_snapshots`  | Pre-computed analytics for time periods               |
+| `sync_jobs`            | Background job tracking with step-by-step progress    |
+| `api_logs`             | External API call logs for monitoring                 |
+
+```
+User
+├── 1:1 → SpotifyTokens
+├── 1:N → ListeningHistory → Track → Album
+│                                  → Artist
+├── 1:N → Playlist (tracks embedded)
+├── 1:N → DailyRollup
+├── 1:N → AnalyticsSnapshot
+├── 1:N → SyncJob
+└── 1:N → ApiLog
+```
+
+---
+
+## users
+
+Stores EchoStats user accounts, each linked to a Spotify profile.
+
+| Field           | Type             | Default            | Description                         |
+| --------------- | ---------------- | ------------------ | ----------------------------------- |
+| `_id`           | ObjectId         | auto               | Primary key                         |
+| `spotify_id`    | string           | required           | Spotify user ID                     |
+| `display_name`  | string           | `""`               | User display name                   |
+| `image_url`     | string           | `""`               | Profile image URL                   |
+| `country`       | string           | `""`               | ISO country code                    |
+| `product`       | string           | `""`               | Spotify subscription (`premium`, `free`) |
+| `created_at`    | datetime         | `utcnow()`         | Account creation timestamp          |
+| `last_synced_at`| datetime \| null | `null`             | Last successful data sync           |
+
+**Indexes:**
+
+| Fields       | Type   | Notes  |
+| ------------ | ------ | ------ |
+| `spotify_id` | unique | User lookup by Spotify ID |
+
+**Example document:**
+
+```json
+{
+  "_id": "682a3b1f2e4a5c6d7e8f9012",
+  "spotify_id": "atul123",
+  "display_name": "Atul",
+  "image_url": "https://i.scdn.co/image/ab67...",
+  "country": "US",
+  "product": "premium",
+  "created_at": "2025-01-01T00:00:00Z",
+  "last_synced_at": "2025-01-15T14:00:00Z"
+}
+```
+
+---
+
+## spotify_tokens
+
+Stores encrypted Spotify OAuth refresh tokens. One document per user.
+
+| Field                      | Type     | Default    | Description                        |
+| -------------------------- | -------- | ---------- | ---------------------------------- |
+| `_id`                      | ObjectId | auto       | Primary key                        |
+| `user_id`                  | string   | required   | Reference to `users._id`           |
+| `refresh_token_encrypted`  | string   | required   | AES-256 encrypted refresh token    |
+| `expires_at`               | datetime | required   | Token expiration time              |
+| `scope`                    | string   | `""`       | OAuth scopes granted               |
+
+**Indexes:**
+
+| Fields    | Type   | Notes              |
+| --------- | ------ | ------------------ |
+| `user_id` | simple | Token lookup by user |
+
+:::caution
+The `refresh_token_encrypted` field is encrypted using the `ENCRYPTION_KEY` environment variable. If the key changes, all tokens become unrecoverable and users must re-authenticate.
+:::
+
+**Example document:**
+
+```json
+{
+  "_id": "682a3b1f2e4a5c6d7e8f9013",
+  "user_id": "682a3b1f2e4a5c6d7e8f9012",
+  "refresh_token_encrypted": "gAAAAABl...",
+  "expires_at": "2025-01-15T15:00:00Z",
+  "scope": "user-read-recently-played user-read-playback-state user-library-read"
+}
+```
+
+---
+
+## listening_history
+
+Records individual track play events. Each document represents one play of one track by one user.
+
+| Field              | Type             | Default  | Description                          |
+| ------------------ | ---------------- | -------- | ------------------------------------ |
+| `_id`              | ObjectId         | auto     | Primary key                          |
+| `user_id`          | string           | required | Reference to `users._id`             |
+| `track`            | embedded object  | required | Track snapshot (see below)           |
+| `played_at`        | datetime         | required | When the track was played            |
+| `ms_played`        | int \| null      | `null`   | Milliseconds listened (from imports) |
+| `source`           | string           | `"api"`  | Data source: `api` or `import`       |
+| `context_type`     | string           | `""`     | Playback context: `playlist`, `album`, `artist` |
+| `context_uri`      | string           | `""`     | Spotify context URI                  |
+
+**Embedded `track` object:**
+
+| Field             | Type   | Description            |
+| ----------------- | ------ | ---------------------- |
+| `spotify_id`      | string | Spotify track ID       |
+| `name`            | string | Track name             |
+| `artist_name`     | string | Primary artist name    |
+| `album_name`      | string | Album name             |
+| `album_image_url` | string | Album cover art URL    |
+| `duration_ms`     | int    | Track duration in ms   |
+
+**Indexes:**
+
+| Fields                                        | Type            | Notes                          |
+| --------------------------------------------- | --------------- | ------------------------------ |
+| `user_id`                                     | simple          | Filter by user                 |
+| `played_at`                                   | simple          | Time-range queries             |
+| `track.spotify_id`                            | simple          | Filter by track                |
+| `(user_id, played_at DESC)`                   | compound        | Paginated history queries      |
+| `(user_id, track.spotify_id, played_at)`      | compound unique | Prevents duplicate play events |
+
+**Example document:**
+
+```json
+{
+  "_id": "682a3b1f2e4a5c6d7e8f9014",
+  "user_id": "682a3b1f2e4a5c6d7e8f9012",
+  "track": {
+    "spotify_id": "2kRFrWaLWifQkBFasAWgMo",
+    "name": "Everything In Its Right Place",
+    "artist_name": "Radiohead",
+    "album_name": "Kid A",
+    "album_image_url": "https://i.scdn.co/image/ab67...",
+    "duration_ms": 250000
+  },
+  "played_at": "2025-01-15T14:32:00Z",
+  "ms_played": 245000,
+  "source": "api",
+  "context_type": "album",
+  "context_uri": "spotify:album:6GjwtEZcfenmof6l18N7T7"
+}
+```
+
+---
+
+## tracks
+
+Stores Spotify track metadata including audio features. Tracks are shared across users — one document per Spotify track ID.
+
+| Field            | Type                  | Default      | Description                     |
+| ---------------- | --------------------- | ------------ | ------------------------------- |
+| `_id`            | ObjectId              | auto         | Primary key                     |
+| `spotify_id`     | string                | required     | Spotify track ID                |
+| `name`           | string                | required     | Track name                      |
+| `artists`        | array of embedded obj | `[]`         | Artist references (see below)   |
+| `album`          | embedded obj \| null  | `null`       | Album reference (see below)     |
+| `duration_ms`    | int                   | `0`          | Duration in milliseconds        |
+| `popularity`     | int                   | `0`          | Spotify popularity score (0–100)|
+| `explicit`       | bool                  | `false`      | Explicit content flag           |
+| `preview_url`    | string \| null        | `null`       | 30-second preview audio URL     |
+| `external_url`   | string                | `""`         | Spotify web URL                 |
+| `audio_features` | embedded obj \| null  | `null`       | Audio analysis (see below)      |
+| `genres`         | array of string       | `[]`         | Genre tags                      |
+| `fetched_at`     | datetime              | `utcnow()`   | When the track was fetched      |
+| `updated_at`     | datetime              | `utcnow()`   | Last metadata update            |
+
+**Embedded `artists[]` object:**
+
+| Field        | Type   | Description       |
+| ------------ | ------ | ----------------- |
+| `spotify_id` | string | Spotify artist ID |
+| `name`       | string | Artist name       |
+
+**Embedded `album` object:**
+
+| Field          | Type   | Description         |
+| -------------- | ------ | ------------------- |
+| `spotify_id`   | string | Spotify album ID    |
+| `name`         | string | Album name          |
+| `image_url`    | string | Album cover art URL |
+| `release_date` | string | Release date (YYYY-MM-DD) |
+
+**Embedded `audio_features` object:**
+
+| Field              | Type  | Range     | Description                        |
+| ------------------ | ----- | --------- | ---------------------------------- |
+| `danceability`     | float | 0.0–1.0   | How suitable for dancing           |
+| `energy`           | float | 0.0–1.0   | Perceptual intensity               |
+| `key`              | int   | 0–11      | Pitch class (0=C, 1=C#, …, 11=B)  |
+| `loudness`         | float | dB        | Overall loudness                   |
+| `mode`             | int   | 0 or 1    | Modality (0=minor, 1=major)        |
+| `speechiness`      | float | 0.0–1.0   | Presence of spoken words           |
+| `acousticness`     | float | 0.0–1.0   | Acoustic confidence                |
+| `instrumentalness` | float | 0.0–1.0   | No vocals prediction               |
+| `liveness`         | float | 0.0–1.0   | Live audience presence             |
+| `valence`          | float | 0.0–1.0   | Musical positiveness               |
+| `tempo`            | float | BPM       | Estimated tempo                    |
+| `duration_ms`      | int   | ms        | Duration from audio analysis       |
+| `time_signature`   | int   | 3–7       | Estimated time signature           |
+
+**Indexes:**
+
+| Fields               | Type   | Notes                     |
+| -------------------- | ------ | ------------------------- |
+| `spotify_id`         | unique | Track deduplication       |
+| `artists.spotify_id` | simple | Find tracks by artist     |
+| `name`               | simple | Search tracks by name     |
+
+**Example document:**
+
+```json
+{
+  "_id": "682a3b1f2e4a5c6d7e8f9015",
+  "spotify_id": "2kRFrWaLWifQkBFasAWgMo",
+  "name": "Everything In Its Right Place",
+  "artists": [
+    { "spotify_id": "4Z8W4fKeB5YxbusRsdQVPb", "name": "Radiohead" }
+  ],
+  "album": {
+    "spotify_id": "6GjwtEZcfenmof6l18N7T7",
+    "name": "Kid A",
+    "image_url": "https://i.scdn.co/image/ab67...",
+    "release_date": "2000-10-02"
+  },
+  "duration_ms": 250000,
+  "popularity": 72,
+  "explicit": false,
+  "preview_url": "https://p.scdn.co/mp3-preview/...",
+  "external_url": "https://open.spotify.com/track/2kRFrWaLWifQkBFasAWgMo",
+  "audio_features": {
+    "danceability": 0.45,
+    "energy": 0.63,
+    "key": 4,
+    "loudness": -9.2,
+    "mode": 1,
+    "speechiness": 0.04,
+    "acousticness": 0.04,
+    "instrumentalness": 0.73,
+    "liveness": 0.11,
+    "valence": 0.22,
+    "tempo": 156.1,
+    "duration_ms": 250000,
+    "time_signature": 4
+  },
+  "genres": ["art rock", "alternative rock"],
+  "fetched_at": "2025-01-10T12:00:00Z",
+  "updated_at": "2025-01-15T14:00:00Z"
+}
+```
+
+---
+
+## artists
+
+Stores Spotify artist metadata. One document per artist, shared across users.
+
+| Field          | Type                  | Default    | Description                |
+| -------------- | --------------------- | ---------- | -------------------------- |
+| `_id`          | ObjectId              | auto       | Primary key                |
+| `spotify_id`   | string                | required   | Spotify artist ID          |
+| `name`         | string                | required   | Artist name                |
+| `genres`       | array of string       | `[]`       | Genre tags                 |
+| `popularity`   | int                   | `0`        | Spotify popularity (0–100) |
+| `followers`    | int                   | `0`        | Follower count             |
+| `images`       | array of embedded obj | `[]`       | Artist images              |
+| `external_url` | string                | `""`       | Spotify profile URL        |
+| `fetched_at`   | datetime              | `utcnow()` | When fetched               |
+| `updated_at`   | datetime              | `utcnow()` | Last update                |
+
+**Embedded `images[]` object:**
+
+| Field    | Type        | Description         |
+| -------- | ----------- | ------------------- |
+| `url`    | string      | Image URL           |
+| `height` | int \| null | Height in pixels    |
+| `width`  | int \| null | Width in pixels     |
+
+**Computed properties:**
+
+- `image_url` — returns the URL of the first image, or empty string if none.
+
+**Indexes:**
+
+| Fields       | Type   | Notes                     |
+| ------------ | ------ | ------------------------- |
+| `spotify_id` | unique | Artist deduplication      |
+| `genres`     | simple | Filter artists by genre   |
+| `name`       | simple | Search artists by name    |
+
+**Example document:**
+
+```json
+{
+  "_id": "682a3b1f2e4a5c6d7e8f9016",
+  "spotify_id": "4Z8W4fKeB5YxbusRsdQVPb",
+  "name": "Radiohead",
+  "genres": ["art rock", "alternative rock", "experimental"],
+  "popularity": 78,
+  "followers": 8500000,
+  "images": [
+    { "url": "https://i.scdn.co/image/ab67...", "height": 640, "width": 640 },
+    { "url": "https://i.scdn.co/image/ab67...", "height": 320, "width": 320 }
+  ],
+  "external_url": "https://open.spotify.com/artist/4Z8W4fKeB5YxbusRsdQVPb",
+  "fetched_at": "2025-01-10T12:00:00Z",
+  "updated_at": "2025-01-15T14:00:00Z"
+}
+```
+
+---
+
+## albums
+
+Stores Spotify album metadata. One document per album, shared across users.
+
+| Field          | Type                  | Default    | Description                |
+| -------------- | --------------------- | ---------- | -------------------------- |
+| `_id`          | ObjectId              | auto       | Primary key                |
+| `spotify_id`   | string                | required   | Spotify album ID           |
+| `name`         | string                | required   | Album name                 |
+| `album_type`   | string                | `""`       | Type: `album`, `single`, `compilation` |
+| `artists`      | array of embedded obj | `[]`       | Album artists              |
+| `images`       | array of embedded obj | `[]`       | Album cover art            |
+| `release_date` | string                | `""`       | Release date (YYYY-MM-DD)  |
+| `total_tracks` | int                   | `0`        | Number of tracks           |
+| `genres`       | array of string       | `[]`       | Genre tags                 |
+| `popularity`   | int                   | `0`        | Spotify popularity (0–100) |
+| `external_url` | string                | `""`       | Spotify web URL            |
+| `fetched_at`   | datetime              | `utcnow()` | When fetched               |
+
+**Embedded `artists[]` object:**
+
+| Field        | Type   | Description       |
+| ------------ | ------ | ----------------- |
+| `spotify_id` | string | Spotify artist ID |
+| `name`       | string | Artist name       |
+
+**Embedded `images[]` object:**
+
+| Field    | Type        | Description      |
+| -------- | ----------- | ---------------- |
+| `url`    | string      | Image URL        |
+| `height` | int \| null | Height in pixels |
+| `width`  | int \| null | Width in pixels  |
+
+**Computed properties:**
+
+- `image_url` — returns the URL of the first image, or empty string if none.
+
+**Indexes:**
+
+| Fields       | Type   | Notes                |
+| ------------ | ------ | -------------------- |
+| `spotify_id` | unique | Album deduplication  |
+
+**Example document:**
+
+```json
+{
+  "_id": "682a3b1f2e4a5c6d7e8f9017",
+  "spotify_id": "6GjwtEZcfenmof6l18N7T7",
+  "name": "Kid A",
+  "album_type": "album",
+  "artists": [
+    { "spotify_id": "4Z8W4fKeB5YxbusRsdQVPb", "name": "Radiohead" }
+  ],
+  "images": [
+    { "url": "https://i.scdn.co/image/ab67...", "height": 640, "width": 640 }
+  ],
+  "release_date": "2000-10-02",
+  "total_tracks": 10,
+  "genres": ["art rock"],
+  "popularity": 75,
+  "external_url": "https://open.spotify.com/album/6GjwtEZcfenmof6l18N7T7",
+  "fetched_at": "2025-01-10T12:00:00Z"
+}
+```
+
+---
+
+## playlists
+
+Stores Spotify playlists with their full track list embedded. Scoped per user.
+
+| Field           | Type                  | Default    | Description                 |
+| --------------- | --------------------- | ---------- | --------------------------- |
+| `_id`           | ObjectId              | auto       | Primary key                 |
+| `spotify_id`    | string                | required   | Spotify playlist ID         |
+| `user_id`       | string                | required   | Reference to `users._id`    |
+| `name`          | string                | required   | Playlist name               |
+| `description`   | string                | `""`       | Playlist description        |
+| `public`        | bool                  | `true`     | Public visibility           |
+| `collaborative` | bool                  | `false`    | Collaborative editing       |
+| `images`        | array of embedded obj | `[]`       | Cover images                |
+| `owner_id`      | string                | `""`       | Spotify owner ID            |
+| `owner_name`    | string                | `""`       | Spotify owner display name  |
+| `total_tracks`  | int                   | `0`        | Track count                 |
+| `tracks`        | array of embedded obj | `[]`       | Embedded track list         |
+| `snapshot_id`   | string                | `""`       | Spotify snapshot version ID |
+| `external_url`  | string                | `""`       | Spotify web URL             |
+| `fetched_at`    | datetime              | `utcnow()` | When fetched                |
+
+**Embedded `tracks[]` object:**
+
+| Field         | Type             | Description         |
+| ------------- | ---------------- | ------------------- |
+| `spotify_id`  | string           | Spotify track ID    |
+| `name`        | string           | Track name          |
+| `artist_name` | string           | Primary artist name |
+| `album_name`  | string           | Album name          |
+| `added_at`    | datetime \| null | When added to playlist |
+| `duration_ms` | int              | Track duration      |
+
+**Indexes:**
+
+| Fields                    | Type     | Notes                         |
+| ------------------------- | -------- | ----------------------------- |
+| `spotify_id`              | simple   | Playlist lookup               |
+| `user_id`                 | simple   | User's playlists              |
+| `(user_id, spotify_id)`   | compound | User-scoped playlist lookup   |
+
+**Example document:**
+
+```json
+{
+  "_id": "682a3b1f2e4a5c6d7e8f9018",
+  "spotify_id": "37i9dQZF1DXcBWIGoYBM5M",
+  "user_id": "682a3b1f2e4a5c6d7e8f9012",
+  "name": "Today's Top Hits",
+  "description": "The hottest tracks right now.",
+  "public": true,
+  "collaborative": false,
+  "images": [
+    { "url": "https://i.scdn.co/image/ab67...", "height": 640, "width": 640 }
+  ],
+  "owner_id": "spotify",
+  "owner_name": "Spotify",
+  "total_tracks": 50,
+  "tracks": [
+    {
+      "spotify_id": "2kRFrWaLWifQkBFasAWgMo",
+      "name": "Everything In Its Right Place",
+      "artist_name": "Radiohead",
+      "album_name": "Kid A",
+      "added_at": "2025-01-10T00:00:00Z",
+      "duration_ms": 250000
+    }
+  ],
+  "snapshot_id": "MTY3...",
+  "external_url": "https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M",
+  "fetched_at": "2025-01-15T14:00:00Z"
+}
+```
+
+---
+
+## daily_rollups
+
+Pre-aggregated listening statistics for one user per day. Built from `listening_history` records to enable fast analytics queries.
+
+| Field          | Type                  | Default | Description                           |
+| -------------- | --------------------- | ------- | ------------------------------------- |
+| `_id`          | ObjectId              | auto    | Primary key                           |
+| `user_id`      | string                | required| Reference to `users._id`              |
+| `date`         | string                | required| Date in `YYYY-MM-DD` format           |
+| `day_of_week`  | int                   | `0`     | Day of week (0=Monday, 6=Sunday)      |
+| `total_plays`  | int                   | `0`     | Total plays for the day               |
+| `total_ms`     | int                   | `0`     | Total milliseconds listened           |
+| `hourly`       | array of embedded obj | `[]`    | Plays broken down by hour             |
+| `artist_plays` | dict (str → int)      | `{}`    | Artist name → play count              |
+| `album_plays`  | dict (str → int)      | `{}`    | Album name → play count               |
+| `track_plays`  | array of embedded obj | `[]`    | Track play breakdown                  |
+
+**Embedded `hourly[]` object:**
+
+| Field   | Type | Description               |
+| ------- | ---- | ------------------------- |
+| `hour`  | int  | Hour of day (0–23)        |
+| `count` | int  | Number of plays           |
+| `ms`    | int  | Milliseconds listened     |
+
+**Embedded `track_plays[]` object:**
+
+| Field         | Type   | Description         |
+| ------------- | ------ | ------------------- |
+| `spotify_id`  | string | Spotify track ID    |
+| `name`        | string | Track name          |
+| `artist_name` | string | Artist name         |
+| `count`       | int    | Number of plays     |
+
+**Indexes:**
+
+| Fields                    | Type     | Notes                       |
+| ------------------------- | -------- | --------------------------- |
+| `user_id`                 | simple   | Filter by user              |
+| `date`                    | simple   | Filter by date              |
+| `(user_id, date ASC)`     | compound | Ascending time-range queries |
+| `(user_id, date DESC)`    | compound | Descending (latest first)   |
+
+**Example document:**
+
+```json
+{
+  "_id": "682a3b1f2e4a5c6d7e8f9019",
+  "user_id": "682a3b1f2e4a5c6d7e8f9012",
+  "date": "2025-01-15",
+  "day_of_week": 2,
+  "total_plays": 42,
+  "total_ms": 8400000,
+  "hourly": [
+    { "hour": 9, "count": 5, "ms": 1000000 },
+    { "hour": 14, "count": 12, "ms": 2400000 },
+    { "hour": 20, "count": 8, "ms": 1600000 }
+  ],
+  "artist_plays": {
+    "Radiohead": 15,
+    "Aphex Twin": 8,
+    "Boards of Canada": 5
+  },
+  "album_plays": {
+    "Kid A": 10,
+    "Selected Ambient Works 85-92": 6
+  },
+  "track_plays": [
+    { "spotify_id": "2kRFrWaLWifQkBFasAWgMo", "name": "Everything In Its Right Place", "artist_name": "Radiohead", "count": 3 }
+  ]
+}
+```
+
+---
+
+## analytics_snapshots
+
+Pre-computed user analytics for named time periods. These power the `/api/v1/analytics/overview` endpoint.
+
+| Field                  | Type                  | Default    | Description                          |
+| ---------------------- | --------------------- | ---------- | ------------------------------------ |
+| `_id`                  | ObjectId              | auto       | Primary key                          |
+| `user_id`              | string                | required   | Reference to `users._id`            |
+| `period`               | string                | required   | Period: `week`, `month`, `quarter`, `year`, `all_time` |
+| `period_start`         | datetime \| null      | `null`     | Period start boundary                |
+| `period_end`           | datetime \| null      | `null`     | Period end boundary                  |
+| `total_tracks_played`  | int                   | `0`        | Total tracks played                  |
+| `total_ms_played`      | int                   | `0`        | Total milliseconds                   |
+| `unique_tracks`        | int                   | `0`        | Unique track count                   |
+| `unique_artists`       | int                   | `0`        | Unique artist count                  |
+| `unique_albums`        | int                   | `0`        | Unique album count                   |
+| `unique_genres`        | int                   | `0`        | Unique genre count                   |
+| `listening_streak_days`| int                   | `0`        | Consecutive listening days           |
+| `top_artists`          | array of embedded obj | `[]`       | Top artists (see TopItem below)      |
+| `top_tracks`           | array of embedded obj | `[]`       | Top tracks                           |
+| `top_genres`           | array of embedded obj | `[]`       | Top genres                           |
+| `top_albums`           | array of embedded obj | `[]`       | Top albums                           |
+| `hourly_distribution`  | array of embedded obj | `[]`       | Plays per hour                       |
+| `daily_distribution`   | array of embedded obj | `[]`       | Plays per day of week                |
+| `avg_audio_features`   | embedded obj \| null  | `null`     | Average audio features               |
+| `computed_at`          | datetime              | `utcnow()` | When snapshot was computed            |
+
+**Embedded `TopItem` object** (used by `top_artists`, `top_tracks`, `top_genres`, `top_albums`):
+
+| Field        | Type   | Description              |
+| ------------ | ------ | ------------------------ |
+| `spotify_id` | string | Spotify ID (empty for genres) |
+| `name`       | string | Display name             |
+| `play_count` | int    | Number of plays          |
+| `total_ms`   | int    | Total listening time     |
+| `image_url`  | string | Image URL                |
+| `rank`       | int    | Position in ranking      |
+
+**Embedded `hourly_distribution[]` object:**
+
+| Field      | Type | Description            |
+| ---------- | ---- | ---------------------- |
+| `hour`     | int  | Hour of day (0–23)     |
+| `count`    | int  | Number of plays        |
+| `total_ms` | int  | Milliseconds listened  |
+
+**Embedded `daily_distribution[]` object:**
+
+| Field      | Type | Description                    |
+| ---------- | ---- | ------------------------------ |
+| `day`      | int  | Day of week (0=Mon, 6=Sun)     |
+| `count`    | int  | Number of plays                |
+| `total_ms` | int  | Milliseconds listened          |
+
+**Embedded `avg_audio_features` object:**
+
+| Field              | Type  | Description                  |
+| ------------------ | ----- | ---------------------------- |
+| `danceability`     | float | Average danceability (0–1)   |
+| `energy`           | float | Average energy (0–1)         |
+| `valence`          | float | Average valence (0–1)        |
+| `acousticness`     | float | Average acousticness (0–1)   |
+| `instrumentalness` | float | Average instrumentalness (0–1)|
+| `liveness`         | float | Average liveness (0–1)       |
+| `speechiness`      | float | Average speechiness (0–1)    |
+| `tempo`            | float | Average tempo (BPM)          |
+
+**Indexes:**
+
+| Fields               | Type     | Notes                              |
+| -------------------- | -------- | ---------------------------------- |
+| `user_id`            | simple   | Filter by user                     |
+| `period`             | simple   | Filter by period                   |
+| `(user_id, period)`  | compound | Unique analytics per user+period   |
+
+**Example document:**
+
+```json
+{
+  "_id": "682a3b1f2e4a5c6d7e8f9020",
+  "user_id": "682a3b1f2e4a5c6d7e8f9012",
+  "period": "week",
+  "period_start": "2025-01-08T00:00:00Z",
+  "period_end": "2025-01-15T00:00:00Z",
+  "total_tracks_played": 319,
+  "total_ms_played": 64140000,
+  "unique_tracks": 279,
+  "unique_artists": 81,
+  "unique_albums": 45,
+  "unique_genres": 11,
+  "listening_streak_days": 5,
+  "top_artists": [
+    { "spotify_id": "4Z8W4fKeB5YxbusRsdQVPb", "name": "Radiohead", "play_count": 45, "total_ms": 9000000, "image_url": "https://...", "rank": 1 }
+  ],
+  "top_tracks": [
+    { "spotify_id": "2kRFrWaLWifQkBFasAWgMo", "name": "Everything In Its Right Place", "play_count": 5, "total_ms": 1250000, "image_url": "", "rank": 1 }
+  ],
+  "top_genres": [
+    { "spotify_id": "", "name": "art rock", "play_count": 120, "total_ms": 24000000, "image_url": "", "rank": 1 }
+  ],
+  "top_albums": [
+    { "spotify_id": "6GjwtEZcfenmof6l18N7T7", "name": "Kid A", "play_count": 30, "total_ms": 6000000, "image_url": "https://...", "rank": 1 }
+  ],
+  "hourly_distribution": [
+    { "hour": 9, "count": 25, "total_ms": 5000000 },
+    { "hour": 14, "count": 42, "total_ms": 8400000 }
+  ],
+  "daily_distribution": [
+    { "day": 0, "count": 48, "total_ms": 9600000 },
+    { "day": 2, "count": 52, "total_ms": 10400000 }
+  ],
+  "avg_audio_features": {
+    "danceability": 0.52,
+    "energy": 0.61,
+    "valence": 0.38,
+    "acousticness": 0.24,
+    "instrumentalness": 0.15,
+    "liveness": 0.12,
+    "speechiness": 0.05,
+    "tempo": 122.5
+  },
+  "computed_at": "2025-01-15T14:05:00Z"
+}
+```
+
+---
+
+## sync_jobs
+
+Tracks background data sync jobs with step-by-step progress. Used by the worker service.
+
+| Field             | Type                  | Default      | Description                          |
+| ----------------- | --------------------- | ------------ | ------------------------------------ |
+| `_id`             | ObjectId              | auto         | Primary key                          |
+| `user_id`         | string                | required     | Reference to `users._id`            |
+| `job_type`        | string                | `"periodic"` | Type: `periodic`, `rollup_build`, `import`, `initial` |
+| `status`          | string                | `"pending"`  | Status: `pending`, `running`, `completed`, `failed` |
+| `started_at`      | datetime \| null      | `null`       | Job start time                       |
+| `completed_at`    | datetime \| null      | `null`       | Job completion time                  |
+| `items_processed` | int                   | `0`          | Items completed so far               |
+| `items_total`     | int                   | `0`          | Total items to process               |
+| `error_message`   | string                | `""`         | Error details if failed              |
+| `steps`           | array of embedded obj | `[]`         | Execution steps (see below)          |
+| `created_at`      | datetime              | `utcnow()`   | Job creation timestamp               |
+
+**Embedded `steps[]` object:**
+
+| Field          | Type             | Description                 |
+| -------------- | ---------------- | --------------------------- |
+| `action`       | string           | Step name (e.g. `recently_played`, `audio_features`, `playlists`) |
+| `status`       | string           | `pending`, `running`, `completed`, `failed` |
+| `detail`       | string           | Human-readable status message |
+| `items`        | int              | Items processed in this step |
+| `started_at`   | datetime         | Step start time              |
+| `completed_at` | datetime \| null | Step completion time         |
+| `error`        | string           | Error message if failed      |
+
+**Indexes:**
+
+| Fields                              | Type     | Notes                       |
+| ----------------------------------- | -------- | --------------------------- |
+| `user_id`                           | simple   | Filter by user              |
+| `status`                            | simple   | Filter by status            |
+| `(user_id, job_type, created_at DESC)` | compound | Latest job by type per user |
+
+**Example document:**
+
+```json
+{
+  "_id": "682a3b1f2e4a5c6d7e8f9021",
+  "user_id": "682a3b1f2e4a5c6d7e8f9012",
+  "job_type": "periodic",
+  "status": "completed",
+  "started_at": "2025-01-15T14:00:00Z",
+  "completed_at": "2025-01-15T14:00:12Z",
+  "items_processed": 50,
+  "items_total": 50,
+  "error_message": "",
+  "steps": [
+    {
+      "action": "recently_played",
+      "status": "completed",
+      "detail": "Fetched 50 recent tracks",
+      "items": 50,
+      "started_at": "2025-01-15T14:00:00Z",
+      "completed_at": "2025-01-15T14:00:03Z",
+      "error": ""
+    },
+    {
+      "action": "audio_features",
+      "status": "completed",
+      "detail": "Updated audio features for 12 tracks",
+      "items": 12,
+      "started_at": "2025-01-15T14:00:03Z",
+      "completed_at": "2025-01-15T14:00:05Z",
+      "error": ""
+    },
+    {
+      "action": "playlists",
+      "status": "completed",
+      "detail": "Synced 24 playlists",
+      "items": 24,
+      "started_at": "2025-01-15T14:00:05Z",
+      "completed_at": "2025-01-15T14:00:10Z",
+      "error": ""
+    }
+  ],
+  "created_at": "2025-01-15T14:00:00Z"
+}
+```
+
+---
+
+## api_logs
+
+Logs outbound API calls (primarily to Spotify) for monitoring and debugging.
+
+| Field         | Type     | Default    | Description                        |
+| ------------- | -------- | ---------- | ---------------------------------- |
+| `_id`         | ObjectId | auto       | Primary key                        |
+| `user_id`     | string   | `""`       | Associated user (optional)         |
+| `service`     | string   | `"spotify"`| API service: `spotify`, `internal` |
+| `method`      | string   | `""`       | HTTP method (`GET`, `POST`, etc.)  |
+| `endpoint`    | string   | `""`       | API endpoint path                  |
+| `status_code` | int      | `0`        | HTTP response status code          |
+| `latency_ms`  | float    | `0.0`      | Request latency in milliseconds    |
+| `error`       | string   | `""`       | Error message if request failed    |
+| `request_id`  | string   | `""`       | Unique request correlation ID      |
+| `timestamp`   | datetime | `utcnow()` | When the call was made             |
+
+**Indexes:**
+
+| Fields                       | Type     | Notes                        |
+| ---------------------------- | -------- | ---------------------------- |
+| `user_id`                    | simple   | Filter by user               |
+| `timestamp`                  | simple   | Time-range queries           |
+| `(user_id, timestamp DESC)`  | compound | User's recent API calls      |
+| `(service, status_code)`     | compound | Service health monitoring    |
+
+**Example document:**
+
+```json
+{
+  "_id": "682a3b1f2e4a5c6d7e8f9022",
+  "user_id": "682a3b1f2e4a5c6d7e8f9012",
+  "service": "spotify",
+  "method": "GET",
+  "endpoint": "/v1/me/player/recently-played",
+  "status_code": 200,
+  "latency_ms": 142.5,
+  "error": "",
+  "request_id": "req-abc123",
+  "timestamp": "2025-01-15T14:00:01Z"
+}
+```
