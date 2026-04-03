@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { Clock, Disc3, Flame, Music, TrendingUp, Users } from "lucide-react";
+import { AlertCircle, Clock, Disc3, Flame, Music, TrendingUp, Users } from "lucide-react";
 import { useState } from "react";
 import { BarChart } from "@/components/charts/bar-chart";
 import { PieChart } from "@/components/charts/pie-chart";
@@ -38,7 +38,7 @@ export default function DashboardPage() {
   const [endDate, setEndDate] = useState("");
   const isMobile = useIsMobile();
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["analytics-overview", period, startDate, endDate],
     queryFn: () => {
       let url = `/api/v1/analytics/overview?period=${period}`;
@@ -57,6 +57,23 @@ export default function DashboardPage() {
     hour: `${h.hour.toString().padStart(2, "0")}:00`,
     plays: h.count,
   }));
+
+  if (isError) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-center">
+        <AlertCircle className="h-12 w-12 text-red-400 mb-4" />
+        <h2 className="text-xl font-semibold text-white mb-2">Failed to load dashboard</h2>
+        <p className="text-white/50 mb-4">Something went wrong fetching your data.</p>
+        <button
+          onClick={() => refetch()}
+          className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg transition-colors"
+          type="button"
+        >
+          Try again
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4 sm:space-y-6">

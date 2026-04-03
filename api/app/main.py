@@ -4,11 +4,13 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 import structlog
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 from prometheus_fastapi_instrumentator import Instrumentator
+from pymongo.errors import ConnectionFailure, ServerSelectionTimeoutError
 
 from app.config import settings
 from app.database import close_db, init_db
@@ -43,6 +45,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     logger.info("Starting EchoStats API", version="0.1.0")
     await init_db()
     logger.info("Database connected")
+    from app.telemetry import setup_telemetry
+
+    setup_telemetry()
     yield
     # Graceful shutdown: allow in-flight requests to drain
     logger.info("Shutting down EchoStats API — draining requests")
@@ -63,7 +68,51 @@ app = FastAPI(
 )
 
 
-# ── Global exception handler ────────────────────────────────────────────────
+# ── Global exception handlers ───────────────────────────────────────────────
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
+    request_id = getattr(request.state, "request_id", "unknown")
+    errors = [
+        {"field": ".".join(str(loc) for loc in err["loc"]), "message": err["msg"]}
+        for err in exc.errors()
+    ]
+    return JSONResponse(
+        status_code=422,
+        content={"detail": "Validation error", "errors": errors, "request_id": request_id},
+    )
+
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
+    request_id = getattr(request.state, "request_id", "unknown")
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail, "request_id": request_id},
+    )
+
+
+@app.exception_handler(ConnectionFailure)
+async def db_connection_handler(request: Request, exc: ConnectionFailure) -> JSONResponse:
+    request_id = getattr(request.state, "request_id", "unknown")
+    logger.error("Database connection failed", request_id=request_id, error=str(exc))
+    return JSONResponse(
+        status_code=503,
+        content={"detail": "Service temporarily unavailable — please retry", "request_id": request_id},
+        headers={"Retry-After": "5"},
+    )
+
+
+@app.exception_handler(ServerSelectionTimeoutError)
+async def db_timeout_handler(request: Request, exc: ServerSelectionTimeoutError) -> JSONResponse:
+    request_id = getattr(request.state, "request_id", "unknown")
+    logger.error("Database connection failed", request_id=request_id, error=str(exc))
+    return JSONResponse(
+        status_code=503,
+        content={"detail": "Service temporarily unavailable — please retry", "request_id": request_id},
+        headers={"Retry-After": "5"},
+    )
 
 
 @app.exception_handler(Exception)
