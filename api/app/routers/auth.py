@@ -5,11 +5,11 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 from urllib.parse import urlencode
 
+import jwt
 import redis.asyncio as aioredis
 import structlog
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Request, Response
 from fastapi.responses import RedirectResponse
-import jwt
 
 from app.config import settings
 from app.models.user import SpotifyTokens, User

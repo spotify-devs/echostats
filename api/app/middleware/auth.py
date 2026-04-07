@@ -1,7 +1,7 @@
 """Authentication middleware and dependencies."""
 
-from fastapi import HTTPException, Request
 import jwt
+from fastapi import HTTPException, Request
 from jwt.exceptions import InvalidTokenError
 
 from app.config import settings
