@@ -28,10 +28,10 @@ from app.services.rollup_service import ensure_rollups_exist
 logger = structlog.get_logger()
 
 
-async def _get_redis() -> aioredis.Redis | None:  # type: ignore[type-arg]
+async def _get_redis() -> aioredis.Redis | None:
     """Get a Redis connection, or None if unavailable."""
     try:
-        r: aioredis.Redis = aioredis.from_url(settings.redis_url, socket_connect_timeout=1)  # type: ignore[assignment]
+        r = aioredis.from_url(settings.redis_url, socket_connect_timeout=1)  # type: ignore[no-untyped-call]
         await r.ping()
         return r
     except Exception:
