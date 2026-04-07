@@ -1,5 +1,6 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import {
   Activity,
   BarChart3,
@@ -33,6 +34,7 @@ import {
   RefreshCw,
   Repeat,
   Settings,
+  Shield,
   Shuffle,
   Sparkles,
   Star,
@@ -47,11 +49,21 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import type { LucideIcon } from "@/lib/types";
+import { api } from "@/lib/api";
+import type { AuthStatus, LucideIcon } from "@/lib/types";
 
 interface NavSection {
   title: string;
   items: { href: string; icon: LucideIcon; label: string }[];
+}
+
+function timeUntil(date: Date): string {
+  const diffMs = date.getTime() - Date.now();
+  if (diffMs <= 0) return "expired";
+  const mins = Math.floor(diffMs / 60000);
+  if (mins < 60) return `${mins}m`;
+  const hours = Math.floor(mins / 60);
+  return `${hours}h ${mins % 60}m`;
 }
 
 const navSections: NavSection[] = [
@@ -208,7 +220,7 @@ export function Sidebar() {
           ))}
         </nav>
 
-        {/* Settings + Version */}
+        {/* Settings + Connection + Version */}
         <div
           className="p-3 space-y-2"
           style={{ borderTop: "1px solid rgb(var(--border) / var(--border-opacity))" }}
@@ -225,6 +237,7 @@ export function Sidebar() {
             <Settings className="w-[16px] h-[16px]" />
             Settings
           </Link>
+          <ConnectionStatus />
           <div className="px-3 flex items-center justify-between">
             <span className="text-[10px] text-theme-tertiary">EchoStats</span>
             <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/5 text-theme-tertiary font-mono">
@@ -234,5 +247,47 @@ export function Sidebar() {
         </div>
       </aside>
     </>
+  );
+}
+
+function ConnectionStatus() {
+  const { data: authStatus } = useQuery({
+    queryKey: ["auth-status"],
+    queryFn: () => api.get<AuthStatus>("/api/v1/auth/status"),
+    refetchInterval: 30000,
+    retry: false,
+  });
+
+  if (!authStatus?.authenticated) return null;
+
+  const tokenExpires = authStatus.token_expires_at ? new Date(authStatus.token_expires_at) : null;
+  const isExpired = tokenExpires && tokenExpires < new Date();
+
+  if (isExpired) {
+    return (
+      <div className="mx-1 flex items-center gap-2 px-2 py-1.5 rounded-lg border border-red-500/20 bg-red-500/5">
+        <span className="w-1.5 h-1.5 rounded-full bg-red-400 flex-shrink-0" />
+        <span className="text-[10px] text-red-400">Token expired</span>
+      </div>
+    );
+  }
+
+  if (!tokenExpires) return null;
+
+  return (
+    <div className="mx-1 flex items-center gap-2 px-2 py-1.5 rounded-lg border border-current/[0.08] bg-current/[0.02]">
+      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse flex-shrink-0" />
+      <span className="text-[10px] text-theme-tertiary">Connected</span>
+      <span className="text-[10px] text-theme-tertiary">·</span>
+      <div className="flex items-center gap-1 text-[10px] text-theme-tertiary">
+        <Clock className="w-2.5 h-2.5" />
+        {timeUntil(tokenExpires)}
+      </div>
+      <span className="text-[10px] text-theme-tertiary">·</span>
+      <div className="flex items-center gap-1 text-[10px] text-emerald-400/70">
+        <Shield className="w-2.5 h-2.5" />
+        <span className="hidden xl:inline">Auto-refresh</span>
+      </div>
+    </div>
   );
 }
