@@ -1,0 +1,40 @@
+# Pre-commit hooks — mirrors CI checks locally
+# Install: pre-commit install
+# Run all: pre-commit run --all-files
+
+repos:
+  # ── Python API ──────────────────────────────────────────────────────────────
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.11.4
+    hooks:
+      - id: ruff
+        name: "ruff (api)"
+        args: [check, --config, api/pyproject.toml]
+        files: ^api/
+
+  - repo: local
+    hooks:
+      - id: mypy-api
+        name: "mypy (api)"
+        entry: uv run --directory api mypy .
+        language: system
+        files: ^api/
+        types: [python]
+        pass_filenames: false
+
+      # ── Web Frontend ──────────────────────────────────────────────────────
+      - id: biome-web
+        name: "biome (web)"
+        entry: pnpm --dir web lint
+        language: system
+        files: ^web/src/
+        types_or: [ts, tsx, javascript, jsx]
+        pass_filenames: false
+
+      - id: typecheck-web
+        name: "tsc (web)"
+        entry: pnpm --dir web typecheck
+        language: system
+        files: ^web/
+        types_or: [ts, tsx]
+        pass_filenames: false
