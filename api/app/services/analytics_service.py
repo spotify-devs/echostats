@@ -33,7 +33,7 @@ async def _get_redis() -> aioredis.Redis | None:
     try:
         r = aioredis.from_url(settings.redis_url, socket_connect_timeout=1)  # type: ignore[no-untyped-call]
         await r.ping()
-        return r
+        return r  # type: ignore[no-any-return]
     except Exception:
         return None
 

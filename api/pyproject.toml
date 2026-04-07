@@ -69,6 +69,10 @@ disallow_untyped_calls = false
 disable_error_code = ["method-assign", "union-attr", "type-arg", "arg-type"]
 
 [[tool.mypy.overrides]]
+module = "app.telemetry"
+disable_error_code = ["import-not-found"]
+
+[[tool.mypy.overrides]]
 module = "seed"
 disallow_untyped_defs = false
 disallow_untyped_calls = false
