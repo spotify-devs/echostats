@@ -1,5 +1,6 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import {
   Activity,
   BarChart3,
@@ -48,7 +49,6 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import type { AuthStatus, LucideIcon } from "@/lib/types";
 
