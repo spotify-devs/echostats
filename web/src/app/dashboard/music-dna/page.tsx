@@ -9,6 +9,7 @@ import { FadeIn, StaggerContainer, StaggerItem } from "@/components/ui/animation
 import { ChartSkeleton } from "@/components/ui/loading-skeleton";
 import { DEFAULT_PERIOD, TimeRangeSelector } from "@/components/ui/time-range-selector";
 import { api } from "@/lib/api";
+import type { GenreDistributionItem, GenreDistributionResponse } from "@/lib/types";
 
 const GENRE_EMOJIS: Record<string, string> = {
   pop: "🎤",
@@ -45,14 +46,20 @@ export default function MusicDnaPage() {
 
   const { data, isLoading } = useQuery({
     queryKey: ["genre-distribution-dna", period],
-    queryFn: () => api.get<any>(`/api/v1/genres/distribution?period=${period}`),
+    queryFn: () =>
+      api.get<GenreDistributionResponse>(`/api/v1/genres/distribution?period=${period}`),
   });
 
   const genres = data?.genres || [];
-  const totalPlays = genres.reduce((sum: number, g: any) => sum + (g.play_count || 0), 0);
+  const totalPlays = genres.reduce(
+    (sum: number, g: GenreDistributionItem) => sum + (g.play_count || 0),
+    0,
+  );
 
-  const pieData = genres.slice(0, 8).map((g: any) => ({ name: g.name, value: g.play_count }));
-  const barData = genres.slice(0, 15).map((g: any) => ({
+  const pieData = genres
+    .slice(0, 8)
+    .map((g: GenreDistributionItem) => ({ name: g.name, value: g.play_count }));
+  const barData = genres.slice(0, 15).map((g: GenreDistributionItem) => ({
     name: g.name.length > 12 ? `${g.name.slice(0, 12)}…` : g.name,
     plays: g.play_count,
   }));
@@ -162,7 +169,7 @@ export default function MusicDnaPage() {
                 Genre Breakdown ({genres.length} genres)
               </h2>
               <StaggerContainer className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {genres.map((genre: any, i: number) => {
+                {genres.map((genre: GenreDistributionItem, i: number) => {
                   const percent =
                     totalPlays > 0 ? Math.round((genre.play_count / totalPlays) * 100) : 0;
                   return (

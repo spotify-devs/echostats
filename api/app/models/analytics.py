@@ -44,8 +44,8 @@ class AudioFeatureAvg(BaseModel):
 
 class AnalyticsSnapshot(Document):
     """Pre-computed analytics for a user over a time period."""
-    user_id: str = Field(index=True)
-    period: str = Field(index=True)  # "week", "month", "quarter", "year", "all_time"
+    user_id: str = Field(index=True)  # type: ignore[call-overload]
+    period: str = Field(index=True)  # type: ignore[call-overload]
     period_start: datetime | None = None
     period_end: datetime | None = None
 
@@ -82,8 +82,8 @@ class AnalyticsSnapshot(Document):
 
 class GenreDistribution(Document):
     """Genre distribution tracking over time for a user."""
-    user_id: str = Field(index=True)
-    date: datetime = Field(index=True)
+    user_id: str = Field(index=True)  # type: ignore[call-overload]
+    date: datetime = Field(index=True)  # type: ignore[call-overload]
     genres: dict[str, int] = {}  # genre_name -> play_count
     total_plays: int = 0
 

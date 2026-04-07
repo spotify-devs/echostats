@@ -9,22 +9,24 @@ import { ArtistMonogram } from "@/components/music/artist-monogram";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/ui/animations";
 import { ChartSkeleton, ListSkeleton } from "@/components/ui/loading-skeleton";
 import { api } from "@/lib/api";
+import type { GenreDistributionResponse, TopItem } from "@/lib/types";
 
 export default function ArtistMapPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["top-artists-map", "all_time"],
-    queryFn: () => api.get<any>("/api/v1/artists/top?period=all_time&limit=50"),
+    queryFn: () => api.get<{ items: TopItem[] }>("/api/v1/artists/top?period=all_time&limit=50"),
   });
 
   const { data: genreData } = useQuery({
     queryKey: ["genre-distribution-map", "all_time"],
-    queryFn: () => api.get<any>("/api/v1/genres/distribution?period=all_time"),
+    queryFn: () =>
+      api.get<GenreDistributionResponse>("/api/v1/genres/distribution?period=all_time"),
   });
 
   const artists = data?.items || [];
-  const totalPlays = artists.reduce((sum: number, a: any) => sum + (a.play_count || 0), 0);
+  const totalPlays = artists.reduce((sum: number, a: TopItem) => sum + (a.play_count || 0), 0);
 
-  const artistPie = artists.slice(0, 8).map((a: any) => ({
+  const artistPie = artists.slice(0, 8).map((a: TopItem) => ({
     name: a.name,
     value: a.play_count || 0,
   }));
@@ -92,7 +94,7 @@ export default function ArtistMapPage() {
                 All Artists ({artists.length})
               </h2>
               <StaggerContainer className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                {artists.map((artist: any, i: number) => {
+                {artists.map((artist: TopItem, i: number) => {
                   const sharePercent =
                     totalPlays > 0 ? Math.round((artist.play_count / totalPlays) * 100) : 0;
                   return (

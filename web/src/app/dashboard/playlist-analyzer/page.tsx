@@ -8,24 +8,25 @@ import { PieChart } from "@/components/charts/pie-chart";
 import { RadarChart } from "@/components/charts/radar-chart";
 import { ListSkeleton } from "@/components/ui/loading-skeleton";
 import { api } from "@/lib/api";
+import type { AnalyticsOverview, SpotifyPlaylist } from "@/lib/types";
 
 export default function PlaylistAnalyzerPage() {
   const [selectedPlaylist, setSelectedPlaylist] = useState<string | null>(null);
 
   const { data: playlists, isLoading: loadingPlaylists } = useQuery({
     queryKey: ["playlists-for-analyzer"],
-    queryFn: () => api.get<any>("/api/v1/playlists"),
+    queryFn: () => api.get<{ items: SpotifyPlaylist[] }>("/api/v1/playlists"),
     retry: false,
   });
 
   const { data: analytics } = useQuery({
     queryKey: ["analytics-overview", "all_time"],
-    queryFn: () => api.get<any>("/api/v1/analytics/overview?period=all_time"),
+    queryFn: () => api.get<AnalyticsOverview>("/api/v1/analytics/overview?period=all_time"),
     retry: false,
   });
 
   const items = playlists?.items || [];
-  const selected = items.find((p: any) => p.spotify_id === selectedPlaylist);
+  const selected = items.find((p: SpotifyPlaylist) => p.spotify_id === selectedPlaylist);
   const af = analytics?.avg_audio_features;
 
   const radarData = af
@@ -66,7 +67,7 @@ export default function PlaylistAnalyzerPage() {
           <ListSkeleton rows={3} />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {items.map((pl: any) => (
+            {items.map((pl: SpotifyPlaylist) => (
               <button
                 key={pl.spotify_id}
                 onClick={() => setSelectedPlaylist(pl.spotify_id)}

@@ -12,7 +12,7 @@ dependencies = [
     "arq>=0.26.0",
     "httpx>=0.28.0",
     "pydantic-settings>=2.7.0",
-    "python-jose[cryptography]>=3.3.0",
+    "PyJWT>=2.8.0",
     "cryptography>=44.0.0",
     "structlog>=24.4.0",
     "prometheus-fastapi-instrumentator>=7.0.0",
@@ -60,6 +60,23 @@ strict = true
 warn_return_any = true
 warn_unused_configs = true
 plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_untyped_defs = false
+disallow_untyped_decorators = false
+disallow_untyped_calls = false
+disable_error_code = ["method-assign", "union-attr", "type-arg", "arg-type"]
+
+[[tool.mypy.overrides]]
+module = "app.telemetry"
+disable_error_code = ["import-not-found"]
+
+[[tool.mypy.overrides]]
+module = "seed"
+disallow_untyped_defs = false
+disallow_untyped_calls = false
+disable_error_code = ["var-annotated", "call-overload", "index", "operator", "arg-type", "type-arg", "no-untyped-call"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

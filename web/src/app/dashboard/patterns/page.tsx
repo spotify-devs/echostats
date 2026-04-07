@@ -11,6 +11,7 @@ import { ChartSkeleton } from "@/components/ui/loading-skeleton";
 import { DEFAULT_PERIOD, TimeRangeSelector } from "@/components/ui/time-range-selector";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { api } from "@/lib/api";
+import type { AnalyticsOverview, DailyDistribution, HourlyDistribution } from "@/lib/types";
 
 const DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
@@ -26,7 +27,7 @@ export default function PatternsPage() {
       let url = `/api/v1/analytics/overview?period=${period}`;
       if (startDate) url += `&start_date=${startDate}`;
       if (endDate) url += `&end_date=${endDate}`;
-      return api.get<any>(url);
+      return api.get<AnalyticsOverview>(url);
     },
   });
 
@@ -34,9 +35,9 @@ export default function PatternsPage() {
   const heatmapData: { day: number; hour: number; value: number }[] = [];
   if (data?.hourly_distribution && data?.daily_distribution) {
     for (let day = 0; day < 7; day++) {
-      const dayData = data.daily_distribution.find((d: any) => d.day === day);
+      const dayData = data.daily_distribution.find((d: DailyDistribution) => d.day === day);
       for (let hour = 0; hour < 24; hour++) {
-        const hourData = data.hourly_distribution.find((h: any) => h.hour === hour);
+        const hourData = data.hourly_distribution.find((h: HourlyDistribution) => h.hour === hour);
         // Approximate: spread daily counts across hours proportionally
         const value =
           dayData && hourData
@@ -47,13 +48,13 @@ export default function PatternsPage() {
     }
   }
 
-  const hourlyData = (data?.hourly_distribution || []).map((h: any) => ({
+  const hourlyData = (data?.hourly_distribution || []).map((h: HourlyDistribution) => ({
     hour: `${h.hour.toString().padStart(2, "0")}:00`,
     plays: h.count,
     minutes: Math.round(h.total_ms / 60000),
   }));
 
-  const dailyData = (data?.daily_distribution || []).map((d: any) => ({
+  const dailyData = (data?.daily_distribution || []).map((d: DailyDistribution) => ({
     day: DAY_NAMES[d.day] || `Day ${d.day}`,
     plays: d.count,
     hours: Math.round((d.total_ms / 3600000) * 10) / 10,

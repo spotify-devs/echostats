@@ -23,7 +23,7 @@ async def sync_recently_played(client: SpotifyClient, user_id: str) -> int:
         after_ts: int | None = None
         latest = await ListeningHistory.find(
             {"user_id": user_id, "source": "api"}
-        ).sort([("played_at", -1)]).limit(1).to_list()
+        ).sort([("played_at", -1)]).limit(1).to_list()  # type: ignore[list-item]
         if latest:
             after_ts = int(latest[0].played_at.timestamp() * 1000)
 
@@ -59,7 +59,7 @@ async def sync_recently_played(client: SpotifyClient, user_id: str) -> int:
 
         # Build new entries and collect tracks to upsert
         new_entries: list[ListeningHistory] = []
-        tracks_to_upsert: dict[str, dict] = {}
+        tracks_to_upsert: dict[str, dict[str, Any]] = {}
 
         for item, track_data, played_at, spotify_id in valid_items:
             key = (spotify_id, int(played_at.timestamp() * 1000))
@@ -109,6 +109,10 @@ async def sync_recently_played(client: SpotifyClient, user_id: str) -> int:
                 else:
                     raise
             count = len(new_entries)
+            if count > 0:
+                from app.metrics import tracks_synced_total
+
+                tracks_synced_total.labels(user_id=user_id).inc(count)
 
         # Batch upsert tracks
         if tracks_to_upsert:
@@ -364,7 +368,7 @@ async def _bulk_upsert_tracks(data_list: list[dict[str, Any]]) -> None:
 
     # Bulk insert new tracks
     new_tracks = []
-    new_artist_data: dict[str, dict] = {}
+    new_artist_data: dict[str, dict[str, Any]] = {}
     for data in data_list:
         sid = data.get("id", "")
         if not sid or sid in existing_map:

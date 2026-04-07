@@ -1,0 +1,101 @@
+---
+title: Architecture
+description: System architecture and data flow overview
+---
+
+# Architecture
+
+EchoStats is a self-hosted Spotify analytics platform. This page describes how the system components work together.
+
+## System Components
+
+```
+┌─────────────┐    ┌─────────────┐    ┌──────────────┐
+│   Web App   │◄──►│   FastAPI    │◄──►│   MongoDB    │
+│  (Next.js)  │    │   Backend   │    │  (Beanie ODM)│
+└─────────────┘    └──────┬──────┘    └──────────────┘
+                          │
+                   ┌──────┴──────┐
+                   │  ARQ Worker │◄──► Redis (job queue)
+                   └──────┬──────┘
+                          │
+                   ┌──────┴──────┐
+                   │ Spotify API │
+                   └─────────────┘
+```
+
+| Component | Technology | Purpose |
+|-----------|------------|---------|
+| **Web** | Next.js 15, React 19, Tailwind | Dashboard UI, charts, analytics views |
+| **API** | FastAPI, Python 3.12, Beanie ODM | REST API, auth, data aggregation |
+| **Worker** | ARQ (async Redis queue) | Periodic Spotify sync, rollup builds |
+| **MongoDB** | Document store | Listening history, tracks, artists, rollups |
+| **Redis** | In-memory cache | Job queue, rate limiting |
+
+## Data Flow
+
+### 1. Spotify Sync (every 15 minutes)
+
+```
+Worker cron → sync_all_users()
+  ├─ For each user:
+  │   ├─ Get valid access token (refresh if expired)
+  │   ├─ Call Spotify /me/player/recently-played?after=<last_played_at>
+  │   ├─ Deduplicate against existing records (timestamp comparison)
+  │   ├─ Insert new ListeningHistory documents
+  │   ├─ Upsert Track/Artist documents
+  │   └─ Enrich audio features for new tracks
+  └─ Update rollups + analytics snapshots
+```
+
+### 2. Rollup System
+
+Raw `ListeningHistory` records are compressed into `DailyRollup` documents — one per user per day. This enables instant analytics across any time window.
+
+```
+ListeningHistory (millions of records)
+  ↓ build_rollups() aggregation
+DailyRollup (one per day per user)
+  ↓ compute_analytics_snapshot()
+AnalyticsSnapshot (cached period summaries)
+  ↓
+Dashboard API responses
+```
+
+**Rollup contents per day:**
+- Total plays and milliseconds
+- Hourly activity buckets
+- Per-artist, per-track, per-album play counts
+
+### 3. Dashboard Request
+
+```
+Browser → GET /api/v1/analytics/overview?period=week
+  ├─ Authenticate via JWT session cookie
+  ├─ Query DailyRollup documents for last 7 days
+  ├─ Aggregate totals (plays, ms, unique artists/tracks)
+  └─ Return JSON response
+```
+
+## MongoDB Collections
+
+| Collection | Purpose | Key Indexes |
+|------------|---------|-------------|
+| `users` | User profiles | `spotify_id` (unique) |
+| `spotify_tokens` | Encrypted OAuth tokens | `user_id` |
+| `listening_history` | Individual play events | `(user_id, track.spotify_id, played_at)` unique |
+| `tracks` | Track metadata + audio features | `spotify_id` (unique) |
+| `artists` | Artist metadata + genres | `spotify_id` (unique) |
+| `daily_rollups` | Pre-aggregated daily stats | `(user_id, date)` |
+| `analytics_snapshots` | Cached period analytics | `(user_id, period)` |
+| `sync_jobs` | Sync job history + steps | `user_id`, `status` |
+| `api_logs` | Spotify API call logs | `(user_id, timestamp)`, 30-day TTL |
+| `playlists` | User's Spotify playlists | `(spotify_id, user_id)` |
+
+## Security
+
+- **Token encryption**: Spotify access/refresh tokens encrypted at rest with AES-256-GCM
+- **Session**: JWT cookie (httponly, samesite=lax)
+- **Secrets**: All sensitive values via environment variables, validated on startup
+- **Headers**: X-Content-Type-Options, X-Frame-Options, X-XSS-Protection, Referrer-Policy
+- **Rate limiting**: Per-IP throttling (100 req/min)

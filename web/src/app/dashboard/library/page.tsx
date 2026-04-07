@@ -6,17 +6,22 @@ import Image from "next/image";
 import { ArtistMonogram } from "@/components/music/artist-monogram";
 import { ListSkeleton } from "@/components/ui/loading-skeleton";
 import { api } from "@/lib/api";
+import type { LibraryAlbum, LibraryArtist } from "@/lib/types";
 
 export default function LibraryPage() {
   const { data: followedArtists, isLoading: loadingArtists } = useQuery({
     queryKey: ["library-followed-artists"],
-    queryFn: () => api.get<any>("/api/v1/library/followed-artists?limit=50"),
+    queryFn: () =>
+      api.get<{ items: LibraryArtist[]; total: number }>(
+        "/api/v1/library/followed-artists?limit=50",
+      ),
     retry: false,
   });
 
   const { data: savedAlbums, isLoading: loadingAlbums } = useQuery({
     queryKey: ["library-saved-albums"],
-    queryFn: () => api.get<any>("/api/v1/library/saved-albums?limit=50"),
+    queryFn: () =>
+      api.get<{ items: LibraryAlbum[]; total: number }>("/api/v1/library/saved-albums?limit=50"),
     retry: false,
   });
 
@@ -43,7 +48,7 @@ export default function LibraryPage() {
           <ListSkeleton rows={5} />
         ) : (followedArtists?.items || []).length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-            {followedArtists.items.map((artist: any) => (
+            {followedArtists!.items.map((artist: LibraryArtist) => (
               <div key={artist.id} className="glass-card-hover p-4 text-center space-y-3 group">
                 <div className="relative w-20 h-20 rounded-full overflow-hidden bg-theme-surface-3 mx-auto">
                   {artist.image ? (
@@ -86,7 +91,7 @@ export default function LibraryPage() {
           <ListSkeleton rows={5} />
         ) : (savedAlbums?.items || []).length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-            {savedAlbums.items.map((album: any) => (
+            {savedAlbums!.items.map((album: LibraryAlbum) => (
               <div key={album.id} className="glass-card-hover p-3 space-y-2 group">
                 <div className="relative aspect-square rounded-xl overflow-hidden bg-theme-surface-3">
                   {album.image ? (

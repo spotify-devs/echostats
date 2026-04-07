@@ -4,6 +4,7 @@ from datetime import datetime
 
 from beanie import Document
 from pydantic import BaseModel, Field
+from pymongo import TEXT, IndexModel
 
 
 class AudioFeatures(BaseModel):
@@ -39,9 +40,7 @@ class TrackAlbumRef(BaseModel):
 
 class Track(Document):
     """A Spotify track with metadata and audio features."""
-    spotify_id: str = Field(index=True, unique=True)
-    name: str
-    artists: list[TrackArtistRef] = []
+    spotify_id: str = Field(index=True, unique=True)  # type: ignore[call-overload]
     album: TrackAlbumRef | None = None
     duration_ms: int = 0
     popularity: int = 0
@@ -57,4 +56,5 @@ class Track(Document):
         name = "tracks"
         indexes = [
             "artists.spotify_id",
+            IndexModel([("name", TEXT), ("artists.name", TEXT)], name="track_text_search"),
         ]

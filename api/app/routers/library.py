@@ -1,6 +1,6 @@
 """User library endpoints — followed artists, saved albums."""
 
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, Query
 
@@ -24,7 +24,7 @@ async def _get_client(user: User) -> SpotifyClient:
 async def followed_artists(
     user: Annotated[User, Depends(get_current_user)],
     limit: int = Query(50, ge=1, le=50),
-) -> dict:
+) -> dict[str, Any]:
     """Get user's followed artists."""
     client = await _get_client(user)
     try:
@@ -52,7 +52,7 @@ async def saved_albums(
     user: Annotated[User, Depends(get_current_user)],
     limit: int = Query(50, ge=1, le=50),
     offset: int = Query(0, ge=0),
-) -> dict:
+) -> dict[str, Any]:
     """Get user's saved albums."""
     client = await _get_client(user)
     try:

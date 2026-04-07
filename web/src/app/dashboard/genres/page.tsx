@@ -10,6 +10,7 @@ import { DateRangeFilter } from "@/components/ui/date-range-filter";
 import { ChartSkeleton } from "@/components/ui/loading-skeleton";
 import { DEFAULT_PERIOD, TimeRangeSelector } from "@/components/ui/time-range-selector";
 import { api } from "@/lib/api";
+import type { GenreDistributionItem, GenreDistributionResponse } from "@/lib/types";
 
 export default function GenresPage() {
   const [period, setPeriod] = useState(DEFAULT_PERIOD);
@@ -22,13 +23,17 @@ export default function GenresPage() {
       let url = `/api/v1/genres/distribution?period=${period}`;
       if (startDate) url += `&start_date=${startDate}`;
       if (endDate) url += `&end_date=${endDate}`;
-      return api.get<any>(url);
+      return api.get<GenreDistributionResponse>(url);
     },
   });
 
   const genres = data?.genres || [];
-  const pieData = genres.slice(0, 10).map((g: any) => ({ name: g.name, value: g.play_count }));
-  const barData = genres.slice(0, 15).map((g: any) => ({ name: g.name, plays: g.play_count }));
+  const pieData = genres
+    .slice(0, 10)
+    .map((g: GenreDistributionItem) => ({ name: g.name, value: g.play_count }));
+  const barData = genres
+    .slice(0, 15)
+    .map((g: GenreDistributionItem) => ({ name: g.name, plays: g.play_count }));
 
   return (
     <div className="space-y-6">
@@ -100,7 +105,7 @@ export default function GenresPage() {
               </div>
               <div className="p-4">
                 <StaggerContainer className="flex flex-wrap gap-2">
-                  {genres.map((genre: any, i: number) => (
+                  {genres.map((genre: GenreDistributionItem, i: number) => (
                     <StaggerItem key={i}>
                       <span className="px-3 py-1.5 text-xs rounded-full bg-surface-3 text-theme-secondary border border-current/[0.08]">
                         {genre.name}{" "}

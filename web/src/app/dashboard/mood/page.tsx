@@ -9,6 +9,7 @@ import { DateRangeFilter } from "@/components/ui/date-range-filter";
 import { ChartSkeleton } from "@/components/ui/loading-skeleton";
 import { DEFAULT_PERIOD, TimeRangeSelector } from "@/components/ui/time-range-selector";
 import { api } from "@/lib/api";
+import type { AnalyticsOverview, HourlyDistribution } from "@/lib/types";
 
 const MOOD_EMOJIS: Record<string, { emoji: string; label: string; color: string }> = {
   euphoric: { emoji: "🎉", label: "Euphoric", color: "#10b981" },
@@ -37,7 +38,7 @@ export default function MoodPage() {
       let url = `/api/v1/analytics/overview?period=${period}`;
       if (startDate) url += `&start_date=${startDate}`;
       if (endDate) url += `&end_date=${endDate}`;
-      return api.get<any>(url);
+      return api.get<AnalyticsOverview>(url);
     },
   });
 
@@ -46,7 +47,7 @@ export default function MoodPage() {
   const moodInfo = MOOD_EMOJIS[currentMood];
 
   // Simulate mood timeline from hourly data (in real app, this would come from aggregated daily valence)
-  const moodTimeline = (data?.hourly_distribution || []).map((h: any) => ({
+  const moodTimeline = (data?.hourly_distribution || []).map((h: HourlyDistribution) => ({
     time: `${h.hour.toString().padStart(2, "0")}:00`,
     valence: avgFeatures
       ? Math.max(0, Math.min(1, avgFeatures.valence + (Math.random() - 0.5) * 0.3))

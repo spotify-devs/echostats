@@ -5,17 +5,18 @@ import { Music, Zap } from "lucide-react";
 import Image from "next/image";
 import { ListSkeleton } from "@/components/ui/loading-skeleton";
 import { api } from "@/lib/api";
+import type { LibraryAlbum, TopItem } from "@/lib/types";
 
 export default function RecentlyAddedPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["library-saved-albums"],
-    queryFn: () => api.get<any>("/api/v1/library/saved-albums?limit=50"),
+    queryFn: () => api.get<{ items: LibraryAlbum[] }>("/api/v1/library/saved-albums?limit=50"),
     retry: false,
   });
 
   const { data: tracksData } = useQuery({
     queryKey: ["top-tracks-recent", "month"],
-    queryFn: () => api.get<any>("/api/v1/tracks/top?period=month&limit=20"),
+    queryFn: () => api.get<{ items: TopItem[] }>("/api/v1/tracks/top?period=month&limit=20"),
     retry: false,
   });
 
@@ -37,7 +38,7 @@ export default function RecentlyAddedPage() {
           </div>
         ) : (
           <div className="glass-card divide-y divide-current/[0.08]">
-            {tracksData.items.map((track: any, i: number) => (
+            {tracksData.items.map((track: TopItem, i: number) => (
               <div
                 key={i}
                 className="flex items-center gap-4 px-4 py-3 hover:bg-current/[0.03] transition-colors"
@@ -78,7 +79,7 @@ export default function RecentlyAddedPage() {
           <ListSkeleton rows={5} />
         ) : (data?.items || []).length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-            {data.items.map((album: any) => (
+            {data!.items.map((album: LibraryAlbum) => (
               <div key={album.id} className="glass-card-hover p-3 space-y-2 group">
                 <div className="relative aspect-square rounded-xl overflow-hidden bg-theme-surface-3">
                   {album.image ? (

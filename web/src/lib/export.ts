@@ -2,6 +2,8 @@
  * CSV export utility for data tables.
  */
 
+import type { ListeningHistoryItem, TopItem } from "./types";
+
 type Row = Record<string, unknown>;
 
 function escapeCSV(value: unknown): string {
@@ -32,9 +34,9 @@ export function exportToCSV(
   URL.revokeObjectURL(url);
 }
 
-export function exportListeningHistory(items: any[]) {
+export function exportListeningHistory(items: ListeningHistoryItem[]) {
   exportToCSV(
-    items.map((item: any) => ({
+    items.map((item) => ({
       track: item.track?.name || "",
       artist: item.track?.artist_name || "",
       album: item.track?.album_name || "",
@@ -54,9 +56,9 @@ export function exportListeningHistory(items: any[]) {
   );
 }
 
-export function exportTopItems(items: any[], type: "tracks" | "artists" | "genres") {
+export function exportTopItems(items: TopItem[], type: "tracks" | "artists" | "genres") {
   exportToCSV(
-    items.map((item: any) => ({
+    items.map((item) => ({
       rank: item.rank || 0,
       name: item.name || "",
       play_count: item.play_count || 0,

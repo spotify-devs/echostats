@@ -11,7 +11,7 @@ from app.config import settings
 
 logger = structlog.get_logger()
 
-client: AsyncMongoClient | None = None
+client: AsyncMongoClient[Any] | None = None
 
 MAX_RETRIES = 10
 RETRY_DELAY = 3  # seconds
@@ -71,7 +71,7 @@ async def init_db() -> None:
         try:
             client = AsyncMongoClient(
                 settings.mongo_uri,
-                maxPoolSize=10,
+                maxPoolSize=settings.mongo_max_pool_size,
                 minPoolSize=2,
                 maxIdleTimeMS=30000,
                 serverSelectionTimeoutMS=5000,
@@ -80,14 +80,15 @@ async def init_db() -> None:
             )
             db = client[settings.mongo_db]
 
-            # Drop the old non-unique compound index that conflicts with the
-            # new unique index (same key pattern, different options).
+            # Run versioned migrations before Beanie (raw motor ops)
             try:
-                await db["listening_history"].drop_index(
-                    "user_id_1_track.spotify_id_1_played_at_1"
-                )
-            except Exception:
-                pass  # Index may not exist or already dropped
+                from app.migrations import run_migrations
+
+                applied = await run_migrations(db)
+                if applied:
+                    logger.info("Database migrations applied", count=applied)
+            except Exception as mig_err:
+                logger.warning("Migration runner failed", error=str(mig_err)[:200])
 
             # Deduplicate listening_history before Beanie tries to create
             # the unique index — otherwise index build fails on dirty data.

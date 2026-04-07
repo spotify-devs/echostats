@@ -20,7 +20,7 @@ logger = structlog.get_logger()
 async def get_overview(
     user: Annotated[User, Depends(get_current_user)],
     period: str = Query("all_time", pattern="^(week|month|quarter|year|all_time)$"),
-) -> dict:
+) -> dict[str, Any]:
     """Get analytics overview for a time period."""
     try:
         snapshot = await get_or_compute_snapshot(str(user.id), period)
@@ -55,7 +55,7 @@ async def get_overview(
 async def refresh_analytics(
     user: Annotated[User, Depends(get_current_user)],
     period: str = Query("all_time", pattern="^(week|month|quarter|year|all_time)$"),
-) -> dict:
+) -> dict[str, Any]:
     """Force recompute analytics for a time period (or all periods)."""
     periods = [period]
     if period == "all_time":
@@ -79,7 +79,7 @@ async def refresh_analytics(
 async def get_trend(
     user: Annotated[User, Depends(get_current_user)],
     period: str = Query("all_time", pattern="^(week|month|quarter|year|all_time)$"),
-) -> dict:
+) -> dict[str, Any]:
     """Get chronological listening trend data from DailyRollups.
 
     Returns data points grouped by appropriate granularity:
@@ -163,7 +163,7 @@ async def get_trend(
 @router.get("/rollup-status")
 async def rollup_status(
     user: Annotated[User, Depends(get_current_user)],
-) -> dict:
+) -> dict[str, Any]:
     """Get rollup build status for the current user."""
     try:
         return await get_rollup_status(str(user.id))
@@ -175,7 +175,7 @@ async def rollup_status(
 @router.post("/rollup-build")
 async def trigger_rollup_build(
     user: Annotated[User, Depends(get_current_user)],
-) -> dict:
+) -> dict[str, Any]:
     """Trigger a background rollup build for the current user."""
     from arq.connections import ArqRedis, create_pool
 

@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Music } from "lucide-react";
 import Image from "next/image";
 import { api } from "@/lib/api";
+import type { NowPlayingResponse } from "@/lib/types";
 
 export function NowPlaying() {
   // Poll every 30 seconds (this would work with real Spotify auth)
@@ -11,7 +12,7 @@ export function NowPlaying() {
     queryKey: ["now-playing"],
     queryFn: async () => {
       try {
-        return await api.get<any>("/api/v1/player/current");
+        return await api.get<NowPlayingResponse>("/api/v1/player/current");
       } catch {
         return null;
       }

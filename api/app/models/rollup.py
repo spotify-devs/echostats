@@ -7,6 +7,7 @@ instant analytics across any time window.
 
 from beanie import Document
 from pydantic import BaseModel, Field
+from pymongo import IndexModel
 
 
 class HourlyBucket(BaseModel):
@@ -29,8 +30,8 @@ class TrackPlayEntry(BaseModel):
 class DailyRollup(Document):
     """Pre-aggregated listening stats for one user-day."""
 
-    user_id: str = Field(index=True)
-    date: str = Field(index=True)  # "YYYY-MM-DD"
+    user_id: str = Field(index=True)  # type: ignore[call-overload]
+    date: str = Field(index=True)  # type: ignore[call-overload]
     day_of_week: int = 0  # 0=Mon..6=Sun (Python convention)
 
     total_plays: int = 0
@@ -44,6 +45,6 @@ class DailyRollup(Document):
     class Settings:
         name = "daily_rollups"
         indexes = [
-            [("user_id", 1), ("date", 1)],
+            IndexModel([("user_id", 1), ("date", 1)], unique=True, name="uniq_user_date"),
             [("user_id", 1), ("date", -1)],
         ]

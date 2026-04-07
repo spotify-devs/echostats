@@ -1,14 +1,17 @@
 """ARQ background worker configuration."""
 
+import time
 from datetime import UTC, datetime, timedelta
+from typing import Any
 
 from arq import cron
 from arq.connections import RedisSettings
 
 from app.config import settings
+from app.metrics import sync_duration_seconds, sync_failures_total
 
 
-async def startup(ctx: dict) -> None:
+async def startup(ctx: dict[str, Any]) -> None:
     """Worker startup — initialize database and clean up stale jobs."""
     import structlog
 
@@ -25,14 +28,14 @@ async def startup(ctx: dict) -> None:
         logger.info("Cleaned up stale jobs on startup", count=cleaned)
 
 
-async def shutdown(ctx: dict) -> None:
+async def shutdown(ctx: dict[str, Any]) -> None:
     """Worker shutdown — close connections."""
     from app.database import close_db
 
     await close_db()
 
 
-async def sync_all_users(ctx: dict) -> None:
+async def sync_all_users(ctx: dict[str, Any]) -> None:
     """Periodic task: sync recently played for all users."""
     import structlog
 
@@ -63,6 +66,7 @@ async def sync_all_users(ctx: dict) -> None:
         )
         await job.insert()
 
+        sync_start = time.monotonic()
         try:
             token = await get_valid_access_token(user)
             if not token:
@@ -133,6 +137,9 @@ async def sync_all_users(ctx: dict) -> None:
                 job.items_processed = count
                 job.completed_at = datetime.now(tz=UTC)
                 logger.info("Periodic sync complete", user_id=user_id, new_tracks=count)
+                sync_duration_seconds.labels(job_type="periodic").observe(
+                    time.monotonic() - sync_start
+                )
             finally:
                 await client.close()
 
@@ -156,6 +163,7 @@ async def sync_all_users(ctx: dict) -> None:
 
         except Exception as e:
             logger.error("Periodic sync failed for user", user_id=user_id, error=str(e))
+            sync_failures_total.labels(job_type="periodic").inc()
             job.status = "failed"
             job.error_message = str(e)[:500]
             job.completed_at = datetime.now(tz=UTC)
@@ -163,7 +171,7 @@ async def sync_all_users(ctx: dict) -> None:
         await job.save()
 
 
-async def refresh_analytics(ctx: dict) -> None:
+async def refresh_analytics(ctx: dict[str, Any]) -> None:
     """Periodic task: update rollups and recompute analytics snapshots."""
     import structlog
 
@@ -185,7 +193,7 @@ async def refresh_analytics(ctx: dict) -> None:
             logger.error("Analytics refresh failed", user_id=str(user.id), error=str(e))
 
 
-async def build_user_rollups(ctx: dict, user_id: str, job_id: str) -> None:
+async def build_user_rollups(ctx: dict[str, Any], user_id: str, job_id: str) -> None:
     """Background task: build DailyRollup documents for a user."""
     import structlog
 
@@ -218,7 +226,7 @@ async def build_user_rollups(ctx: dict, user_id: str, job_id: str) -> None:
     await job.save()
 
 
-async def periodic_rollup_build(ctx: dict) -> None:
+async def periodic_rollup_build(ctx: dict[str, Any]) -> None:
     """Periodic task: build missing rollups for all users.
 
     Compares rollup day count vs listening history day count and rebuilds
@@ -327,7 +335,7 @@ async def _reap_stale_jobs() -> int:
     return len(stale_jobs)
 
 
-async def cleanup_stale_jobs(ctx: dict) -> None:
+async def cleanup_stale_jobs(ctx: dict[str, Any]) -> None:
     """Periodic task: reap jobs stuck in running/pending state."""
     import structlog
 
@@ -357,3 +365,6 @@ class WorkerSettings:
     ]
     max_jobs = 5
     job_timeout = 600  # 10 minutes (rollup builds can be large)
+    max_tries = 3  # Retry failed jobs up to 3 times
+    retry_jobs = True
+    health_check_interval = 30  # Seconds between health checks

@@ -3,11 +3,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { Clock, Disc3, Target, Trophy, Users } from "lucide-react";
 import { api } from "@/lib/api";
+import type { AnalyticsOverview, LucideIcon } from "@/lib/types";
 
 interface Goal {
   id: string;
   title: string;
-  icon: any;
+  icon: LucideIcon;
   target: number;
   current: number;
   unit: string;
@@ -17,7 +18,7 @@ interface Goal {
 export default function GoalsPage() {
   const { data } = useQuery({
     queryKey: ["analytics-overview", "month"],
-    queryFn: () => api.get<any>("/api/v1/analytics/overview?period=month"),
+    queryFn: () => api.get<AnalyticsOverview>("/api/v1/analytics/overview?period=month"),
   });
 
   const goals: Goal[] = [

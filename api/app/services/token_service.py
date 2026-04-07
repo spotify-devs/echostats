@@ -1,5 +1,6 @@
 """Token management service — encrypt/decrypt/refresh Spotify tokens."""
 
+import asyncio
 from datetime import datetime, timedelta
 
 import structlog
@@ -10,6 +11,9 @@ from app.services.spotify_client import refresh_access_token
 from app.utils.crypto import decrypt_token, encrypt_token
 
 logger = structlog.get_logger()
+
+MAX_REFRESH_RETRIES = 3
+RETRY_DELAYS = [1, 3, 5]  # seconds
 
 
 async def store_tokens(
@@ -57,26 +61,60 @@ async def get_valid_access_token(user: User) -> str | None:
             tokens.refresh_token_encrypted, settings.encryption_key
         )
 
-        try:
-            token_data = await refresh_access_token(refresh_tok)
-            new_access = token_data["access_token"]
-            new_refresh = token_data.get("refresh_token", refresh_tok)
-            expires_in = token_data.get("expires_in", 3600)
+        for attempt in range(MAX_REFRESH_RETRIES):
+            try:
+                token_data = await refresh_access_token(refresh_tok)
+                new_access: str = token_data["access_token"]
+                new_refresh = token_data.get("refresh_token", refresh_tok)
+                expires_in = token_data.get("expires_in", 3600)
 
-            tokens.access_token_encrypted = encrypt_token(
-                new_access, settings.encryption_key
-            )
-            tokens.refresh_token_encrypted = encrypt_token(
-                new_refresh, settings.encryption_key
-            )
-            tokens.expires_at = datetime.utcnow() + timedelta(seconds=expires_in)
-            await tokens.save()
+                tokens.access_token_encrypted = encrypt_token(
+                    new_access, settings.encryption_key
+                )
+                tokens.refresh_token_encrypted = encrypt_token(
+                    new_refresh, settings.encryption_key
+                )
+                tokens.expires_at = datetime.utcnow() + timedelta(seconds=expires_in)
+                await tokens.save()
 
-            return new_access
-        except Exception as e:
-            logger.error(
-                "Token refresh failed", error=str(e), user_id=str(user.id)
-            )
-            return None
+                from app.metrics import token_refreshes_total
+
+                token_refreshes_total.labels(status="success").inc()
+                return new_access
+            except Exception as e:
+                err_str = str(e).lower()
+                # Token revoked or invalid — don't retry
+                if "invalid_grant" in err_str or "revoked" in err_str or "400" in err_str:
+                    logger.warning(
+                        "Spotify token revoked — user must re-authenticate",
+                        user_id=str(user.id),
+                        error=str(e),
+                    )
+                    from app.metrics import token_refreshes_total
+
+                    token_refreshes_total.labels(status="revoked").inc()
+                    return None
+
+                if attempt < MAX_REFRESH_RETRIES - 1:
+                    delay = RETRY_DELAYS[attempt]
+                    logger.warning(
+                        "Token refresh failed, retrying",
+                        attempt=attempt + 1,
+                        delay=delay,
+                        error=str(e),
+                        user_id=str(user.id),
+                    )
+                    await asyncio.sleep(delay)
+                else:
+                    logger.error(
+                        "Token refresh failed after all retries",
+                        attempts=MAX_REFRESH_RETRIES,
+                        error=str(e),
+                        user_id=str(user.id),
+                    )
+                    from app.metrics import token_refreshes_total
+
+                    token_refreshes_total.labels(status="failed").inc()
+                    return None
 
     return decrypt_token(tokens.access_token_encrypted, settings.encryption_key)

@@ -6,6 +6,7 @@ per day, enabling instant analytics across arbitrarily large time windows.
 
 import asyncio
 import copy
+import time
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -44,11 +45,13 @@ async def build_rollups(
 
     agg_opts: dict[str, Any] = {"allowDiskUse": True}
 
-    def _match() -> dict:
+    def _match() -> dict[str, Any]:
         return {"$match": copy.deepcopy(match_filter)}
 
-    def _dur() -> dict:
+    def _dur() -> dict[str, Any]:
         return {"$ifNull": ["$ms_played", {"$ifNull": ["$track.duration_ms", 0]}]}
+
+    agg_start = time.monotonic()
 
     try:
         # Batch 1: lightweight aggregations
@@ -112,6 +115,10 @@ async def build_rollups(
     except Exception as e:
         logger.error("Rollup build pipelines failed", user_id=user_id, error=str(e))
         raise
+
+    agg_ms = (time.monotonic() - agg_start) * 1000
+    if agg_ms > 500:
+        logger.warning("Slow rollup aggregation", user_id=user_id, duration_ms=round(agg_ms, 2))
 
     # Merge pipeline results by date
     days: dict[str, dict[str, Any]] = {}
@@ -210,7 +217,7 @@ async def ensure_rollups_exist(user_id: str) -> None:
     await build_rollups(user_id)
 
 
-async def get_rollup_status(user_id: str) -> dict:
+async def get_rollup_status(user_id: str) -> dict[str, Any]:
     """Return rollup build status for a user."""
     from app.models.sync_job import SyncJob
 
@@ -239,7 +246,7 @@ async def get_rollup_status(user_id: str) -> dict:
         "rollup_days": rollup_days,
         "history_days": history_days,
         "is_building": running_job is not None,
-        "started_at": running_job.started_at.isoformat() if running_job else None,
+        "started_at": running_job.started_at.isoformat() if running_job and running_job.started_at else None,
         "last_built_at": last_job.completed_at.isoformat() if last_job and last_job.completed_at else None,
         "items_processed": running_job.items_processed if running_job else 0,
     }

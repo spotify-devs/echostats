@@ -8,13 +8,14 @@ import { use } from "react";
 import { ArtistMonogram } from "@/components/music/artist-monogram";
 import { ChartSkeleton, ListSkeleton } from "@/components/ui/loading-skeleton";
 import { api } from "@/lib/api";
+import type { SpotifyArtistDetail } from "@/lib/types";
 
 export default function ArtistDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
 
   const { data: artist, isLoading } = useQuery({
     queryKey: ["artist", id],
-    queryFn: () => api.get<any>(`/api/v1/artists/${id}`),
+    queryFn: () => api.get<SpotifyArtistDetail>(`/api/v1/artists/${id}`),
   });
 
   if (isLoading) {

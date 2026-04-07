@@ -4,6 +4,7 @@ from datetime import datetime
 
 from beanie import Document
 from pydantic import BaseModel, Field
+from pymongo import TEXT, IndexModel
 
 
 class ArtistImage(BaseModel):
@@ -15,11 +16,7 @@ class ArtistImage(BaseModel):
 
 class Artist(Document):
     """A Spotify artist with metadata."""
-    spotify_id: str = Field(index=True, unique=True)
-    name: str
-    genres: list[str] = []
-    popularity: int = 0
-    followers: int = 0
+    spotify_id: str = Field(index=True, unique=True)  # type: ignore[call-overload]
     images: list[ArtistImage] = []
     external_url: str = ""
     fetched_at: datetime = Field(default_factory=datetime.utcnow)
@@ -36,4 +33,5 @@ class Artist(Document):
         name = "artists"
         indexes = [
             "genres",
+            IndexModel([("name", TEXT)], name="artist_text_search"),
         ]

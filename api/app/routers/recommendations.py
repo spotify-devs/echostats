@@ -1,6 +1,6 @@
 """Recommendations endpoints — personalized track suggestions."""
 
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, Query
 
@@ -17,7 +17,7 @@ async def get_recommendations(
     user: Annotated[User, Depends(get_current_user)],
     limit: int = Query(20, ge=1, le=50),
     seed_type: str = Query("mixed", pattern="^(artists|tracks|genres|mixed)$"),
-) -> dict:
+) -> dict[str, Any]:
     """Get personalized recommendations based on user's listening."""
     # Get user's top items as seeds
     snapshot = await AnalyticsSnapshot.find_one(

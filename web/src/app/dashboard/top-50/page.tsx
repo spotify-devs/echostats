@@ -9,6 +9,7 @@ import { StaggerContainer, StaggerItem } from "@/components/ui/animations";
 import { ListSkeleton } from "@/components/ui/loading-skeleton";
 import { DEFAULT_PERIOD, TimeRangeSelector } from "@/components/ui/time-range-selector";
 import { api } from "@/lib/api";
+import type { LucideIcon, TopItem } from "@/lib/types";
 
 const RANK_COLORS: Record<number, string> = {
   1: "from-amber-500 to-yellow-400",
@@ -16,7 +17,7 @@ const RANK_COLORS: Record<number, string> = {
   3: "from-amber-700 to-amber-600",
 };
 
-const RANK_ICONS: Record<number, any> = {
+const RANK_ICONS: Record<number, LucideIcon> = {
   1: Crown,
   2: Medal,
   3: Award,
@@ -28,7 +29,7 @@ export default function Top50Page() {
 
   const { data, isLoading } = useQuery({
     queryKey: ["top-tracks-50", period],
-    queryFn: () => api.get<any>(`/api/v1/tracks/top?period=${period}&limit=50`),
+    queryFn: () => api.get<{ items: TopItem[] }>(`/api/v1/tracks/top?period=${period}&limit=50`),
   });
 
   const items = data?.items || [];
@@ -50,7 +51,7 @@ export default function Top50Page() {
         <ListSkeleton rows={15} />
       ) : items.length > 0 ? (
         <StaggerContainer className="space-y-2">
-          {items.map((track: any, i: number) => {
+          {items.map((track: TopItem, i: number) => {
             const rank = track.rank || i + 1;
             const isTop3 = rank <= 3;
             const RankIcon = RANK_ICONS[rank];

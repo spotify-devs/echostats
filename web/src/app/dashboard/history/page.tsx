@@ -10,6 +10,7 @@ import { ImportHistoryModal } from "@/components/ui/import-modal";
 import { ListSkeleton } from "@/components/ui/loading-skeleton";
 import { api } from "@/lib/api";
 import { exportListeningHistory } from "@/lib/export";
+import type { ListeningHistoryItem, PaginatedResponse } from "@/lib/types";
 
 export default function HistoryPage() {
   const [page, setPage] = useState(1);
@@ -29,7 +30,7 @@ export default function HistoryPage() {
       let url = `/api/v1/history?page=${page}&limit=50`;
       if (startDate) url += `&start_date=${startDate}`;
       if (endDate) url += `&end_date=${endDate}`;
-      return api.get<any>(url);
+      return api.get<PaginatedResponse<ListeningHistoryItem>>(url);
     },
   });
 
@@ -88,7 +89,7 @@ export default function HistoryPage() {
       ) : (
         <>
           <StaggerContainer className="glass-card divide-y divide-current/[0.08]">
-            {items.map((item: any, idx: number) => (
+            {items.map((item: ListeningHistoryItem, idx: number) => (
               <StaggerItem key={idx}>
                 <div className="flex items-center justify-between gap-2">
                   <div className="min-w-0 flex-1">

@@ -13,11 +13,26 @@ from app.services.rollup_service import build_rollups
 
 logger = structlog.get_logger()
 
+MAX_IMPORT_SIZE = 50 * 1024 * 1024  # 50 MB
+MAX_STRING_LENGTH = 500  # Max chars for track/artist/album names
+
+
+def _truncate(value: str, max_length: int = MAX_STRING_LENGTH) -> str:
+    """Truncate a string to max_length characters."""
+    if len(value) > max_length:
+        return value[:max_length]
+    return value
+
 
 async def import_streaming_history(
     user_id: str, file_content: bytes, filename: str
 ) -> SyncJob:
     """Import a StreamingHistory*.json or endsong*.json file."""
+    if len(file_content) > MAX_IMPORT_SIZE:
+        raise ValueError(
+            f"File too large: {len(file_content)} bytes exceeds {MAX_IMPORT_SIZE} byte limit"
+        )
+
     job = SyncJob(
         user_id=user_id,
         job_type="import",
@@ -134,9 +149,9 @@ async def _parse_history_entry(
     # Extended streaming history format (endsong*.json / Streaming_History_Audio*.json)
     if "ts" in entry:
         played_at_str = entry.get("ts", "")
-        track_name = entry.get("master_metadata_track_name", "")
-        artist_name = entry.get("master_metadata_album_artist_name", "")
-        album_name = entry.get("master_metadata_album_album_name", "")
+        track_name = _truncate(entry.get("master_metadata_track_name", ""))
+        artist_name = _truncate(entry.get("master_metadata_album_artist_name", ""))
+        album_name = _truncate(entry.get("master_metadata_album_album_name", ""))
         ms_played = entry.get("ms_played", 0)
         spotify_uri = entry.get("spotify_track_uri", "")
 
@@ -166,8 +181,8 @@ async def _parse_history_entry(
     # Basic streaming history format (StreamingHistory*.json)
     if "endTime" in entry:
         played_at_str = entry.get("endTime", "")
-        track_name = entry.get("trackName", "")
-        artist_name = entry.get("artistName", "")
+        track_name = _truncate(entry.get("trackName", ""))
+        artist_name = _truncate(entry.get("artistName", ""))
         ms_played = entry.get("msPlayed", 0)
 
         if not track_name:

@@ -7,13 +7,14 @@ import { useState } from "react";
 import { GlobalSearch } from "@/components/layout/search";
 import { SpotifyConnectModal } from "@/components/ui/spotify-connect-modal";
 import { api } from "@/lib/api";
+import type { AuthStatus } from "@/lib/types";
 
 export function Header() {
   const [connectOpen, setConnectOpen] = useState(false);
 
   const { data: authStatus } = useQuery({
     queryKey: ["auth-status"],
-    queryFn: () => api.get<any>("/api/v1/auth/status"),
+    queryFn: () => api.get<AuthStatus>("/api/v1/auth/status"),
     retry: false,
     refetchInterval: 60000,
   });

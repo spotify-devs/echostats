@@ -1,6 +1,6 @@
 """API logs viewer endpoints."""
 
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, Query
 
@@ -21,7 +21,7 @@ async def get_api_logs(
     status_max: int | None = None,
     method: str | None = None,
     endpoint_contains: str | None = None,
-) -> dict:
+) -> dict[str, Any]:
     """Get paginated API call logs."""
     query_filters = [ApiLog.user_id == str(user.id)]
 
@@ -68,7 +68,7 @@ async def get_api_logs(
 @router.get("/stats")
 async def get_api_log_stats(
     user: Annotated[User, Depends(get_current_user)],
-) -> dict:
+) -> dict[str, Any]:
     """Get aggregated API call statistics."""
     user_id = str(user.id)
 

@@ -1,0 +1,25 @@
+# Prometheus scrape configuration for EchoStats
+# Copy to your Prometheus config or include via file_sd_configs
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: "echostats-api"
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["echostats-api:8000"]
+        labels:
+          service: echostats
+          component: api
+
+    # For Kubernetes service discovery, replace static_configs with:
+    # kubernetes_sd_configs:
+    #   - role: pod
+    #     namespaces:
+    #       names: [echostats]
+    # relabel_configs:
+    #   - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_component]
+    #     regex: api
+    #     action: keep

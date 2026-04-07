@@ -1,7 +1,8 @@
 """Authentication middleware and dependencies."""
 
+import jwt
 from fastapi import HTTPException, Request
-from jose import JWTError, jwt
+from jwt.exceptions import InvalidTokenError
 
 from app.config import settings
 from app.models.user import User
@@ -20,7 +21,7 @@ async def get_current_user(request: Request) -> User:
 
     try:
         payload = jwt.decode(token, settings.jwt_secret, algorithms=["HS256"])
-    except JWTError:
+    except InvalidTokenError:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
 
     spotify_id = payload.get("spotify_id")

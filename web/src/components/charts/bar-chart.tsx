@@ -9,6 +9,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import type { RechartsTooltipProps } from "@/lib/types";
 
 interface BarChartProps {
   data: Record<string, unknown>[];
@@ -18,12 +19,12 @@ interface BarChartProps {
   layout?: "horizontal" | "vertical";
 }
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+const CustomTooltip = ({ active, payload, label }: RechartsTooltipProps) => {
   if (!active || !payload?.length) return null;
   return (
     <div className="glass-card p-3 text-sm">
       <p className="text-theme-secondary mb-1">{label}</p>
-      {payload.map((entry: any, i: number) => (
+      {payload.map((entry: { name: string; value: number; color: string }, i: number) => (
         <p key={i} style={{ color: entry.color }} className="font-medium">
           {entry.name}:{" "}
           {typeof entry.value === "number" ? entry.value.toLocaleString() : entry.value}

@@ -20,6 +20,7 @@ import { ImportHistoryModal } from "@/components/ui/import-modal";
 import { showToast } from "@/components/ui/toast";
 import { api } from "@/lib/api";
 import { accents, themes } from "@/lib/themes";
+import type { AuthStatus } from "@/lib/types";
 
 interface RollupStatus {
   rollup_days: number;
@@ -38,7 +39,7 @@ export default function SettingsPage() {
 
   const { data: authStatus } = useQuery({
     queryKey: ["auth-status"],
-    queryFn: () => api.get<any>("/api/v1/auth/status"),
+    queryFn: () => api.get<AuthStatus>("/api/v1/auth/status"),
   });
 
   const { data: rollupStatus, refetch: refetchRollups } = useQuery({

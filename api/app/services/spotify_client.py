@@ -15,6 +15,13 @@ SPOTIFY_AUTH_URL = "https://accounts.spotify.com/authorize"
 SPOTIFY_TOKEN_URL = "https://accounts.spotify.com/api/token"
 SPOTIFY_API_BASE = "https://api.spotify.com/v1"
 
+# ── Circuit breaker state ────────────────────────────────────────────────────
+CIRCUIT_FAILURE_THRESHOLD = 5
+CIRCUIT_RESET_SECONDS = 900  # 15 minutes
+
+_circuit_failures: dict[str, int] = {}
+_circuit_open_until: dict[str, float] = {}
+
 SCOPES = [
     "user-read-private",
     "user-read-email",
@@ -57,7 +64,18 @@ class SpotifyClient:
     async def _request(
         self, method: str, endpoint: str, **kwargs: Any
     ) -> dict[str, Any]:
-        """Make an API request with logging."""
+        """Make an API request with logging and circuit breaker."""
+        # ── Circuit breaker: check ───────────────────────────────────────
+        open_until = _circuit_open_until.get(self.user_id, 0)
+        if time.monotonic() < open_until:
+            raise SpotifyClientError(
+                503, "Circuit breaker open — Spotify API temporarily unavailable"
+            )
+        if open_until:
+            # Circuit was open but has expired — reset
+            _circuit_open_until.pop(self.user_id, None)
+            _circuit_failures.pop(self.user_id, None)
+
         start = time.monotonic()
         status_code = 0
         error_msg = ""
@@ -71,14 +89,23 @@ class SpotifyClient:
                 logger.warning("Rate limited by Spotify", retry_after=retry_after)
                 raise SpotifyClientError(429, f"Rate limited, retry after {retry_after}s")
 
+            if response.status_code >= 500:
+                body = response.text
+                error_msg = body[:500]
+                self._record_circuit_failure()
+                raise SpotifyClientError(response.status_code, body)
+
             if response.status_code >= 400:
                 body = response.text
                 error_msg = body[:500]
                 raise SpotifyClientError(response.status_code, body)
 
+            # Success — reset failure count
+            _circuit_failures.pop(self.user_id, None)
             return response.json() if response.content else {}
         except httpx.HTTPError as e:
             error_msg = str(e)
+            self._record_circuit_failure()
             raise SpotifyClientError(0, str(e)) from e
         finally:
             latency = (time.monotonic() - start) * 1000
@@ -94,6 +121,19 @@ class SpotifyClient:
                 ).insert()
             except Exception:
                 pass  # Don't fail on log errors
+
+    def _record_circuit_failure(self) -> None:
+        """Increment circuit failure count; open circuit if threshold reached."""
+        count = _circuit_failures.get(self.user_id, 0) + 1
+        _circuit_failures[self.user_id] = count
+        if count >= CIRCUIT_FAILURE_THRESHOLD:
+            _circuit_open_until[self.user_id] = time.monotonic() + CIRCUIT_RESET_SECONDS
+            logger.warning(
+                "Circuit breaker opened for user",
+                user_id=self.user_id,
+                failures=count,
+                reset_seconds=CIRCUIT_RESET_SECONDS,
+            )
 
     async def get(
         self, endpoint: str, params: dict[str, Any] | None = None
@@ -335,7 +375,7 @@ class SpotifyClient:
 
     async def start_playback(
         self, device_id: str | None = None, context_uri: str | None = None,
-        uris: list[str] | None = None, offset: dict | None = None
+        uris: list[str] | None = None, offset: dict[str, Any] | None = None
     ) -> dict[str, Any]:
         """Start or resume playback."""
         body: dict[str, Any] = {}
@@ -463,7 +503,7 @@ async def exchange_code_for_tokens(code: str) -> dict[str, Any]:
             },
         )
         response.raise_for_status()
-        return response.json()
+        return dict(response.json())
 
 
 async def refresh_access_token(refresh_token: str) -> dict[str, Any]:
@@ -479,4 +519,4 @@ async def refresh_access_token(refresh_token: str) -> dict[str, Any]:
             },
         )
         response.raise_for_status()
-        return response.json()
+        return dict(response.json())

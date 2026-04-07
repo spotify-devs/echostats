@@ -16,16 +16,17 @@ import { BarChart } from "@/components/charts/bar-chart";
 import { PieChart } from "@/components/charts/pie-chart";
 import { CardSkeleton, ChartSkeleton } from "@/components/ui/loading-skeleton";
 import { api } from "@/lib/api";
+import type { AnalyticsOverview, ArtistPlay, GenrePlay, HourlyDistribution } from "@/lib/types";
 
 export default function ListeningReportPage() {
   const { data: monthData, isLoading: loadingMonth } = useQuery({
     queryKey: ["analytics-overview", "month"],
-    queryFn: () => api.get<any>("/api/v1/analytics/overview?period=month"),
+    queryFn: () => api.get<AnalyticsOverview>("/api/v1/analytics/overview?period=month"),
   });
 
   const { data: weekData } = useQuery({
     queryKey: ["analytics-overview", "week"],
-    queryFn: () => api.get<any>("/api/v1/analytics/overview?period=week"),
+    queryFn: () => api.get<AnalyticsOverview>("/api/v1/analytics/overview?period=week"),
   });
 
   const isLoading = loadingMonth;
@@ -56,8 +57,8 @@ export default function ListeningReportPage() {
 
   const genrePie = (monthData?.top_genres || [])
     .slice(0, 6)
-    .map((g: any) => ({ name: g.name, value: g.play_count }));
-  const hourlyData = (monthData?.hourly_distribution || []).map((h: any) => ({
+    .map((g: GenrePlay) => ({ name: g.name, value: g.play_count || 0 }));
+  const hourlyData = (monthData?.hourly_distribution || []).map((h: HourlyDistribution) => ({
     hour: `${h.hour.toString().padStart(2, "0")}:00`,
     plays: h.count,
   }));
@@ -131,7 +132,7 @@ export default function ListeningReportPage() {
             <div className="glass-card p-6">
               <h2 className="text-lg font-semibold text-theme mb-4">Top Artists This Month</h2>
               <div className="space-y-3">
-                {(monthData?.top_artists || []).slice(0, 5).map((a: any, i: number) => (
+                {(monthData?.top_artists || []).slice(0, 5).map((a: ArtistPlay, i: number) => (
                   <div key={i} className="flex items-center gap-3">
                     <span className="w-6 text-center text-sm font-bold text-accent-dynamic">
                       {a.rank}

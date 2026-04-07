@@ -8,16 +8,17 @@ import { BarChart } from "@/components/charts/bar-chart";
 import { ArtistMonogram } from "@/components/music/artist-monogram";
 import { ChartSkeleton, ListSkeleton } from "@/components/ui/loading-skeleton";
 import { api } from "@/lib/api";
+import type { TopItem } from "@/lib/types";
 
 export default function ReplayPage() {
   const { data: tracksData, isLoading: loadingTracks } = useQuery({
     queryKey: ["top-tracks-replay", "all_time"],
-    queryFn: () => api.get<any>("/api/v1/tracks/top?period=all_time&limit=20"),
+    queryFn: () => api.get<{ items: TopItem[] }>("/api/v1/tracks/top?period=all_time&limit=20"),
   });
 
   const { data: artistsData } = useQuery({
     queryKey: ["top-artists-replay", "all_time"],
-    queryFn: () => api.get<any>("/api/v1/artists/top?period=all_time&limit=10"),
+    queryFn: () => api.get<{ items: TopItem[] }>("/api/v1/artists/top?period=all_time&limit=10"),
   });
 
   const tracks = tracksData?.items || [];
@@ -26,11 +27,11 @@ export default function ReplayPage() {
   // Most replayed = highest play count relative to average
   const avgPlays =
     tracks.length > 0
-      ? tracks.reduce((sum: number, t: any) => sum + (t.play_count || 0), 0) / tracks.length
+      ? tracks.reduce((sum: number, t: TopItem) => sum + (t.play_count || 0), 0) / tracks.length
       : 0;
   const replayFactor = (count: number) => (avgPlays > 0 ? (count / avgPlays).toFixed(1) : "0");
 
-  const barData = tracks.slice(0, 10).map((t: any) => ({
+  const barData = tracks.slice(0, 10).map((t: TopItem) => ({
     name: (t.name || "").split(" — ")[0]?.slice(0, 15) || "",
     plays: t.play_count || 0,
   }));
@@ -76,7 +77,7 @@ export default function ReplayPage() {
                 <Flame className="w-5 h-5 text-accent-amber" /> Hottest Tracks
               </h2>
               <div className="space-y-3">
-                {tracks.slice(0, 8).map((track: any, i: number) => {
+                {tracks.slice(0, 8).map((track: TopItem, i: number) => {
                   const [name, artist] = (track.name || "").split(" — ");
                   return (
                     <div
@@ -124,7 +125,7 @@ export default function ReplayPage() {
                 <Users className="w-5 h-5 text-spotify-green" /> Favorite Artists
               </h2>
               <div className="space-y-3">
-                {artists.map((artist: any, i: number) => (
+                {artists.map((artist: TopItem, i: number) => (
                   <Link
                     key={i}
                     href={artist.spotify_id ? `/dashboard/artists/${artist.spotify_id}` : "#"}

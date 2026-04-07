@@ -19,9 +19,9 @@ class HistoryTrackRef(BaseModel):
 
 class ListeningHistory(Document):
     """A single listening event — one track played at a specific time."""
-    user_id: str = Field(index=True)
+    user_id: str = Field(index=True)  # type: ignore[call-overload]
     track: HistoryTrackRef
-    played_at: datetime = Field(index=True)
+    played_at: datetime = Field(index=True)  # type: ignore[call-overload]
     ms_played: int | None = None  # Available from privacy exports
     source: str = "api"  # "api" or "import"
     context_type: str = ""  # "playlist", "album", "artist", etc.

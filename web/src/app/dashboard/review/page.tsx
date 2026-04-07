@@ -8,11 +8,12 @@ import { PieChart } from "@/components/charts/pie-chart";
 import { ArtistMonogram } from "@/components/music/artist-monogram";
 import { CardSkeleton, ChartSkeleton } from "@/components/ui/loading-skeleton";
 import { api } from "@/lib/api";
+import type { AnalyticsOverview, ArtistPlay, GenrePlay, TrackPlay } from "@/lib/types";
 
 export default function YearInReviewPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["analytics-overview", "year"],
-    queryFn: () => api.get<any>("/api/v1/analytics/overview?period=year"),
+    queryFn: () => api.get<AnalyticsOverview>("/api/v1/analytics/overview?period=year"),
   });
 
   if (isLoading) {
@@ -31,12 +32,12 @@ export default function YearInReviewPage() {
   const topGenre = data?.top_genres?.[0];
   const streak = data?.listening_streak_days || 0;
 
-  const genrePie = (data?.top_genres || []).slice(0, 6).map((g: any) => ({
+  const genrePie = (data?.top_genres || []).slice(0, 6).map((g: GenrePlay) => ({
     name: g.name,
-    value: g.play_count,
+    value: g.play_count || 0,
   }));
 
-  const topArtists5 = (data?.top_artists || []).slice(0, 5).map((a: any) => ({
+  const topArtists5 = (data?.top_artists || []).slice(0, 5).map((a: ArtistPlay) => ({
     name: a.name,
     plays: a.play_count,
   }));
@@ -180,7 +181,7 @@ export default function YearInReviewPage() {
           <h2 className="text-lg font-semibold text-theme">Your Top 5 Tracks</h2>
         </div>
         <div className="divide-y divide-current/[0.08]">
-          {(data?.top_tracks || []).slice(0, 5).map((track: any, i: number) => (
+          {(data?.top_tracks || []).slice(0, 5).map((track: TrackPlay, i: number) => (
             <div key={i} className="flex items-center gap-4 px-4 py-3">
               <span className="w-8 text-center text-2xl font-bold text-accent-dynamic/40">
                 {i + 1}

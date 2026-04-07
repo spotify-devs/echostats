@@ -4,6 +4,7 @@ from datetime import UTC, datetime
 
 from beanie import Document
 from pydantic import BaseModel, Field
+from pymongo import IndexModel
 
 
 class SyncStep(BaseModel):
@@ -19,8 +20,7 @@ class SyncStep(BaseModel):
 
 class SyncJob(Document):
     """Tracks background data sync jobs."""
-    user_id: str = Field(index=True)
-    job_type: str  # "initial", "periodic", "import", "enrichment"
+    user_id: str = Field(index=True)  # type: ignore[call-overload]
     status: str = "pending"  # "pending", "running", "completed", "failed"
     started_at: datetime | None = None
     completed_at: datetime | None = None
@@ -36,4 +36,6 @@ class SyncJob(Document):
             "user_id",
             "status",
             [("user_id", 1), ("job_type", 1), ("created_at", -1)],
+            [("user_id", 1), ("status", 1)],
+            IndexModel("created_at", expireAfterSeconds=2592000, name="sync_job_ttl"),  # 30 days
         ]

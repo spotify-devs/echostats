@@ -8,6 +8,7 @@ import { use } from "react";
 import { RadarChart } from "@/components/charts/radar-chart";
 import { ChartSkeleton } from "@/components/ui/loading-skeleton";
 import { api } from "@/lib/api";
+import type { SpotifyTrackDetail } from "@/lib/types";
 
 function formatMs(ms: number): string {
   const min = Math.floor(ms / 60000);
@@ -20,7 +21,7 @@ export default function TrackDetailPage({ params }: { params: Promise<{ id: stri
 
   const { data: track, isLoading } = useQuery({
     queryKey: ["track", id],
-    queryFn: () => api.get<any>(`/api/v1/tracks/${id}`),
+    queryFn: () => api.get<SpotifyTrackDetail>(`/api/v1/tracks/${id}`),
   });
 
   if (isLoading) {
@@ -114,7 +115,7 @@ export default function TrackDetailPage({ params }: { params: Promise<{ id: stri
         <div className="text-center sm:text-left flex-1">
           <h1 className="text-xl sm:text-3xl font-bold text-theme">{track.name}</h1>
           <p className="text-lg text-theme-secondary mt-1">
-            {track.artists?.map((a: any) => a.name).join(", ")}
+            {track.artists?.map((a: { name: string; spotify_id: string }) => a.name).join(", ")}
           </p>
           <div className="flex flex-wrap items-center gap-4 mt-3 justify-center sm:justify-start text-sm text-theme-tertiary">
             {track.album && (

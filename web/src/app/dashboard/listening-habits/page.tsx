@@ -5,6 +5,7 @@ import { Activity, Moon, Sun, Sunrise, Sunset } from "lucide-react";
 import { BarChart } from "@/components/charts/bar-chart";
 import { ChartSkeleton } from "@/components/ui/loading-skeleton";
 import { api } from "@/lib/api";
+import type { AnalyticsOverview, DailyDistribution, HourlyDistribution } from "@/lib/types";
 
 const TIME_SLOTS = [
   {
@@ -44,7 +45,7 @@ const TIME_SLOTS = [
 export default function ListeningHabitsPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["analytics-overview", "all_time"],
-    queryFn: () => api.get<any>("/api/v1/analytics/overview?period=all_time"),
+    queryFn: () => api.get<AnalyticsOverview>("/api/v1/analytics/overview?period=all_time"),
   });
 
   const hourlyDist = data?.hourly_distribution || [];
@@ -53,24 +54,24 @@ export default function ListeningHabitsPage() {
   // Calculate time slot totals
   const slotData = TIME_SLOTS.map((slot) => {
     const total = hourlyDist
-      .filter((h: any) => slot.hours.includes(h.hour))
-      .reduce((sum: number, h: any) => sum + h.count, 0);
+      .filter((h: HourlyDistribution) => slot.hours.includes(h.hour))
+      .reduce((sum: number, h: HourlyDistribution) => sum + h.count, 0);
     const totalMs = hourlyDist
-      .filter((h: any) => slot.hours.includes(h.hour))
-      .reduce((sum: number, h: any) => sum + h.total_ms, 0);
+      .filter((h: HourlyDistribution) => slot.hours.includes(h.hour))
+      .reduce((sum: number, h: HourlyDistribution) => sum + h.total_ms, 0);
     return { ...slot, plays: total, hours: Math.round((totalMs / 3600000) * 10) / 10 };
   });
 
   const totalPlays = slotData.reduce((sum, s) => sum + s.plays, 0);
   const peakSlot = slotData.reduce((max, s) => (s.plays > max.plays ? s : max), slotData[0]);
 
-  const hourlyData = hourlyDist.map((h: any) => ({
+  const hourlyData = hourlyDist.map((h: HourlyDistribution) => ({
     hour: `${h.hour.toString().padStart(2, "0")}`,
     plays: h.count,
   }));
 
   const DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-  const dailyData = dailyDist.map((d: any) => ({
+  const dailyData = dailyDist.map((d: DailyDistribution) => ({
     day: DAY_NAMES[d.day]?.slice(0, 3) || "",
     plays: d.count,
     hours: Math.round((d.total_ms / 3600000) * 10) / 10,

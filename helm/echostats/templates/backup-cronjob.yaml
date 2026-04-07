@@ -1,0 +1,54 @@
+{{- if .Values.backup.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "echostats.fullname" . }}-backup
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "echostats.labels" . | nindent 4 }}
+    app.kubernetes.io/component: backup
+spec:
+  schedule: {{ .Values.backup.schedule | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: backup
+              image: {{ .Values.backup.image | default "mongo:7" }}
+              command:
+                - /bin/bash
+                - -c
+                - |
+                  set -e
+                  TIMESTAMP=$(date +%Y-%m-%d_%H%M)
+                  echo "Starting backup: $TIMESTAMP"
+                  mongodump --uri="$MONGO_URI" --out="/backup/$TIMESTAMP"
+                  echo "Backup complete. Cleaning old backups..."
+                  find /backup -maxdepth 1 -mtime +{{ .Values.backup.retentionDays | default 7 }} -exec rm -rf {} \;
+                  echo "Done."
+              env:
+                - name: MONGO_URI
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ include "echostats.fullname" . }}
+                      key: MONGO_URI
+              volumeMounts:
+                - name: backup-storage
+                  mountPath: /backup
+              resources:
+                limits:
+                  memory: 256Mi
+                  cpu: 200m
+                requests:
+                  memory: 128Mi
+                  cpu: 100m
+          volumes:
+            - name: backup-storage
+              persistentVolumeClaim:
+                claimName: {{ .Values.backup.pvcName | default (printf "%s-backup" (include "echostats.fullname" .)) }}
+          restartPolicy: OnFailure
+{{- end }}

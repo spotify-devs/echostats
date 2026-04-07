@@ -5,6 +5,7 @@ import { Fingerprint, Gauge, Heart, Zap } from "lucide-react";
 import { RadarChart } from "@/components/charts/radar-chart";
 import { ChartSkeleton } from "@/components/ui/loading-skeleton";
 import { api } from "@/lib/api";
+import type { AnalyticsOverview } from "@/lib/types";
 
 const TASTE_LABELS: Record<string, { high: string; low: string; emoji: string }> = {
   danceability: { high: "Groovy Dancer", low: "Chill Listener", emoji: "💃" },
@@ -18,7 +19,7 @@ const TASTE_LABELS: Record<string, { high: string; low: string; emoji: string }>
 export default function TasteProfilePage() {
   const { data, isLoading } = useQuery({
     queryKey: ["analytics-overview", "all_time"],
-    queryFn: () => api.get<any>("/api/v1/analytics/overview?period=all_time"),
+    queryFn: () => api.get<AnalyticsOverview>("/api/v1/analytics/overview?period=all_time"),
   });
 
   const af = data?.avg_audio_features;
@@ -118,7 +119,7 @@ export default function TasteProfilePage() {
               <h2 className="text-lg font-semibold text-theme mb-4">What This Means</h2>
               <div className="space-y-4">
                 {Object.entries(TASTE_LABELS).map(([key, labels]) => {
-                  const value = af[key] || 0;
+                  const value = af[key as keyof typeof af] || 0;
                   const label = getTasteLabel(key, value);
                   return (
                     <div key={key}>

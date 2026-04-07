@@ -1,0 +1,81 @@
+---
+title: Sync & Data Issues
+description: Troubleshooting sync failures, data anomalies, and rollup problems
+---
+
+# Sync & Data Issues
+
+## Sync Jobs Failing
+
+**Symptom:** Sync Jobs page shows repeated failures.
+
+### Check worker logs
+```bash
+# Docker Compose
+docker compose logs worker --tail 100
+
+# Kubernetes
+kubectl logs -n echostats -l app.kubernetes.io/component=worker --tail 100
+```
+
+### Common causes
+
+| Error | Cause | Fix |
+|-------|-------|-----|
+| "No valid Spotify token" | Token expired and refresh failed | User must re-login via Settings → Log Out → Log In |
+| "Rate limited by Spotify" | Too many API calls | Wait — the worker respects `Retry-After` headers |
+| "Token refresh failed after all retries" | Network issue or Spotify outage | Check Spotify status; will auto-recover on next sync |
+| "Database unreachable" | MongoDB connection lost | Check MongoDB is running and accessible |
+
+### Force a manual sync
+Click **Force Sync** in Settings → Data Sync section.
+
+---
+
+## Listening Time Looks Wrong
+
+### Time is too high
+- **Cause:** Duplicate records (now prevented by unique index)
+- **Fix:** Click **Rebuild Rollups** in Settings to recalculate from clean data
+
+### Time is too low
+- **Cause:** Spotify API only keeps the last 50 recently played tracks. If you listen to more than 50 tracks between syncs (15 min), some may be lost.
+- **Fix:** Import your full Spotify listening history via Settings → Import History (request data from [Spotify Privacy](https://www.spotify.com/account/privacy/))
+
+### Duration is approximate
+For API-synced tracks, `ms_played` is not available. The system uses the full track duration as a fallback. Skipped tracks may overcount. Import data from Spotify privacy exports for accurate `ms_played` values.
+
+---
+
+## Rebuilding Rollups
+
+Rollups are pre-aggregated daily summaries. If data looks wrong:
+
+1. Go to **Settings** → **Data Rollups**
+2. Click **Rebuild Rollups**
+3. Wait for completion (check Sync Jobs page)
+
+This recalculates all daily rollups from raw listening history.
+
+---
+
+## Database Maintenance
+
+### Check duplicate records
+```bash
+# Connect to MongoDB
+mongosh "mongodb://host:27017/echostats"
+
+# Count duplicates
+db.listening_history.aggregate([
+  {$group: {_id: {u: "$user_id", s: "$track.spotify_id", p: "$played_at"}, c: {$sum: 1}}},
+  {$match: {c: {$gt: 1}}},
+  {$count: "duplicates"}
+])
+```
+
+### Check index status
+```bash
+db.listening_history.getIndexes()
+# Should include: uniq_user_track_played_at (unique: true)
+```

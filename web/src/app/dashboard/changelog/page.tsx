@@ -1,12 +1,13 @@
 "use client";
 
 import { Calendar, Sparkles, Zap } from "lucide-react";
+import type { LucideIcon } from "@/lib/types";
 
 interface ChangelogEntry {
   version: string;
   date: string;
   title: string;
-  icon: any;
+  icon: LucideIcon;
   color: string;
   changes: string[];
 }

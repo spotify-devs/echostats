@@ -1,6 +1,7 @@
 """Health check endpoints."""
 
 import os
+from typing import Any
 
 import httpx
 import structlog
@@ -13,7 +14,7 @@ APP_VERSION = os.environ.get("APP_VERSION", "dev")
 GITHUB_REPO = os.environ.get("GITHUB_REPO", "spotify-devs/echostats")
 
 # Cache the latest release check
-_update_cache: dict = {"version": None, "url": None, "notes": None, "published": None, "checked_at": 0}
+_update_cache: dict[str, Any] = {"version": None, "url": None, "notes": None, "published": None, "checked_at": 0}
 
 
 @router.get("/health")
@@ -23,7 +24,7 @@ async def health_check() -> dict[str, str]:
 
 
 @router.get("/health/update")
-async def check_update() -> dict:
+async def check_update() -> dict[str, Any]:
     """Check if a newer version is available on GitHub releases."""
     import time
 
@@ -56,7 +57,7 @@ async def check_update() -> dict:
     }
 
 
-def _build_update_response() -> dict:
+def _build_update_response() -> dict[str, Any]:
     current = APP_VERSION.lstrip("v")
     latest = _update_cache["version"]
     return {
@@ -71,14 +72,32 @@ def _build_update_response() -> dict:
 
 @router.get("/health/ready")
 async def readiness_check() -> dict[str, str]:
-    """Readiness check — verifies database connectivity."""
+    """Readiness check — verifies database and cache connectivity."""
     from app.database import client
 
-    if client is None:
-        return {"status": "not_ready", "reason": "database not connected"}
+    issues = []
 
+    # MongoDB
+    if client is None:
+        issues.append("database not connected")
+    else:
+        try:
+            await client.admin.command("ping")
+        except Exception:
+            issues.append("database unreachable")
+
+    # Redis
     try:
-        await client.admin.command("ping")
-        return {"status": "ready"}
+        import redis.asyncio as aioredis
+
+        from app.config import settings
+
+        r = aioredis.from_url(settings.redis_url, socket_connect_timeout=2)  # type: ignore[no-untyped-call]
+        await r.ping()
+        await r.aclose()
     except Exception:
-        return {"status": "not_ready", "reason": "database unreachable"}
+        issues.append("cache unreachable")
+
+    if issues:
+        return {"status": "not_ready", "reason": ", ".join(issues)}
+    return {"status": "ready"}

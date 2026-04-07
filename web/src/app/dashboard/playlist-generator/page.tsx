@@ -5,6 +5,7 @@ import { Check, Loader2, Plus, Sparkles, Wand2 } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import { api } from "@/lib/api";
+import type { TopItem } from "@/lib/types";
 
 const MOODS = [
   { id: "happy", emoji: "😊", label: "Happy", params: { min_valence: 0.7, min_energy: 0.5 } },
@@ -57,13 +58,15 @@ export default function PlaylistGeneratorPage() {
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [trackCount, setTrackCount] = useState(20);
   const [playlistName, setPlaylistName] = useState("");
-  const [generatedTracks, setGeneratedTracks] = useState<any[]>([]);
+  const [generatedTracks, setGeneratedTracks] = useState<TopItem[]>([]);
 
   const generateMutation = useMutation({
     mutationFn: async () => {
       // In production, this would call the recommendations API
       // For now, use top tracks as seed data
-      const data = await api.get<any>("/api/v1/tracks/top?period=all_time&limit=50");
+      const data = await api.get<{ items: TopItem[] }>(
+        "/api/v1/tracks/top?period=all_time&limit=50",
+      );
       const tracks = data?.items || [];
       // Shuffle and take requested count
       const shuffled = [...tracks].sort(() => Math.random() - 0.5);
@@ -225,7 +228,7 @@ export default function PlaylistGeneratorPage() {
             </div>
 
             <div className="divide-y divide-current/[0.08]">
-              {generatedTracks.map((track: any, i: number) => {
+              {generatedTracks.map((track: TopItem, i: number) => {
                 const [name, artist] = (track.name || "").split(" — ");
                 return (
                   <div key={i} className="flex items-center gap-3 py-3">

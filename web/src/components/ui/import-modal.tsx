@@ -79,8 +79,10 @@ export function ImportHistoryModal({ isOpen, onClose, onComplete }: ImportModalP
 
         const result: ImportResult = await response.json();
         setResults((prev) => [...prev, result]);
-      } catch (err: any) {
-        setError(`Failed to import ${file.name}: ${err.message}`);
+      } catch (err: unknown) {
+        setError(
+          `Failed to import ${file.name}: ${err instanceof Error ? err.message : "Unknown error"}`,
+        );
         break;
       }
     }

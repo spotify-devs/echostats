@@ -1,6 +1,6 @@
 """Browse/Discover endpoints — new releases, featured playlists, categories."""
 
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends
 
@@ -21,7 +21,7 @@ async def _get_client(user: User) -> SpotifyClient:
 
 
 @router.get("/new-releases")
-async def new_releases(user: Annotated[User, Depends(get_current_user)], limit: int = 20) -> dict:
+async def new_releases(user: Annotated[User, Depends(get_current_user)], limit: int = 20) -> dict[str, Any]:
     """Get new album releases."""
     client = await _get_client(user)
     try:
@@ -46,7 +46,7 @@ async def new_releases(user: Annotated[User, Depends(get_current_user)], limit: 
 
 
 @router.get("/featured-playlists")
-async def featured_playlists(user: Annotated[User, Depends(get_current_user)], limit: int = 20) -> dict:
+async def featured_playlists(user: Annotated[User, Depends(get_current_user)], limit: int = 20) -> dict[str, Any]:
     """Get Spotify featured playlists."""
     client = await _get_client(user)
     try:
@@ -71,7 +71,7 @@ async def featured_playlists(user: Annotated[User, Depends(get_current_user)], l
 
 
 @router.get("/categories")
-async def categories(user: Annotated[User, Depends(get_current_user)], limit: int = 50) -> dict:
+async def categories(user: Annotated[User, Depends(get_current_user)], limit: int = 50) -> dict[str, Any]:
     """Get browse categories."""
     client = await _get_client(user)
     try:

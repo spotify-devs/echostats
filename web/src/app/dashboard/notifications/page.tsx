@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle, Bell, CheckCircle, Info, Trophy, X } from "lucide-react";
 import { useState } from "react";
 import { api } from "@/lib/api";
+import type { AnalyticsOverview, LucideIcon } from "@/lib/types";
 
 interface Notification {
   id: string;
@@ -12,7 +13,7 @@ interface Notification {
   message: string;
   time: string;
   read: boolean;
-  icon?: any;
+  icon?: LucideIcon;
 }
 
 const ICONS = {
@@ -36,7 +37,7 @@ const COLORS = {
 export default function NotificationsPage() {
   const { data: analytics } = useQuery({
     queryKey: ["analytics-overview", "all_time"],
-    queryFn: () => api.get<any>("/api/v1/analytics/overview?period=all_time"),
+    queryFn: () => api.get<AnalyticsOverview>("/api/v1/analytics/overview?period=all_time"),
   });
 
   // Generate notifications from analytics data
@@ -53,23 +54,23 @@ export default function NotificationsPage() {
       read: false,
     });
 
-    if (analytics?.total_tracks_played >= 1000) {
+    if ((analytics?.total_tracks_played ?? 0) >= 1000) {
       notifs.push({
         id: "milestone-1k",
         type: "achievement",
         title: "🏆 Milestone: 1,000 plays!",
-        message: `You've reached ${analytics.total_tracks_played.toLocaleString()} total plays. Keep it up!`,
+        message: `You've reached ${analytics!.total_tracks_played.toLocaleString()} total plays. Keep it up!`,
         time: new Date(now.getTime() - 2 * 3600000).toISOString(),
         read: false,
       });
     }
 
-    if (analytics?.listening_streak_days >= 7) {
+    if ((analytics?.listening_streak_days ?? 0) >= 7) {
       notifs.push({
         id: "streak-7",
         type: "achievement",
         title: "🔥 7-Day Streak!",
-        message: `You've listened to music for ${analytics.listening_streak_days} consecutive days`,
+        message: `You've listened to music for ${analytics!.listening_streak_days} consecutive days`,
         time: new Date(now.getTime() - 5 * 3600000).toISOString(),
         read: true,
       });
@@ -93,12 +94,12 @@ export default function NotificationsPage() {
       read: true,
     });
 
-    if (analytics?.unique_genres >= 10) {
+    if ((analytics?.unique_genres ?? 0) >= 10) {
       notifs.push({
         id: "genre-explorer",
         type: "achievement",
         title: "🌍 Genre Explorer",
-        message: `You've listened to ${analytics.unique_genres} different genres!`,
+        message: `You've listened to ${analytics!.unique_genres} different genres!`,
         time: new Date(now.getTime() - 72 * 3600000).toISOString(),
         read: true,
       });

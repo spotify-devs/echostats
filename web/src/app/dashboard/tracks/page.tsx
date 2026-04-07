@@ -10,6 +10,7 @@ import { ListSkeleton } from "@/components/ui/loading-skeleton";
 import { DEFAULT_PERIOD, TimeRangeSelector } from "@/components/ui/time-range-selector";
 import { api } from "@/lib/api";
 import { exportTopItems } from "@/lib/export";
+import type { TopItem } from "@/lib/types";
 
 type ViewMode = "list" | "grid" | "compact";
 
@@ -25,7 +26,7 @@ export default function TopTracksPage() {
       let url = `/api/v1/tracks/top?period=${period}&limit=50`;
       if (startDate) url += `&start_date=${startDate}`;
       if (endDate) url += `&end_date=${endDate}`;
-      return api.get<any>(url);
+      return api.get<{ items: TopItem[] }>(url);
     },
   });
 
@@ -86,7 +87,7 @@ export default function TopTracksPage() {
         </div>
       ) : view === "list" ? (
         <div className="glass-card divide-y divide-current/[0.08]">
-          {items.map((item: any, idx: number) => (
+          {items.map((item: TopItem, idx: number) => (
             <TrackCard
               key={item.spotify_id || idx}
               rank={item.rank || idx + 1}
@@ -99,7 +100,7 @@ export default function TopTracksPage() {
         </div>
       ) : view === "grid" ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-          {items.map((item: any, idx: number) => {
+          {items.map((item: TopItem, idx: number) => {
             const trackName = item.name?.split(" — ")[0] || item.name;
             const artistName = item.name?.split(" — ")[1] || "";
             return (
@@ -147,7 +148,7 @@ export default function TopTracksPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-current/[0.06]">
-              {items.map((item: any, idx: number) => {
+              {items.map((item: TopItem, idx: number) => {
                 const trackName = item.name?.split(" — ")[0] || item.name;
                 const artistName = item.name?.split(" — ")[1] || "";
                 return (

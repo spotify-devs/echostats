@@ -6,25 +6,26 @@ import Image from "next/image";
 import { useState } from "react";
 import { ListSkeleton } from "@/components/ui/loading-skeleton";
 import { api } from "@/lib/api";
+import type { TopItem } from "@/lib/types";
 
 export default function SimilarTracksPage() {
-  const [selectedTrack, setSelectedTrack] = useState<any>(null);
+  const [selectedTrack, setSelectedTrack] = useState<TopItem | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
   const { data: topTracks, isLoading } = useQuery({
     queryKey: ["top-tracks-similar", "all_time"],
-    queryFn: () => api.get<any>("/api/v1/tracks/top?period=all_time&limit=50"),
+    queryFn: () => api.get<{ items: TopItem[] }>("/api/v1/tracks/top?period=all_time&limit=50"),
   });
 
   const tracks = topTracks?.items || [];
   const filtered = searchQuery
-    ? tracks.filter((t: any) => t.name?.toLowerCase().includes(searchQuery.toLowerCase()))
+    ? tracks.filter((t: TopItem) => t.name?.toLowerCase().includes(searchQuery.toLowerCase()))
     : tracks;
 
   // Mock similar tracks (in production, would use recommendations API with seed track)
   const similarTracks = selectedTrack
     ? tracks
-        .filter((t: any) => t.spotify_id !== selectedTrack.spotify_id)
+        .filter((t: TopItem) => t.spotify_id !== selectedTrack.spotify_id)
         .sort(() => Math.random() - 0.5)
         .slice(0, 8)
     : [];
@@ -59,7 +60,7 @@ export default function SimilarTracksPage() {
             <ListSkeleton rows={6} />
           ) : (
             <div className="space-y-1 max-h-[400px] overflow-y-auto">
-              {filtered.map((track: any, i: number) => {
+              {filtered.map((track: TopItem, i: number) => {
                 const [name, artist] = (track.name || "").split(" — ");
                 const isSelected = selectedTrack?.spotify_id === track.spotify_id;
                 return (
@@ -136,7 +137,7 @@ export default function SimilarTracksPage() {
                   {similarTracks.length})
                 </h3>
                 <div className="space-y-1">
-                  {similarTracks.map((track: any, i: number) => {
+                  {similarTracks.map((track: TopItem, i: number) => {
                     const [name, artist] = (track.name || "").split(" — ");
                     return (
                       <div

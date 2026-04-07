@@ -8,18 +8,19 @@ import { LineChart } from "@/components/charts/line-chart";
 import { ChartSkeleton } from "@/components/ui/loading-skeleton";
 import { DEFAULT_PERIOD, TimeRangeSelector } from "@/components/ui/time-range-selector";
 import { api } from "@/lib/api";
+import type { AnalyticsOverview, TrendPoint, TrendResponse } from "@/lib/types";
 
 export default function TimelinePage() {
   const [period, setPeriod] = useState(DEFAULT_PERIOD);
 
   const { data, isLoading } = useQuery({
     queryKey: ["analytics-overview", period],
-    queryFn: () => api.get<any>(`/api/v1/analytics/overview?period=${period}`),
+    queryFn: () => api.get<AnalyticsOverview>(`/api/v1/analytics/overview?period=${period}`),
   });
 
   const { data: trendData } = useQuery({
     queryKey: ["analytics-trend", period],
-    queryFn: () => api.get<any>(`/api/v1/analytics/trend?period=${period}`),
+    queryFn: () => api.get<TrendResponse>(`/api/v1/analytics/trend?period=${period}`),
   });
 
   const PERIOD_LABELS: Record<string, string> = {
@@ -45,7 +46,7 @@ export default function TimelinePage() {
     return label.replace(/^\d{4}-/, "");
   };
 
-  const trendPoints = (trendData?.points || []).map((p: any) => ({
+  const trendPoints = (trendData?.points || []).map((p: TrendPoint) => ({
     label: formatLabel(p.label, trendData?.granularity || ""),
     plays: p.plays,
     hours: p.hours,

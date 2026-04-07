@@ -1,7 +1,7 @@
 """Listening history API endpoints."""
 
 from datetime import datetime
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, File, Query, UploadFile
 
@@ -21,7 +21,7 @@ async def get_history(
     track: str | None = None,
     start_date: str | None = None,
     end_date: str | None = None,
-) -> dict:
+) -> dict[str, Any]:
     """Get paginated listening history."""
     query_filters = [ListeningHistory.user_id == str(user.id)]
 
@@ -57,7 +57,7 @@ async def get_history(
 async def import_history(
     user: Annotated[User, Depends(get_current_user)],
     file: Annotated[UploadFile, File(...)],
-) -> dict:
+) -> dict[str, Any]:
     """Import Spotify streaming history from privacy data export."""
     from app.services.import_service import import_streaming_history
 
