@@ -9,7 +9,7 @@ import redis.asyncio as aioredis
 import structlog
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Request, Response
 from fastapi.responses import RedirectResponse
-from jose import jwt  # type: ignore[import-untyped]
+import jwt
 
 from app.config import settings
 from app.models.user import SpotifyTokens, User
@@ -46,7 +46,7 @@ def _create_jwt(user_id: str, spotify_id: str) -> str:
         "iat": datetime.now(tz=UTC),
         "exp": datetime.now(tz=UTC) + timedelta(days=30),
     }
-    return jwt.encode(payload, settings.jwt_secret, algorithm="HS256")  # type: ignore[no-any-return]
+    return jwt.encode(payload, settings.jwt_secret, algorithm="HS256")
 
 
 @router.get("/login", response_model=None)
