@@ -32,10 +32,12 @@ def _make_tokens(
 
 
 @pytest.mark.asyncio
+@patch("app.services.token_service.settings")
 @patch("app.services.token_service.decrypt_token")
 @patch("app.services.token_service.SpotifyTokens")
-async def test_returns_decrypted_token_when_not_expired(mock_st, mock_decrypt):
+async def test_returns_decrypted_token_when_not_expired(mock_st, mock_decrypt, mock_settings):
     """When the token is still valid, returns the decrypted access token."""
+    mock_settings.encryption_key = ENCRYPTION_KEY
     tokens = _make_tokens(expires_at=datetime.utcnow() + timedelta(hours=1))
     mock_st.find_one = AsyncMock(return_value=tokens)
     mock_decrypt.return_value = "plain_access_token"

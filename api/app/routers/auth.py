@@ -9,7 +9,7 @@ import redis.asyncio as aioredis
 import structlog
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Request, Response
 from fastapi.responses import RedirectResponse
-from jose import jwt
+from jose import jwt  # type: ignore[import-untyped]
 
 from app.config import settings
 from app.models.user import SpotifyTokens, User
@@ -35,7 +35,7 @@ _oauth_states: dict[str, datetime] = {}
 
 def _get_redis() -> aioredis.Redis:
     """Create a Redis client from application settings."""
-    return aioredis.from_url(settings.redis_url, decode_responses=True)
+    return aioredis.from_url(settings.redis_url, decode_responses=True)  # type: ignore[no-any-return, no-untyped-call]
 
 
 def _create_jwt(user_id: str, spotify_id: str) -> str:
