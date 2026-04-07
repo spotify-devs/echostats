@@ -50,8 +50,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import type { AuthStatus } from "@/lib/types";
-import type { LucideIcon } from "@/lib/types";
+import type { AuthStatus, LucideIcon } from "@/lib/types";
 
 interface NavSection {
   title: string;
