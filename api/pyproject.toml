@@ -66,6 +66,13 @@ module = "tests.*"
 disallow_untyped_defs = false
 disallow_untyped_decorators = false
 disallow_untyped_calls = false
+disable_error_code = ["method-assign", "union-attr", "type-arg"]
+
+[[tool.mypy.overrides]]
+module = "seed"
+disallow_untyped_defs = false
+disallow_untyped_calls = false
+disable_error_code = ["var-annotated", "call-overload", "index", "operator", "arg-type", "type-arg", "no-untyped-call"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

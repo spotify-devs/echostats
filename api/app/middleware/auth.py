@@ -1,7 +1,7 @@
 """Authentication middleware and dependencies."""
 
 from fastapi import HTTPException, Request
-from jose import JWTError, jwt
+from jose import JWTError, jwt  # type: ignore[import-untyped]
 
 from app.config import settings
 from app.models.user import User
