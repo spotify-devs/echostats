@@ -41,6 +41,8 @@ class TrackAlbumRef(BaseModel):
 class Track(Document):
     """A Spotify track with metadata and audio features."""
     spotify_id: str = Field(index=True, unique=True)  # type: ignore[call-overload]
+    name: str = ""
+    artists: list[TrackArtistRef] = []
     album: TrackAlbumRef | None = None
     duration_ms: int = 0
     popularity: int = 0
